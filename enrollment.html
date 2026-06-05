@@ -64,9 +64,20 @@
   .semester-pill:hover:not(.active){background:var(--paper);}
   footer{text-align:center;padding:32px;font-size:.78rem;color:#aaa;border-top:1px solid var(--mist);margin-top:48px;}
   @media(max-width:600px){header,main,nav{padding-left:20px;padding-right:20px;}header h1{font-size:1.6rem;}.summary-grid{grid-template-columns:1fr 1fr;}}
+
+  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;display:inline-block;}
+  .site-nav a:hover{opacity:1;}
+  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
+  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
 </style>
 </head>
 <body>
+<nav class="site-nav">
+  <a href="index.html">🏠 Home</a>
+  <span class="sep">/</span>
+  <a href="enrollment.html" class="current">Enrollment Tracker</a>
+</nav>
 <header>
   <div>
     <h1>Visual Arts<br>Enrollment Tracker</h1>
