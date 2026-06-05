@@ -126,8 +126,8 @@
   .pref-toggle.rare{background:var(--paper);border-color:var(--mist);color:#888;}
   .pref-toggle.inactive{background:white;border-color:var(--mist);color:#bbb;}
   .remove-course{background:none;border:none;color:#ccc;cursor:pointer;font-size:.9rem;padding:2px 4px;}
-  .remove-course:hover{color:#c0392b;}
-  .search-dropdown{border:1px solid var(--mist);border-top:none;border-radius:0 0 3px 3px;background:white;max-height:180px;overflow-y:auto;display:none;position:absolute;z-index:10;width:100%;}
+  .remove-course:hover{color:#c0392b;} 
+  .search-dropdown{border:1px solid var(--mist);border-top:none;border-radius:0 0 3px 3px;background:white;max-height:180px;overflow-y:auto;display:none;position:relative;z-index:10;width:100%;margin-top:-1px;} .search-dropdown{border:1px solid var(--mist);border-top:none;border-radius:0 0 3px 3px;background:white;max-height:180px;overflow-y:auto;display:none;position:absolute;z-index:10;width:100%;}
   .search-dropdown.open{display:block;}
   .search-option{padding:7px 10px;font-size:.8rem;cursor:pointer;border-bottom:1px solid var(--mist);}
   .search-option:last-child{border-bottom:none;}
@@ -689,14 +689,32 @@ function selectCourseFromDropdown(code,title){
 }
 
 function addCourseFromSearch(){
-  const q=document.getElementById('courseSearchInput').value.trim().toUpperCase();
-  const match=ALL_COURSES.find(c=>c.code===q||c.code.replace(/\s/g,'')===q.replace(/\s/g,''));
-  if(!match){alert('Course not found. Please select from the dropdown.');return;}
-  const pref=document.getElementById('newCoursePref').value||'can';
-  modalCourses[match.code]=pref;
-  document.getElementById('courseSearchInput').value='';
-  document.getElementById('courseDropdown').classList.remove('open');
-  renderCourseList();
+  const q=document.getElementById('courseSearchInput').value.trim();
+  if(!q){return;}
+  const exactMatch=ALL_COURSES.find(c=>c.code.toUpperCase()===q.toUpperCase()||c.code.replace(/\s/g,'').toUpperCase()===q.replace(/\s/g,'').toUpperCase());
+  if(exactMatch){
+    const pref=document.getElementById('newCoursePref').value||'can';
+    modalCourses[exactMatch.code]=pref;
+    document.getElementById('courseSearchInput').value='';
+    document.getElementById('courseDropdown').classList.remove('open');
+    renderCourseList();
+    return;
+  }
+  const partialMatches=ALL_COURSES.filter(c=>
+    (c.code.toLowerCase().includes(q.toLowerCase())||c.title.toLowerCase().includes(q.toLowerCase()))&&!modalCourses[c.code]
+  );
+  if(partialMatches.length===1){
+    const pref=document.getElementById('newCoursePref').value||'can';
+    modalCourses[partialMatches[0].code]=pref;
+    document.getElementById('courseSearchInput').value='';
+    document.getElementById('courseDropdown').classList.remove('open');
+    renderCourseList();
+  } else if(partialMatches.length>1){
+    alert('Multiple courses match "'+q+'". Please click a course from the dropdown list to select it.');
+    updateCourseDropdown();
+  } else {
+    alert('No courses found matching "'+q+'". Try a different search term.');
+  }
 }
 
 document.addEventListener('click',function(e){
