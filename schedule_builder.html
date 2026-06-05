@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Schedule Builder — Visual Arts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{--ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;--cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;--red:#c0392b;--yellow:#e67e22;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;}
+  .site-nav a:hover{opacity:1;}
+  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
+  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
+  header{background:var(--ink);color:var(--cream);padding:24px 40px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  header h1{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;line-height:1.1;}
+  header p{font-size:.8rem;opacity:.5;margin-top:3px;}
+  .toolbar{background:var(--paper);border-bottom:1px solid var(--mist);padding:10px 40px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .toolbar label{font-size:.78rem;font-weight:500;opacity:.65;}
+  .toolbar select{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;background:white;}
+  .btn{padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;border-radius:2px;border:1px solid var(--mist);background:white;transition:all .15s;}
+  .btn:hover{background:var(--paper);}
+  .btn-gold{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .btn-gold:hover{opacity:.85;}
+  main{padding:24px 40px;max-width:1400px;margin:0 auto;}
+
+  /* Two-panel layout */
+  .panels{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start;}
+
+  /* Left panel — course pool */
+  .pool-panel{background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;position:sticky;top:20px;}
+  .pool-header{background:var(--paper);padding:12px 16px;border-bottom:1px solid var(--mist);font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;}
+  .pool-subhead{padding:10px 16px 6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;opacity:.5;font-weight:500;display:flex;justify-content:space-between;align-items:center;}
+  .pool-search{padding:8px 16px;border-bottom:1px solid var(--mist);}
+  .pool-search input{width:100%;padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;}
+  .pool-search input:focus{outline:none;border-color:var(--clay);}
+  .pool-list{max-height:calc(100vh - 320px);overflow-y:auto;}
+  .pool-item{padding:9px 16px;border-bottom:1px solid var(--mist);cursor:pointer;transition:background .1s;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .pool-item:hover{background:var(--cream);}
+  .pool-item.committed{border-left:3px solid var(--clay);}
+  .pool-item.scheduled{opacity:.4;cursor:default;}
+  .pool-item.scheduled:hover{background:white;}
+  .pool-code{font-size:.74rem;font-weight:500;color:#666;flex-shrink:0;}
+  .pool-title{font-size:.8rem;flex:1;}
+  .pool-badge{font-size:.66rem;padding:1px 5px;border-radius:2px;flex-shrink:0;}
+  .badge-committed{background:var(--light-clay);color:var(--clay);}
+  .badge-odd{background:#F0EBF5;color:#7A5C8B;}
+  .badge-all{background:#EBF1F5;color:#4A6B7C;}
+  .badge-scheduled{background:#EAF3EB;color:var(--sage);}
+  .badge-irreg{background:var(--paper);color:#aaa;}
+
+  /* Right panel — schedule grid */
+  .grid-panel{display:flex;flex-direction:column;gap:16px;}
+  .section-label{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;padding-bottom:6px;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;}
+  .schedule-grid{display:grid;grid-template-columns:90px 1fr 1fr;border:1px solid var(--mist);border-radius:4px;overflow:hidden;background:white;}
+  .grid-col-header{background:var(--paper);padding:9px 12px;font-size:.74rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;color:#666;border-bottom:1px solid var(--mist);}
+  .grid-col-header.mw{border-left:3px solid #4A6B7C;}
+  .grid-col-header.tth{border-left:3px solid #7A5C8B;}
+  .time-label{background:var(--paper);padding:10px 8px;font-size:.72rem;color:#888;font-weight:500;border-bottom:1px solid var(--mist);border-right:1px solid var(--mist);text-align:center;line-height:1.3;}
+  .drop-cell{min-height:90px;padding:6px;border-bottom:1px solid var(--mist);border-right:1px solid var(--mist);vertical-align:top;transition:background .15s;}
+  .drop-cell:last-child{border-right:none;}
+  .drop-cell.last-row{border-bottom:none;}
+  .drop-cell.drag-over{background:var(--light-clay);}
+  .drop-cell.drop-empty{display:flex;align-items:center;justify-content:center;}
+  .drop-hint{font-size:.72rem;color:#ccc;pointer-events:none;}
+
+  /* Scheduled course chips */
+  .sched-chip{border-radius:3px;padding:6px 8px;font-size:.75rem;margin-bottom:4px;position:relative;border-left:3px solid transparent;cursor:grab;}
+  .sched-chip:active{cursor:grabbing;}
+  .sched-chip.mw{background:#EBF1F5;border-left-color:#4A6B7C;}
+  .sched-chip.tth{background:#F0EBF5;border-left-color:#7A5C8B;}
+  .sched-chip.once{background:#EAF3EB;border-left-color:var(--sage);}
+  .sched-chip.async{background:#F5F5F5;border-left-color:#aaa;}
+  .chip-code{font-weight:500;font-size:.7rem;opacity:.65;}
+  .chip-title{font-weight:500;margin:1px 0;line-height:1.3;}
+  .chip-meta{font-size:.68rem;opacity:.6;margin-top:2px;}
+  .chip-remove{position:absolute;top:3px;right:3px;background:none;border:none;cursor:pointer;color:#bbb;font-size:.75rem;line-height:1;padding:2px;}
+  .chip-remove:hover{color:var(--red);}
+  .chip-flags{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;}
+  .chip-flag{font-size:.64rem;padding:1px 4px;border-radius:2px;}
+  .flag-red{background:#FDECEA;color:var(--red);}
+  .flag-yellow{background:#FDF3E0;color:var(--yellow);}
+  .flag-faculty{background:#EAF3EB;color:var(--sage);}
+
+  /* Once/week and async sections */
+  .once-section,.async-section{background:white;border:1px solid var(--mist);border-radius:4px;padding:14px 16px;}
+  .once-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+  .once-col-header{font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#888;font-weight:500;margin-bottom:6px;}
+  .once-drop{min-height:70px;border:1px dashed var(--mist);border-radius:3px;padding:6px;transition:background .15s;}
+  .once-drop.drag-over{background:var(--light-clay);border-color:var(--clay);}
+  .async-drop{min-height:50px;border:1px dashed var(--mist);border-radius:3px;padding:6px;margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;transition:background .15s;}
+  .async-drop.drag-over{background:var(--light-clay);}
+
+  /* Faculty load sidebar */
+  .load-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:.78rem;}
+  .load-name{width:80px;flex-shrink:0;}
+  .load-track{flex:1;height:8px;background:var(--mist);border-radius:4px;overflow:hidden;}
+  .load-fill{height:100%;border-radius:4px;transition:width .3s;}
+  .load-fill.ok{background:var(--sage);}
+  .load-fill.over{background:var(--red);}
+  .load-fill.under{background:var(--gold);}
+  .load-num{font-size:.72rem;color:#888;flex-shrink:0;width:40px;}
+
+  /* Assignment modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:white;border-radius:6px;width:100%;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--mist);display:flex;justify-content:space-between;align-items:center;}
+  .modal-header h3{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;}
+  .modal-close{background:none;border:none;cursor:pointer;color:#aaa;font-size:1.2rem;}
+  .modal-body{padding:18px 20px;}
+  .modal-footer{padding:12px 20px;border-top:1px solid var(--mist);display:flex;justify-content:flex-end;gap:8px;}
+  .form-group{margin-bottom:12px;}
+  .form-group label{display:block;font-size:.74rem;font-weight:500;opacity:.65;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+  .form-group select,.form-group input{width:100%;padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.85rem;}
+  .form-group select:focus,.form-group input:focus{outline:none;border-color:var(--clay);}
+  .checkbox-row{display:flex;gap:14px;flex-wrap:wrap;}
+  .checkbox-label{display:flex;align-items:center;gap:5px;font-size:.82rem;cursor:pointer;}
+
+  /* Conflict panel */
+  .conflict-panel{background:white;border:1px solid var(--mist);border-radius:4px;padding:14px 16px;margin-bottom:16px;}
+  .conflict-panel h3{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;margin-bottom:10px;}
+  .conflict-item{display:flex;gap:8px;padding:7px 10px;border-radius:3px;margin-bottom:5px;font-size:.78rem;align-items:flex-start;}
+  .conflict-item.red{background:#FDECEA;border-left:3px solid var(--red);}
+  .conflict-item.yellow{background:#FDF3E0;border-left:3px solid var(--yellow);}
+  .conflict-icon{flex-shrink:0;font-size:.85rem;}
+  .no-conflicts{color:var(--sage);font-size:.82rem;font-style:italic;}
+
+  /* Notes area */
+  .notes-area{background:white;border:1px solid var(--mist);border-radius:4px;padding:14px 16px;}
+  .notes-area label{font-size:.74rem;font-weight:500;opacity:.65;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:6px;}
+  .notes-area textarea{width:100%;border:1px solid var(--mist);border-radius:2px;padding:8px 10px;font-family:'DM Sans',sans-serif;font-size:.82rem;resize:vertical;min-height:70px;line-height:1.5;}
+  .notes-area textarea:focus{outline:none;border-color:var(--clay);}
+
+  footer{text-align:center;padding:24px;font-size:.74rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
+  @media(max-width:900px){.panels{grid-template-columns:1fr;}main,.toolbar,.site-nav,header{padding-left:20px;padding-right:20px;}}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html">🏠 Home</a>
+  <span class="sep">/</span>
+  <a href="schedule_builder.html" class="current">Schedule Builder</a>
+</nav>
+<header>
+  <div>
+    <h1>Schedule Builder</h1>
+    <p>Department of Visual Arts — Semester Planning Tool</p>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn" onclick="exportSchedule()">⬇ Export JSON</button>
+    <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importSchedule(event)"/>
+    <button class="btn btn-gold" onclick="window.print()">🖨 Print</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label>Semester:</label>
+  <select id="semSelect" onchange="switchSemester()"></select>
+  <button class="btn" style="font-size:.76rem;" onclick="newSemester()">+ New</button>
+  <label style="margin-left:12px;">Show rotation:</label>
+  <select id="rotFilter" onchange="renderPool()">
+    <option value="committed">Committed this semester</option>
+    <option value="all">All courses</option>
+    <option value="irregular">Irregular only</option>
+  </select>
+</div>
+
+<main>
+  <div class="panels">
+    <!-- LEFT: Course Pool -->
+    <div class="pool-panel">
+      <div class="pool-header">
+        Course Pool
+        <span id="poolStats" style="font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;"></span>
+      </div>
+      <div class="pool-search">
+        <input type="text" id="poolSearch" placeholder="Search courses…" oninput="renderPool()"/>
+      </div>
+      <div class="pool-subhead">
+        <span>Click a course to place it</span>
+      </div>
+      <div class="pool-list" id="poolList"></div>
+    </div>
+
+    <!-- RIGHT: Schedule + Tools -->
+    <div class="grid-panel">
+
+      <!-- Conflict panel -->
+      <div class="conflict-panel">
+        <h3>⚡ Conflict Check</h3>
+        <div id="conflictList"><p class="no-conflicts">No conflicts detected.</p></div>
+      </div>
+
+      <!-- MW/TTh grid -->
+      <div>
+        <div class="section-label">
+          <span>Weekly Schedule Grid</span>
+          <span style="font-size:.72rem;opacity:.5;font-family:'DM Sans',sans-serif;">Click course in pool → select slot below</span>
+        </div>
+        <div class="schedule-grid" id="schedGrid">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+
+      <!-- Once/week -->
+      <div class="once-section">
+        <div class="section-label" style="margin-bottom:10px;">Once-a-Week / Special</div>
+        <div class="once-grid" id="onceGrid"></div>
+      </div>
+
+      <!-- Async -->
+      <div class="async-section">
+        <div class="section-label" style="margin-bottom:6px;">Asynchronous / Online</div>
+        <div class="async-drop" id="asyncDrop" ondragover="onDragOver(event)" ondrop="onDrop(event,'async','')"></div>
+      </div>
+
+      <!-- Faculty load -->
+      <div class="notes-area">
+        <label>Faculty Load</label>
+        <div id="loadBars" style="margin-top:4px;"></div>
+      </div>
+
+      <!-- External constraints notes -->
+      <div class="notes-area">
+        <label>External Constraints / Notes</label>
+        <textarea id="notesField" placeholder="e.g. Fashion dept needs Drawing Foundations to avoid Tuesday mornings this semester. ENG 3433 placed TTh 11:00-12:20 by English dept." oninput="saveNotes()"></textarea>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- Assignment Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalCourseTitle">Place Course</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Faculty</label>
+        <select id="m_faculty">
+          <option value="">-- select --</option>
+          <option>GIOVANNI</option><option>SARA</option><option>SHELI</option>
+          <option>MEG</option><option>JULIE</option><option>TANYA</option>
+          <option>LAURA LEE</option><option>CHRISTINE</option><option>COLBY</option>
+          <option>staff</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Meeting Pattern</label>
+        <select id="m_pattern" onchange="updateSlotOptions()">
+          <option value="mw">Mon/Wed</option>
+          <option value="tth">Tue/Thu</option>
+          <option value="once">Once a week</option>
+          <option value="async">Async/Online</option>
+        </select>
+      </div>
+      <div class="form-group" id="slotGroup">
+        <label>Time Block</label>
+        <select id="m_slot"></select>
+      </div>
+      <div class="form-group" id="onceDayGroup" style="display:none;">
+        <label>Day</label>
+        <select id="m_onceday">
+          <option>Monday</option><option>Tuesday</option>
+          <option>Wednesday</option><option>Thursday</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Room</label>
+        <select id="m_room">
+          <option value="">-- select --</option>
+          <option value="002">002 — Sculpture (15)</option>
+          <option value="011">011 — Ceramics (18)</option>
+          <option value="101">101 — Lecture/Seminar (24)</option>
+          <option value="106">106 — GD Lab (20)</option>
+          <option value="110">110 — Drawing (20)</option>
+          <option value="201">201 — Critique Seminar (20)</option>
+          <option value="202">202 — Computer Lab (20)</option>
+          <option value="204">204 — Printmaking (20)</option>
+          <option value="206">206 — Painting (20)</option>
+          <option value="301">301 — Photo Lab (18)</option>
+          <option value="302">302 — Digital Craft Lab (paired)</option>
+          <option value="306">306 — Art Education (20)</option>
+          <option value="off-site">Off-site</option>
+        </select>
+      </div>
+      <div class="checkbox-row">
+        <label class="checkbox-label"><input type="checkbox" id="m_hybrid"/> Hybrid</label>
+        <label class="checkbox-label"><input type="checkbox" id="m_bracketed"/> Bracketed</label>
+        <label class="checkbox-label"><input type="checkbox" id="m_grad"/> Grad section</label>
+        <label class="checkbox-label"><input type="checkbox" id="m_hidden"/> Hidden</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="placeSelected()">Place Course</button>
+    </div>
+  </div>
+</div>
+
+<footer>Visual Arts Department · Schedule Builder · For internal planning use</footer>
+
+<script>
+// ── Rotation data ──────────────────────────────────────────────────────────
+const ROTATION = [
+  {code:'ART 1203',title:'2D FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1213',title:'3D FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1303',title:'DRAWING FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1503',title:'INTRO TO PAINTING',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1603',title:'INTRO TO PHOTOGRAPHY',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2223',title:'DIGITAL ART FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2243',title:'FUNDAMENTALS OF TYPE & IMAGE',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2293',title:'VISUAL IDENTITY AND SYMBOL',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2303',title:'FIGURE DRAWING',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2423',title:'WORLD ART HISTORY I',sem:'FALL',yr:'ALL'},
+  {code:'ART 2433',title:'WORLD ART HISTORY II',sem:'SPRING',yr:'ALL'},
+  {code:'ART 2613',title:'INTRODUCTION TO PRINTMAKING',sem:'SPRING',yr:'ALL'},
+  {code:'ART 2653',title:'BLACK & WHITE PHOTOGRAPHY',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 2713',title:'UNDERSTANDING ARTS-VISUAL ART',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2753',title:'INTRO TO SCULPTURE',sem:'FALL',yr:'ALL'},
+  {code:'ART 2823',title:'INTRODUCTION TO CERAMICS',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3013',title:'PRINCIPLES OF ART EDUCATION',sem:'FALL',yr:'EVEN'},
+  {code:'ART 3053',title:'GLOBAL PERSPECTIVES IN ART',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3153',title:'ANIMATION',sem:'FALL',yr:'ODD'},
+  {code:'ART 3173',title:'CONTEMPORARY ISSUES IN ART',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3223',title:'ELEMENTARY ART EDUCATION',sem:'FALL',yr:'ODD'},
+  {code:'ART 3233',title:'SECONDARY ART EDUCATION',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 3253',title:'MOTION GRAPHICS',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3263',title:'EXPERIMENTS IN FUNCTIONAL DESIGN',sem:'IRREGULAR',yr:''},
+  {code:'ART 3333',title:'HISTORY OF CAMERA ARTS',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 3343',title:'WOMEN IN THE VISUAL ARTS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3363',title:'CHARACTER DESIGN',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 3383',title:'DIGITAL ILLUSTRATION',sem:'FALL',yr:'EVEN'},
+  {code:'ART 3393',title:'PROF PRACTICES VISUAL ARTS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3613',title:'CERAMICS SURFACES',sem:'IRREGULAR',yr:''},
+  {code:'ART 3673',title:'SCULPTURE: INSTALLATION ART',sem:'IRREGULAR',yr:''},
+  {code:'ART 3683',title:'SCULPT PROCESS/POSSIBILITIES',sem:'SPRING',yr:'ODD'},
+  {code:'ART 3693',title:'ALTERNATIVE PHOTO PROCESS',sem:'SPRING',yr:'ODD'},
+  {code:'ART 3703',title:'INTERMEDIATE PAINTING',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3723',title:'MURAL PAINTING',sem:'FALL',yr:'ALL'},
+  {code:'ART 3783',title:'ALTERNATIVE DRAWING',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3793',title:'FUNCTIONAL CERAMICS',sem:'FALL',yr:'EVEN'},
+  {code:'ART 3893',title:'SCULPTURAL CERAMICS',sem:'FALL',yr:'ODD'},
+  {code:'ART 3913',title:'SCIENTIFIC ILLUSTRATION',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 4013',title:'SCULPTURE & THE ENVIRONMENT',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 4033',title:'PACKAGING DESIGN',sem:'FALL',yr:'ODD'},
+  {code:'ART 4043',title:'LATINX ART',sem:'SPRING',yr:'ODD'},
+  {code:'ART 4053',title:'AFRICAN AMERICAN ART',sem:'FALL',yr:'EVEN'},
+  {code:'ART 4133',title:'APPROACHES TO ART EDUCATION',sem:'SPRING',yr:'ODD'},
+  {code:'ART 4253',title:'PUBLICATION DESIGN',sem:'FALL',yr:'ALL'},
+  {code:'ART 4283',title:'WEB AND APP DESIGN',sem:'SPRING',yr:'ALL'},
+  {code:'ART 4313',title:'ADVERTISING & SOCIAL MEDIA',sem:'SPRING',yr:'ALL'},
+  {code:'ART 4363',title:'COMMUNITY FOCUS DESIGN STUDIO',sem:'FALL',yr:'ALL'},
+  {code:'ART 4483',title:'NARRATIVE ILLUSTRATION',sem:'SPRING',yr:'ODD'},
+  {code:'ART 4543',title:'INTERDISCIPLINARY INFLUENCES',sem:'FALL',yr:'ODD'},
+  {code:'ART 4653',title:'COLOR PHOTOGRAPHY',sem:'FALL',yr:'EVEN'},
+  {code:'ART 4683',title:'PHOTOGRAPHIC POSSIBILITIES',sem:'FALL',yr:'ODD'},
+  {code:'ART 4703',title:'ADVANCED PAINTING',sem:'SPRING',yr:'ALL'},
+  {code:'ART 4903',title:'SPECIAL TOPICS',sem:'IRREGULAR',yr:''},
+  {code:'ART 4953',title:'INTERNSHIP',sem:'FALL',yr:'ALL'},
+  {code:'ART 4973',title:'SENIOR RESEARCH IN ART HISTORY',sem:'IRREGULAR',yr:''},
+  {code:'ART 4993',title:'BFA EXHIBITION',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 5003',title:'CRITIQUE SEMINAR',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 5063',title:'THEORIES OF ART',sem:'SPRING',yr:'ALL'},
+  {code:'ART 5533',title:'ART & SOCIAL MOVEMENTS',sem:'FALL',yr:'ALL'},
+  {code:'ART 5543',title:'ART & DECOLONIALITY',sem:'SPRING',yr:'ALL'},
+  {code:'ART 5573',title:'RESHAPING THE ART HIST CANON',sem:'SPRING',yr:'ALL'},
+  {code:'ART 5843',title:'ART-BASED RESEARCH WRITING',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 5883',title:'MFA THESIS EXHIBITION',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 5903',title:'SPECIAL TOPICS (GRAD)',sem:'IRREGULAR',yr:''},
+  {code:'ART 5993',title:'THESIS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ENG 3433',title:'PROFESSIONAL WRITING',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'EDUC 4946',title:'CLINICAL STUDENT TEACHING',sem:'FALL/SPRING',yr:'ALL'},
+];
+
+// ── Conflict rules ─────────────────────────────────────────────────────────
+const TIER1 = [
+  ['ART 3013','ART 3223','ART 3233','ART 4133'], // Art Ed sequence
+  ['ART 3173','ART 3393','ENG 3433','ART 4993'],  // Universal capstone
+];
+const TIER2 = [
+  ['ART 2243','ART 2293'],['ART 2293','ART 3253'],
+  ['ART 4363','ART 4253'],['ART 4363','ART 4283'],['ART 4363','ART 4313'],
+  ['ART 3383','ART 3363'],['ART 3383','ART 4483'],
+  ['ART 3683','ART 3793'],['ART 3683','ART 3893'],['ART 4013','ART 3793'],
+  ['ART 3703','ART 3723'],['ART 3703','ART 4703'],
+  ['ART 3693','ART 4653'],['ART 4683','ART 4653'],
+  ['ART 4043','ART 4053'],['ART 4543','ART 3333'],
+  ['ART 3013','ART 4133'],['ART 3013','ART 3223'],['ART 3013','ART 3233'],
+];
+
+// ── Faculty targets ────────────────────────────────────────────────────────
+const FACULTY_TARGETS = {
+  GIOVANNI:3,SARA:4,SHELI:3,MEG:3,JULIE:3,
+  TANYA:3,LAURA_LEE:3,CHRISTINE:3,COLBY:1,staff:99
+};
+
+// ── Time blocks ────────────────────────────────────────────────────────────
+const BLOCKS = ['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50'];
+const SLOT_OPTIONS = {
+  mw:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)'],
+  tth:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)'],
+  once:['6:00–8:50','8:00–10:50','11:00–1:50','2:30–5:20','Other'],
+  async:['No set time'],
+};
+
+// ── Storage ────────────────────────────────────────────────────────────────
+function loadDB(){try{return JSON.parse(localStorage.getItem('twu_builder')||'{}');}catch(e){return {};}}
+function saveDB(){localStorage.setItem('twu_builder',JSON.stringify(db));}
+
+let db = loadDB();
+let currentSem = Object.keys(db)[0]||null;
+let selectedCourse = null; // course from pool waiting to be placed
+
+// ── Semester helpers ───────────────────────────────────────────────────────
+function getSemInfo(){
+  if(!currentSem) return {sem:'',year:new Date().getFullYear()};
+  const parts = currentSem.split(' ');
+  return {sem:parts[0].toUpperCase(), year:parseInt(parts[1]||new Date().getFullYear())};
+}
+function isCommitted(r){
+  const {sem,year} = getSemInfo();
+  if(r.sem==='IRREGULAR') return false;
+  const sems = r.sem.split('/');
+  if(!sems.includes(sem)) return false;
+  if(r.yr==='ALL') return true;
+  const isEven = year%2===0;
+  return r.yr===(isEven?'EVEN':'ODD');
+}
+function getCourses(){return currentSem&&db[currentSem]?db[currentSem].courses:[];}
+function getNotes(){return currentSem&&db[currentSem]?db[currentSem].notes||'':'';}
+
+// ── Semester UI ────────────────────────────────────────────────────────────
+function buildSemSelect(){
+  const sel = document.getElementById('semSelect');
+  sel.innerHTML = '';
+  Object.keys(db).forEach(k=>{
+    const o = document.createElement('option');
+    o.value=k; o.textContent=k;
+    if(k===currentSem) o.selected=true;
+    sel.appendChild(o);
+  });
+}
+function switchSemester(){
+  currentSem = document.getElementById('semSelect').value;
+  renderAll();
+}
+function newSemester(){
+  const name = prompt('Semester (e.g. "Fall 2027"):');
+  if(!name||!name.trim()) return;
+  const key = name.trim();
+  if(db[key]){alert('Already exists.');return;}
+  db[key]={courses:[],notes:''};
+  saveDB();
+  currentSem=key;
+  buildSemSelect();
+  renderAll();
+}
+
+// ── Slot key helpers ───────────────────────────────────────────────────────
+function slotKey(pattern,time){return `${pattern}|${time}`;}
+function parseSlot(key){const p=key.split('|');return{pattern:p[0],time:p[1]};}
+function blockForTime(t){
+  for(const b of BLOCKS) if(t.startsWith(b.split('–')[0])) return b;
+  return t;
+}
+
+// ── Course placement ───────────────────────────────────────────────────────
+function selectPoolCourse(rot){
+  // Check if already scheduled
+  const already = getCourses().find(c=>c.code===rot.code);
+  if(already){alert(rot.code+' is already scheduled.');return;}
+  selectedCourse = rot;
+  // Open modal
+  document.getElementById('modalCourseTitle').textContent = rot.code+' — '+rot.title;
+  document.getElementById('m_faculty').value='';
+  document.getElementById('m_pattern').value='mw';
+  document.getElementById('m_room').value='';
+  document.getElementById('m_hybrid').checked=false;
+  document.getElementById('m_bracketed').checked=false;
+  document.getElementById('m_grad').checked=false;
+  document.getElementById('m_hidden').checked=false;
+  updateSlotOptions();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function updateSlotOptions(){
+  const pat = document.getElementById('m_pattern').value;
+  const sel = document.getElementById('m_slot');
+  sel.innerHTML = (SLOT_OPTIONS[pat]||[]).map(t=>`<option>${t}</option>`).join('');
+  document.getElementById('slotGroup').style.display = pat==='async'?'none':'block';
+  document.getElementById('onceDayGroup').style.display = pat==='once'?'block':'none';
+}
+
+function placeSelected(){
+  if(!selectedCourse||!currentSem) return;
+  const pat = document.getElementById('m_pattern').value;
+  const course = {
+    code: selectedCourse.code,
+    title: selectedCourse.title,
+    faculty: document.getElementById('m_faculty').value,
+    room: document.getElementById('m_room').value,
+    pattern: pat,
+    time: pat==='async'?'No set time':document.getElementById('m_slot').value,
+    onceday: document.getElementById('m_onceday').value,
+    hybrid: document.getElementById('m_hybrid').checked,
+    bracketed: document.getElementById('m_bracketed').checked,
+    grad: document.getElementById('m_grad').checked,
+    hidden: document.getElementById('m_hidden').checked,
+    bracketpair:'',
+  };
+  db[currentSem].courses.push(course);
+  saveDB();
+  closeModal();
+  renderAll();
+}
+
+function removeCourse(code){
+  if(!currentSem) return;
+  db[currentSem].courses = db[currentSem].courses.filter(c=>c.code!==code);
+  saveDB();
+  renderAll();
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  selectedCourse=null;
+}
+
+// ── Render pool ────────────────────────────────────────────────────────────
+function renderPool(){
+  const filter = document.getElementById('rotFilter').value;
+  const q = (document.getElementById('poolSearch').value||'').toLowerCase();
+  const courses = getCourses();
+  const scheduledCodes = new Set(courses.map(c=>c.code));
+
+  let pool = ROTATION.filter(r=>{
+    if(q && !r.code.toLowerCase().includes(q) && !r.title.toLowerCase().includes(q)) return false;
+    if(filter==='committed') return isCommitted(r);
+    if(filter==='irregular') return r.sem==='IRREGULAR';
+    return true;
+  });
+
+  const committed = pool.filter(r=>isCommitted(r));
+  const notCommitted = pool.filter(r=>!isCommitted(r)&&r.sem!=='IRREGULAR');
+  const irreg = pool.filter(r=>r.sem==='IRREGULAR');
+
+  const scheduledCount = committed.filter(r=>scheduledCodes.has(r.code)).length;
+  document.getElementById('poolStats').textContent =
+    filter==='committed' ? `${scheduledCount}/${committed.length} scheduled` : `${pool.length} courses`;
+
+  const list = document.getElementById('poolList');
+  list.innerHTML='';
+
+  const renderGroup = (items, groupLabel) => {
+    if(!items.length) return;
+    const div = document.createElement('div');
+    div.innerHTML = `<div class="pool-subhead">${groupLabel}</div>`;
+    items.forEach(r=>{
+      const sched = scheduledCodes.has(r.code);
+      const item = document.createElement('div');
+      item.className = 'pool-item'+(isCommitted(r)?' committed':'')+(sched?' scheduled':'');
+      item.onclick = sched ? null : ()=>selectPoolCourse(r);
+      const badge = sched ? 'scheduled' : r.yr==='ALL'?'all':r.yr==='ODD'||r.yr==='EVEN'?'odd':'irreg';
+      const badgeText = sched ? '✓ placed' : r.yr==='ALL'?'every yr':r.yr||'irregular';
+      item.innerHTML = `<span class="pool-code">${r.code}</span>
+        <span class="pool-title">${r.title}</span>
+        <span class="pool-badge badge-${badge}">${badgeText}</span>`;
+      div.appendChild(item);
+    });
+    list.appendChild(div);
+  };
+
+  if(filter==='committed'||filter==='all'){
+    renderGroup(committed.filter(r=>!scheduledCodes.has(r.code)),'Not yet scheduled');
+    renderGroup(committed.filter(r=>scheduledCodes.has(r.code)),'Already scheduled');
+  }
+  if(filter==='all') renderGroup(notCommitted,'Not committed this semester');
+  if(filter==='irregular'||filter==='all') renderGroup(irreg,'Irregular / as needed');
+}
+
+// ── Render schedule grid ───────────────────────────────────────────────────
+function renderGrid(){
+  const courses = getCourses();
+  const grid = document.getElementById('schedGrid');
+
+  // Group courses by slot
+  const bySlot = {};
+  courses.forEach(c=>{
+    if(c.pattern==='async'||c.pattern==='once') return;
+    const key = slotKey(c.pattern,c.time);
+    const block = blockForTime(c.time);
+    const blockKey = slotKey(c.pattern,block);
+    if(!bySlot[blockKey]) bySlot[blockKey]=[];
+    bySlot[blockKey].push(c);
+  });
+
+  let html = `<div class="grid-col-header"></div>
+    <div class="grid-col-header mw">Monday / Wednesday</div>
+    <div class="grid-col-header tth">Tuesday / Thursday</div>`;
+
+  BLOCKS.forEach((block,bi)=>{
+    const isLast = bi===BLOCKS.length-1;
+    const mwKey = slotKey('mw',block);
+    const tthKey = slotKey('tth',block);
+    const mwCourses = bySlot[mwKey]||[];
+    const tthCourses = bySlot[tthKey]||[];
+    const conflicts = getConflictsForSlot('mw',block).concat(getConflictsForSlot('tth',block));
+
+    html += `<div class="time-label${isLast?' last-row':''}">${block}</div>`;
+    ['mw','tth'].forEach((pat,pi)=>{
+      const slotCourses = pat==='mw'?mwCourses:tthCourses;
+      const key = pat==='mw'?mwKey:tthKey;
+      html += `<div class="drop-cell${isLast?' last-row':''}${pi===1?' last-col':''}">
+        ${slotCourses.map(c=>chipHtml(c)).join('')}
+      </div>`;
+    });
+  });
+
+  grid.innerHTML = html;
+
+  // Once/week grid
+  const onceDays = ['Monday','Tuesday','Wednesday','Thursday'];
+  const onceCourses = courses.filter(c=>c.pattern==='once');
+  const onceGrid = document.getElementById('onceGrid');
+  onceGrid.innerHTML = onceDays.map(day=>{
+    const dayCourses = onceCourses.filter(c=>c.onceday===day);
+    return `<div>
+      <div class="once-col-header">${day}</div>
+      <div class="once-drop">
+        ${dayCourses.map(c=>chipHtml(c,'once')).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Async
+  const asyncCourses = courses.filter(c=>c.pattern==='async');
+  document.getElementById('asyncDrop').innerHTML =
+    asyncCourses.map(c=>chipHtml(c,'async')).join('') ||
+    '<span style="color:#bbb;font-size:.75rem;">Drag or place courses here</span>';
+}
+
+function chipHtml(c, patOverride){
+  const pat = patOverride||c.pattern;
+  const conflicts = getConflictsForCourse(c);
+  const flagsHtml = conflicts.map(f=>
+    `<span class="chip-flag flag-${f.tier==='1'?'red':'yellow'}">${f.tier==='1'?'🔴':'🟡'} ${f.with}</span>`
+  ).join('');
+  const facultyFlag = c.faculty && c.faculty!=='staff' ?
+    `<span class="chip-flag flag-faculty">👤 ${c.faculty}</span>` : '';
+  return `<div class="sched-chip ${pat}">
+    <button class="chip-remove" onclick="removeCourse('${c.code}')" title="Remove">✕</button>
+    <div class="chip-code">${c.code}${c.hidden?' ⚠':''}</div>
+    <div class="chip-title">${c.title}</div>
+    <div class="chip-meta">${[c.faculty,c.room?'Rm '+c.room:''].filter(Boolean).join(' · ')}</div>
+    ${flagsHtml||facultyFlag?`<div class="chip-flags">${flagsHtml}${facultyFlag}</div>`:''}
+  </div>`;
+}
+
+// ── Conflict detection ─────────────────────────────────────────────────────
+function getScheduledSlot(code){
+  const courses = getCourses();
+  const c = courses.find(x=>x.code===code||x.code.split('.')[0]===code);
+  if(!c||c.pattern==='async') return null;
+  return slotKey(c.pattern, blockForTime(c.time));
+}
+
+function areBracketed(codeA, codeB){
+  const courses = getCourses();
+  const a = courses.find(c=>c.code===codeA||c.code.split('.')[0]===codeA);
+  const b = courses.find(c=>c.code===codeB||c.code.split('.')[0]===codeB);
+  if(!a||!b) return false;
+  return a.bracketed && b.bracketed &&
+    (a.bracketpair===b.code||b.bracketpair===a.code||
+     (a.bracketpair&&b.bracketpair&&a.bracketpair.split('.')[0]===b.code.split('.')[0]));
+}
+
+function checkConflicts(){
+  const conflicts = [];
+  const courses = getCourses();
+
+  // Tier 1
+  TIER1.forEach(group=>{
+    const scheduled = group.filter(code=>getScheduledSlot(code));
+    for(let i=0;i<scheduled.length;i++){
+      for(let j=i+1;j<scheduled.length;j++){
+        const a=scheduled[i], b=scheduled[j];
+        if(getScheduledSlot(a)===getScheduledSlot(b) && !areBracketed(a,b)){
+          conflicts.push({tier:'1',a,b,slot:getScheduledSlot(a)});
+        }
+      }
+    }
+  });
+
+  // Tier 2
+  TIER2.forEach(([a,b])=>{
+    const slotA=getScheduledSlot(a), slotB=getScheduledSlot(b);
+    if(slotA&&slotB&&slotA===slotB&&!areBracketed(a,b)){
+      conflicts.push({tier:'2',a,b,slot:slotA});
+    }
+  });
+
+  return conflicts;
+}
+
+function getConflictsForCourse(c){
+  const conflicts = checkConflicts();
+  return conflicts
+    .filter(f=>f.a===c.code||f.b===c.code||
+               f.a===c.code.split('.')[0]||f.b===c.code.split('.')[0])
+    .map(f=>({tier:f.tier, with:f.a===c.code||f.a===c.code.split('.')[0]?f.b:f.a}));
+}
+
+function getConflictsForSlot(pat,block){
+  return checkConflicts().filter(f=>f.slot===slotKey(pat,block));
+}
+
+function renderConflicts(){
+  const conflicts = checkConflicts();
+  const el = document.getElementById('conflictList');
+  if(!conflicts.length){
+    el.innerHTML='<p class="no-conflicts">✅ No conflicts detected.</p>';
+    return;
+  }
+  el.innerHTML = conflicts.map(f=>`
+    <div class="conflict-item ${f.tier==='1'?'red':'yellow'}">
+      <span class="conflict-icon">${f.tier==='1'?'🔴':'🟡'}</span>
+      <div>
+        <strong>${f.a}</strong> and <strong>${f.b}</strong> are in the same time slot.
+        ${f.tier==='1'?'<br><small>Tier 1 — all students in multiple tracks need both of these.</small>':'<br><small>Tier 2 — students in a specific track/focus need both.</small>'}
+      </div>
+    </div>`).join('');
+}
+
+// ── Faculty load ───────────────────────────────────────────────────────────
+function renderLoad(){
+  const courses = getCourses();
+  const loads = {};
+  courses.forEach(c=>{
+    if(!c.faculty||c.faculty==='staff') return;
+    if(!loads[c.faculty]) loads[c.faculty]=0;
+    // Bracketed pairs count as one — only count if not already counted via bracketpair
+    if(c.bracketed&&c.bracketpair){
+      const pair = courses.find(x=>x.code===c.bracketpair||x.code.split('.')[0]===c.bracketpair.split('.')[0]);
+      if(pair&&pair.faculty===c.faculty&&courses.indexOf(pair)<courses.indexOf(c)) return;
+    }
+    loads[c.faculty]+=1;
+  });
+
+  const el = document.getElementById('loadBars');
+  if(!Object.keys(loads).length){el.innerHTML='<span style="color:#bbb;font-size:.78rem;">No faculty assigned yet.</span>';return;}
+
+  el.innerHTML = Object.entries(loads).sort((a,b)=>a[0].localeCompare(b[0])).map(([name,count])=>{
+    const target = FACULTY_TARGETS[name.replace(' ','_')]||3;
+    const pct = Math.min(100,Math.round(count/target*100));
+    const cls = count===target?'ok':count>target?'over':'under';
+    const status = count===target?'✓':count>target?'⚠ over':'under';
+    return `<div class="load-bar-row">
+      <span class="load-name" style="font-size:.75rem;">${name}</span>
+      <div class="load-track"><div class="load-fill ${cls}" style="width:${pct}%"></div></div>
+      <span class="load-num">${count}/${target} ${status}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Notes ──────────────────────────────────────────────────────────────────
+function saveNotes(){
+  if(!currentSem) return;
+  db[currentSem].notes = document.getElementById('notesField').value;
+  saveDB();
+}
+function loadNotes(){
+  document.getElementById('notesField').value = getNotes();
+}
+
+// ── Export/Import ──────────────────────────────────────────────────────────
+function exportSchedule(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(db,null,2)],{type:'application/json'}));
+  a.download='schedule_builder.json';a.click();
+}
+function importSchedule(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{db=JSON.parse(ev.target.result);saveDB();currentSem=Object.keys(db)[0]||null;buildSemSelect();renderAll();}
+    catch(err){alert('Error: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+// ── Render all ─────────────────────────────────────────────────────────────
+function renderAll(){
+  buildSemSelect();
+  renderPool();
+  renderGrid();
+  renderConflicts();
+  renderLoad();
+  loadNotes();
+}
+
+// ── Modal close on overlay ─────────────────────────────────────────────────
+document.getElementById('modalOverlay').addEventListener('click',function(e){
+  if(e.target===this)closeModal();
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+if(!Object.keys(db).length){
+  db={'Spring 2027':{courses:[],notes:''}};
+  saveDB();
+  currentSem='Spring 2027';
+}
+updateSlotOptions();
+renderAll();
+</script>
+</body>
+</html>
