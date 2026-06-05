@@ -726,7 +726,7 @@ function addCourseFromSearch(){
 }
 
 document.addEventListener('click',function(e){
-  if(!e.target.closest('.search-wrapper'))
+if(!e.target.closest('.course-search-outer'))
     document.getElementById('courseDropdown').classList.remove('open');
 });
 
