@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Conflict Checker — Visual Arts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{--ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;--cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;--red:#c0392b;--yellow:#e67e22;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;}
+  .site-nav a:hover{opacity:1;}
+  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
+  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
+  header{background:var(--ink);color:var(--cream);padding:24px 40px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  header h1{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;line-height:1.1;}
+  header p{font-size:.8rem;opacity:.5;margin-top:3px;}
+  .toolbar{background:var(--paper);border-bottom:1px solid var(--mist);padding:10px 40px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .toolbar label{font-size:.78rem;font-weight:500;opacity:.65;}
+  .toolbar select{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;background:white;}
+  .btn{padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;border-radius:2px;border:1px solid var(--mist);background:white;}
+  .btn:hover{background:var(--paper);}
+  .btn-gold{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  main{padding:28px 40px;max-width:1100px;margin:0 auto;}
+
+  /* Summary cards */
+  .summary-row{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+  .summary-card{background:white;border:1px solid var(--mist);border-radius:4px;padding:16px 20px;flex:1;min-width:140px;}
+  .summary-card .num{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;line-height:1;}
+  .summary-card .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;opacity:.5;margin-top:4px;}
+  .summary-card.red .num{color:var(--red);}
+  .summary-card.yellow .num{color:var(--yellow);}
+  .summary-card.green .num{color:var(--sage);}
+
+  /* Upload area */
+  .upload-area{background:white;border:1px solid var(--mist);border-radius:4px;padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .upload-area p{font-size:.83rem;opacity:.65;flex:1;}
+  .btn-outline{background:white;border:1px solid var(--mist);}
+
+  /* Conflict sections */
+  .section-header{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--mist);display:flex;align-items:center;gap:10px;}
+  .conflict-card{background:white;border:1px solid var(--mist);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+  .conflict-card.tier1{border-left:4px solid var(--red);}
+  .conflict-card.tier2{border-left:4px solid var(--yellow);}
+  .conflict-card.ok{border-left:4px solid var(--sage);}
+  .conflict-header{padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .conflict-icon{font-size:1rem;flex-shrink:0;}
+  .conflict-title{font-weight:500;font-size:.88rem;flex:1;}
+  .conflict-slot{font-size:.76rem;background:var(--paper);padding:2px 8px;border-radius:2px;color:#666;}
+  .conflict-body{padding:0 16px 14px;font-size:.8rem;line-height:1.6;color:#555;border-top:1px solid var(--mist);padding-top:10px;}
+  .conflict-courses{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
+  .course-pill{background:var(--paper);border:1px solid var(--mist);padding:3px 9px;border-radius:3px;font-size:.75rem;font-weight:500;}
+  .course-pill.conflicting{background:#FDECEA;border-color:#F5C0BB;color:var(--red);}
+  .course-pill.ok{background:#EAF3EB;border-color:#B8D8BA;color:var(--sage);}
+
+  /* Slot grid view */
+  .slot-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:24px;}
+  .slot-card{background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
+  .slot-card-header{padding:10px 14px;border-bottom:1px solid var(--mist);font-size:.78rem;font-weight:500;display:flex;justify-content:space-between;align-items:center;}
+  .slot-card-header.has-conflict{background:#FDECEA;}
+  .slot-card-header.has-warn{background:#FDF3E0;}
+  .slot-card-header.clean{background:#EAF3EB;}
+  .slot-courses{padding:10px 14px;}
+  .slot-course-row{font-size:.78rem;padding:3px 0;display:flex;align-items:center;gap:6px;}
+  .tier-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .tier-dot.red{background:var(--red);}
+  .tier-dot.yellow{background:var(--yellow);}
+  .tier-dot.none{background:var(--mist);}
+
+  /* Tier info panels */
+  .tier-info{background:white;border:1px solid var(--mist);border-radius:4px;padding:16px;margin-bottom:16px;}
+  .tier-info h3{font-size:.85rem;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .tier-info ul{font-size:.78rem;line-height:1.8;opacity:.75;padding-left:16px;}
+
+  .notice{background:var(--light-clay);border-left:3px solid var(--clay);padding:10px 14px;font-size:.8rem;margin-bottom:20px;border-radius:0 4px 4px 0;line-height:1.5;}
+  .notice strong{color:var(--clay);}
+  .view-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--mist);}
+  .view-tab{padding:9px 18px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--ink);opacity:.5;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'DM Sans',sans-serif;}
+  .view-tab.active{opacity:1;border-bottom-color:var(--clay);}
+  .view-panel{display:none;}
+  .view-panel.active{display:block;}
+  footer{text-align:center;padding:24px;font-size:.74rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
+  @media(max-width:600px){main,.site-nav,.toolbar,header{padding-left:20px;padding-right:20px;}}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html">🏠 Home</a>
+  <span class="sep">/</span>
+  <a href="conflict_checker.html" class="current">Conflict Checker</a>
+</nav>
+<header>
+  <div>
+    <h1>Conflict Checker</h1>
+    <p>Department of Visual Arts — Schedule Analysis Tool</p>
+  </div>
+  <button class="btn btn-gold" onclick="document.getElementById('schedInput').click()">Upload Schedule JSON</button>
+  <input type="file" id="schedInput" accept=".json" style="display:none" onchange="loadSchedule(event)"/>
+</header>
+
+<div class="toolbar">
+  <label>Semester:</label>
+  <select id="semSelect" onchange="renderAll()"></select>
+  <span style="font-size:.78rem;opacity:.5;margin-left:8px;">Upload a schedule JSON from the Schedule Builder or Schedule Map tools to analyze it.</span>
+</div>
+
+<main>
+  <div class="notice">
+    <strong>How this works:</strong> Upload a schedule JSON file from the Schedule Builder or Schedule Map. The checker compares all scheduled courses against known conflict rules and flags issues. Bracketed course pairs are automatically excluded from conflict warnings.
+  </div>
+
+  <!-- Summary -->
+  <div class="summary-row" id="summaryRow">
+    <div class="summary-card red"><div class="num" id="s-red">—</div><div class="lbl">🔴 Tier 1 Issues</div></div>
+    <div class="summary-card yellow"><div class="num" id="s-yellow">—</div><div class="lbl">🟡 Tier 2 Warnings</div></div>
+    <div class="summary-card green"><div class="num" id="s-ok">—</div><div class="lbl">✅ Clean Pairs</div></div>
+    <div class="summary-card"><div class="num" id="s-courses">—</div><div class="lbl">Courses Scheduled</div></div>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" onclick="showView('issues',this)">Issues</button>
+    <button class="view-tab" onclick="showView('slots',this)">By Time Slot</button>
+    <button class="view-tab" onclick="showView('rules',this)">Conflict Rules</button>
+  </div>
+
+  <!-- ISSUES VIEW -->
+  <div class="view-panel active" id="view-issues">
+    <div id="issueList"><p style="color:#bbb;font-style:italic;font-size:.83rem;">Upload a schedule to see conflict analysis.</p></div>
+  </div>
+
+  <!-- SLOTS VIEW -->
+  <div class="view-panel" id="view-slots">
+    <div class="slot-grid" id="slotGrid"></div>
+  </div>
+
+  <!-- RULES VIEW -->
+  <div class="view-panel" id="view-rules">
+    <div class="tier-info">
+      <h3><span style="color:var(--red);">🔴</span> Tier 1 — Must Never Overlap</h3>
+      <p style="font-size:.78rem;opacity:.65;margin-bottom:8px;">These courses are required by all or most students with no substitutions. Scheduling any two in the same time slot prevents students from taking both.</p>
+      <ul>
+        <li><strong>Art Education sequence:</strong> ART 3013 · ART 3223 · ART 3233 · ART 4133</li>
+        <li><strong>Universal capstone cluster:</strong> ART 3173 · ART 3393 · ENG 3433 · ART 4993</li>
+      </ul>
+    </div>
+    <div class="tier-info">
+      <h3><span style="color:var(--yellow);">🟡</span> Tier 2 — Avoid Within Track/Focus</h3>
+      <p style="font-size:.78rem;opacity:.65;margin-bottom:8px;">Students in specific tracks or focus areas commonly need both courses. Overlapping them creates a conflict for that population.</p>
+      <ul>
+        <li><strong>GD required:</strong> 2243↔2293 · 2293↔3253 · 4363↔4253 · 4363↔4283 · 4363↔4313</li>
+        <li><strong>GD Illustration focus:</strong> 3383↔3363 · 3383↔4483</li>
+        <li><strong>Studio 3D focus:</strong> 3683↔3793 · 3683↔3893 · 4013↔3793</li>
+        <li><strong>Studio Painting focus:</strong> 3703↔3723 · 3703↔4703</li>
+        <li><strong>Studio Photography focus:</strong> 3693↔4653 · 4683↔4653</li>
+        <li><strong>BA Art History electives:</strong> 4043↔4053 · 4543↔3333</li>
+        <li><strong>Art Education:</strong> 3013↔4133 · 3013↔3223 · 3013↔3233</li>
+      </ul>
+    </div>
+    <div class="tier-info">
+      <h3>ℹ️ Tier 3 — High-Demand Courses (informational)</h3>
+      <p style="font-size:.78rem;opacity:.65;margin-bottom:8px;">These courses appear in many programs and minors. Conflicts cannot be fully avoided but are noted for awareness.</p>
+      <ul>
+        <li><strong>ART 3173</strong> Contemporary Issues — required ALL tracks + Art History minor</li>
+        <li><strong>ART 2223</strong> Digital Art Foundations — in 4 minors; needs multiple sections</li>
+        <li><strong>ART 3393</strong> Prof Practices — capstone for ALL tracks</li>
+        <li><strong>ART 3343</strong> WIVA — required BA + Art History minor</li>
+        <li><strong>ART 3913</strong> Scientific Illustration — in Illustration + Sci Illus minors</li>
+      </ul>
+    </div>
+    <div class="tier-info" style="background:var(--paper);">
+      <h3>📌 Special Rules</h3>
+      <ul>
+        <li>Bracketed course pairs are automatically excluded from conflict warnings</li>
+        <li>ENG 3433 is taught by English dept — must be worked around, not moved by us</li>
+        <li>Art Ed courses: only one offered per semester, but must not share a time slot</li>
+        <li>ART 3173 Contemporary Issues offered every semester — protect its slot carefully</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<footer>Visual Arts Department · Conflict Checker · For internal planning use</footer>
+
+<script>
+const TIER1 = [
+  {name:'Art Education sequence', courses:['ART 3013','ART 3223','ART 3233','ART 4133'], desc:'Art Ed students must be able to take all of these. Only one is typically offered per semester, but they must not share a time slot.'},
+  {name:'Universal capstone cluster', courses:['ART 3173','ART 3393','ENG 3433','ART 4993'], desc:'All BFA and BA students need all of these. None can overlap with another in this group.'},
+];
+const TIER2 = [
+  {pair:['ART 2243','ART 2293'], track:'GD Required', desc:'GD students need both Type & Image and Visual ID & Symbol.'},
+  {pair:['ART 2293','ART 3253'], track:'GD Required', desc:'GD students need Visual ID & Symbol before Motion Graphics.'},
+  {pair:['ART 4363','ART 4253'], track:'GD Required', desc:'GD seniors commonly take Community Design and Publication Design together.'},
+  {pair:['ART 4363','ART 4283'], track:'GD Required', desc:'GD seniors need Community Design and Web & App Design.'},
+  {pair:['ART 4363','ART 4313'], track:'GD Required', desc:'GD seniors need Community Design and Ad & Social Media.'},
+  {pair:['ART 3383','ART 3363'], track:'GD Illustration Focus', desc:'Illustration focus students need both Digital Illustration and Character Design.'},
+  {pair:['ART 3383','ART 4483'], track:'GD Illustration Focus', desc:'Illustration focus students need both Digital Illustration and Narrative Illustration.'},
+  {pair:['ART 3683','ART 3793'], track:'Studio 3D Focus', desc:'3D focus students need both Sculpture Process and Functional Ceramics.'},
+  {pair:['ART 3683','ART 3893'], track:'Studio 3D Focus', desc:'3D focus students need both Sculpture Process and Sculptural Ceramics.'},
+  {pair:['ART 4013','ART 3793'], track:'Studio 3D Focus', desc:'3D focus students need both Sculpture & Environment and Functional Ceramics.'},
+  {pair:['ART 3703','ART 3723'], track:'Studio Painting Focus', desc:'Painting focus students need both Intermediate Painting and Mural Painting.'},
+  {pair:['ART 3703','ART 4703'], track:'Studio Painting Focus', desc:'Painting focus students need Intermediate before Advanced Painting — also a prereq sequence.'},
+  {pair:['ART 3693','ART 4653'], track:'Studio Photography Focus', desc:'Photo focus students need both Alternative Process and Color Photography.'},
+  {pair:['ART 4683','ART 4653'], track:'Studio Photography Focus', desc:'Photo focus students need both Photographic Possibilities and Color Photography.'},
+  {pair:['ART 4043','ART 4053'], track:'BA Art History', desc:'BA students often take Latinx Art and African American Art in the same period.'},
+  {pair:['ART 4543','ART 3333'], track:'BA Art History', desc:'BA students often take Interdisciplinary Influences and History of Camera Arts together.'},
+  {pair:['ART 3013','ART 4133'], track:'Art Education', desc:'Art Ed students need both Principles and Approaches to Art Education.'},
+  {pair:['ART 3013','ART 3223'], track:'Art Education', desc:'Art Ed students need both Principles and Elementary Art Education.'},
+  {pair:['ART 3013','ART 3233'], track:'Art Education', desc:'Art Ed students need both Principles and Secondary Art Education.'},
+];
+
+let scheduleData = null;
+let currentSem = null;
+
+function loadSchedule(e){
+  const file = e.target.files[0];if(!file)return;
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    try{
+      scheduleData = JSON.parse(ev.target.result);
+      // Handle both schedule_map format and schedule_builder format
+      if(scheduleData['Fall 2026']||scheduleData['Spring 2027']){
+        // already correct format
+      }
+      currentSem = Object.keys(scheduleData)[0];
+      buildSemSelect();
+      renderAll();
+    }catch(err){alert('Error reading file: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+function buildSemSelect(){
+  const sel = document.getElementById('semSelect');
+  sel.innerHTML='';
+  if(!scheduleData){sel.innerHTML='<option>— upload a schedule —</option>';return;}
+  Object.keys(scheduleData).forEach(k=>{
+    const o=document.createElement('option');
+    o.value=k;o.textContent=k;
+    if(k===currentSem)o.selected=true;
+    sel.appendChild(o);
+  });
+}
+
+function showView(name,btn){
+  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function getCourses(){
+  if(!scheduleData||!currentSem) return [];
+  return scheduleData[currentSem]?.courses||[];
+}
+
+function slotKey(c){
+  if(!c.pattern||c.pattern==='async') return 'async';
+  const block = blockForTime(c.time||'');
+  return `${c.pattern}|${block}`;
+}
+
+function blockForTime(t){
+  const blocks=['8:00','11:00','2:30','6:00'];
+  for(const b of blocks) if(t.startsWith(b)) return t;
+  // lecture slots map to their parent block
+  if(t.startsWith('9:30')) return '8:00–10:50';
+  if(t.startsWith('11:00–12')) return '11:00–1:50';
+  if(t.startsWith('2:30–4')) return '2:30–5:20';
+  return t;
+}
+
+function getSlotForCode(code){
+  const c = getCourses().find(x=>x.code===code||x.code.replace(/\.\d+$/,'')===code);
+  return c?slotKey(c):null;
+}
+
+function areBracketed(codeA,codeB){
+  const courses=getCourses();
+  const a=courses.find(c=>c.code===codeA||c.code.replace(/\.\d+$/,'')===codeA);
+  const b=courses.find(c=>c.code===codeB||c.code.replace(/\.\d+$/,'')===codeB);
+  if(!a||!b) return false;
+  if(!a.bracketed||!b.bracketed) return false;
+  const ap=(a.bracketpair||'').replace(/\.\d+$/,'');
+  const bp=(b.bracketpair||'').replace(/\.\d+$/,'');
+  return ap===codeB||bp===codeA||ap===b.code||bp===a.code;
+}
+
+function runCheck(){
+  const issues=[];
+  // Tier 1
+  TIER1.forEach(group=>{
+    const scheduled=group.courses.filter(c=>getSlotForCode(c)&&getSlotForCode(c)!=='async');
+    for(let i=0;i<scheduled.length;i++){
+      for(let j=i+1;j<scheduled.length;j++){
+        const a=scheduled[i],b=scheduled[j];
+        if(getSlotForCode(a)===getSlotForCode(b)&&!areBracketed(a,b)){
+          issues.push({tier:1,a,b,slot:getSlotForCode(a),group:group.name,desc:group.desc});
+        }
+      }
+    }
+  });
+  // Tier 2
+  TIER2.forEach(rule=>{
+    const [a,b]=rule.pair;
+    const slotA=getSlotForCode(a),slotB=getSlotForCode(b);
+    if(slotA&&slotB&&slotA!=='async'&&slotB!=='async'&&slotA===slotB&&!areBracketed(a,b)){
+      issues.push({tier:2,a,b,slot:slotA,group:rule.track,desc:rule.desc});
+    }
+  });
+  return issues;
+}
+
+function fmtSlot(key){
+  if(!key||key==='async') return 'Async';
+  const [pat,time]=key.split('|');
+  return `${pat==='mw'?'MW':'TTh'} ${time}`;
+}
+
+function renderAll(){
+  if(!scheduleData){
+    document.getElementById('s-red').textContent='—';
+    document.getElementById('s-yellow').textContent='—';
+    document.getElementById('s-ok').textContent='—';
+    document.getElementById('s-courses').textContent='—';
+    return;
+  }
+  currentSem=document.getElementById('semSelect').value;
+  const issues=runCheck();
+  const tier1=issues.filter(i=>i.tier===1);
+  const tier2=issues.filter(i=>i.tier===2);
+  const courses=getCourses();
+
+  // Count clean tier1+tier2 pairs checked
+  const totalChecked=TIER1.reduce((s,g)=>{
+    const sched=g.courses.filter(c=>getSlotForCode(c)&&getSlotForCode(c)!=='async');
+    return s+(sched.length*(sched.length-1))/2;
+  },0)+TIER2.filter(r=>{
+    const [a,b]=r.pair;
+    return getSlotForCode(a)&&getSlotForCode(b);
+  }).length;
+  const okCount=totalChecked-issues.length;
+
+  document.getElementById('s-red').textContent=tier1.length;
+  document.getElementById('s-yellow').textContent=tier2.length;
+  document.getElementById('s-ok').textContent=Math.max(0,okCount);
+  document.getElementById('s-courses').textContent=courses.length;
+
+  // Issues view
+  const issueEl=document.getElementById('issueList');
+  if(!issues.length){
+    issueEl.innerHTML=`<div style="text-align:center;padding:40px;">
+      <div style="font-size:2rem;margin-bottom:10px;">✅</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;margin-bottom:6px;">No conflicts detected</div>
+      <div style="font-size:.82rem;opacity:.6;">All checked course pairs are in different time slots.</div>
+    </div>`;
+  } else {
+    // Group by tier
+    const mkCard=(issue)=>{
+      const aTitle=courses.find(c=>c.code===issue.a||c.code.replace(/\.\d+$/,'')===issue.a)?.title||issue.a;
+      const bTitle=courses.find(c=>c.code===issue.b||c.code.replace(/\.\d+$/,'')===issue.b)?.title||issue.b;
+      return `<div class="conflict-card tier${issue.tier}">
+        <div class="conflict-header">
+          <span class="conflict-icon">${issue.tier===1?'🔴':'🟡'}</span>
+          <span class="conflict-title">${issue.a} and ${issue.b} — same time slot</span>
+          <span class="conflict-slot">${fmtSlot(issue.slot)}</span>
+        </div>
+        <div class="conflict-body">
+          <strong>${issue.group}</strong> — ${issue.desc}
+          <div class="conflict-courses">
+            <span class="course-pill conflicting">${issue.a}: ${aTitle}</span>
+            <span class="course-pill conflicting">${issue.b}: ${bTitle}</span>
+          </div>
+        </div>
+      </div>`;
+    };
+    let html='';
+    if(tier1.length){
+      html+=`<div class="section-header"><span>🔴 Tier 1 — Must Fix</span><span style="font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;">${tier1.length} issue${tier1.length>1?'s':''}</span></div>`;
+      html+=tier1.map(mkCard).join('');
+    }
+    if(tier2.length){
+      html+=`<div class="section-header" style="margin-top:20px;"><span>🟡 Tier 2 — Should Fix</span><span style="font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;">${tier2.length} warning${tier2.length>1?'s':''}</span></div>`;
+      html+=tier2.map(mkCard).join('');
+    }
+    issueEl.innerHTML=html;
+  }
+
+  // Slots view
+  const slots={};
+  courses.filter(c=>c.pattern!=='async').forEach(c=>{
+    const key=slotKey(c);
+    if(!slots[key]) slots[key]=[];
+    slots[key].push(c);
+  });
+  const slotGrid=document.getElementById('slotGrid');
+  slotGrid.innerHTML=Object.entries(slots).sort((a,b)=>a[0].localeCompare(b[0])).map(([key,clist])=>{
+    const slotIssues=issues.filter(i=>i.slot===key);
+    const hasRed=slotIssues.some(i=>i.tier===1);
+    const hasYellow=slotIssues.some(i=>i.tier===2);
+    const headerClass=hasRed?'has-conflict':hasYellow?'has-warn':'clean';
+    const icon=hasRed?'🔴':hasYellow?'🟡':'✅';
+    return `<div class="slot-card">
+      <div class="slot-card-header ${headerClass}">
+        <strong>${fmtSlot(key)}</strong>
+        <span>${icon} ${clist.length} course${clist.length>1?'s':''}</span>
+      </div>
+      <div class="slot-courses">
+        ${clist.map(c=>{
+          const cIssues=issues.filter(i=>i.slot===key&&(i.a===c.code||i.b===c.code||i.a===c.code.replace(/\.\d+$/,'')||i.b===c.code.replace(/\.\d+$/,'')));
+          const dot=cIssues.some(i=>i.tier===1)?'red':cIssues.some(i=>i.tier===2)?'yellow':'none';
+          return `<div class="slot-course-row">
+            <div class="tier-dot ${dot}"></div>
+            <span style="font-size:.72rem;color:#888;flex-shrink:0;">${c.code}</span>
+            <span>${c.title}</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+buildSemSelect();
+renderAll();
+</script>
+</body>
+</html>
