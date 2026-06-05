@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Course Rotation — Visual Arts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{
+    --ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;
+    --cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;
+    --fall:#6B3A2A;--spring:#3A5C4A;--both:#4A5C6B;--irreg:#999;
+    --all:#4A5C6B;--even:#7A5C8B;--odd:#8B7A2F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;display:inline-block;}
+  .site-nav a:hover{opacity:1;}
+  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
+  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
+  header{background:var(--ink);color:var(--cream);padding:28px 40px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  header h1{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;line-height:1.1;}
+  header p{font-size:.82rem;opacity:.55;margin-top:4px;font-weight:300;}
+  .toolbar{background:var(--paper);border-bottom:1px solid var(--mist);padding:12px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .toolbar label{font-size:.78rem;font-weight:500;opacity:.65;}
+  .toolbar select,.toolbar input{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--ink);background:white;}
+  .search-box{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;width:220px;}
+  .btn{padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;border-radius:2px;border:1px solid var(--mist);background:white;}
+  .btn:hover{background:var(--paper);}
+  .btn.active{background:var(--ink);color:var(--cream);border-color:var(--ink);}
+  main{padding:28px 40px;max-width:1400px;margin:0 auto;}
+
+  /* Legend */
+  .legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;font-size:.76rem;align-items:center;}
+  .legend-item{display:flex;align-items:center;gap:5px;}
+  .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+  .legend-sep{width:1px;height:16px;background:var(--mist);}
+
+  /* Semester columns layout */
+  .rotation-grid{display:grid;gap:16px;}
+  .semester-col{background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
+  .sem-header{padding:12px 16px;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;}
+  .sem-header.fall{border-top:3px solid var(--fall);}
+  .sem-header.spring{border-top:3px solid var(--spring);}
+  .sem-count{font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;}
+  .course-row{padding:8px 16px;border-bottom:1px solid var(--mist);font-size:.8rem;display:flex;align-items:center;gap:10px;}
+  .course-row:last-child{border-bottom:none;}
+  .course-row:hover{background:var(--cream);}
+  .course-code{font-weight:500;font-size:.76rem;color:#666;min-width:68px;flex-shrink:0;}
+  .course-title{flex:1;}
+  .year-badge{font-size:.68rem;font-weight:500;padding:2px 7px;border-radius:10px;flex-shrink:0;}
+  .badge-all{background:#EBF1F5;color:var(--all);}
+  .badge-even{background:#F0EBF5;color:var(--even);}
+  .badge-odd{background:#F5F0EB;color:var(--odd);}
+  .irreg-row{opacity:.5;font-style:italic;}
+
+  /* Table view */
+  .rotation-table{width:100%;border-collapse:collapse;font-size:.8rem;background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
+  .rotation-table th{background:var(--paper);padding:9px 14px;text-align:left;font-weight:500;font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:#666;border-bottom:1px solid var(--mist);}
+  .rotation-table td{padding:8px 14px;border-bottom:1px solid var(--mist);vertical-align:middle;}
+  .rotation-table tr:last-child td{border-bottom:none;}
+  .rotation-table tr:hover td{background:var(--cream);}
+  .cell-yes{text-align:center;font-size:.85rem;}
+  .cell-year{font-size:.7rem;font-weight:500;padding:2px 6px;border-radius:8px;white-space:nowrap;}
+  .dot-fall{color:var(--fall);}
+  .dot-spring{color:var(--spring);}
+  .dot-both{color:var(--both);}
+  .dot-irreg{color:#ccc;}
+
+  /* View toggle */
+  .view-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--mist);}
+  .view-tab{padding:9px 18px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--ink);opacity:.5;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'DM Sans',sans-serif;}
+  .view-tab.active{opacity:1;border-bottom-color:var(--clay);}
+  .view-panel{display:none;}
+  .view-panel.active{display:block;}
+
+  /* Summary stats */
+  .stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
+  .stat-card{background:white;border:1px solid var(--mist);border-radius:4px;padding:14px 18px;min-width:130px;}
+  .stat-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;opacity:.5;margin-bottom:4px;}
+  .stat-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:600;line-height:1;}
+
+  .notice{background:var(--light-clay);border-left:3px solid var(--clay);padding:10px 14px;font-size:.8rem;margin-bottom:20px;border-radius:0 4px 4px 0;line-height:1.5;}
+  .notice strong{color:var(--clay);}
+
+  footer{text-align:center;padding:24px;font-size:.74rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
+  @media print{.site-nav,.toolbar,footer{display:none!important;}main{padding:0;}}
+  @media(max-width:700px){header,main,.toolbar,.site-nav{padding-left:20px;padding-right:20px;}}
+</style>
+</head>
+<body>
+<nav class="site-nav">
+  <a href="index.html">🏠 Home</a>
+  <span class="sep">/</span>
+  <a href="rotation.html" class="current">Course Rotation</a>
+</nav>
+<header>
+  <div>
+    <h1>Undergraduate Course Rotation</h1>
+    <p>Department of Visual Arts — Two-Year Cycle View</p>
+  </div>
+  <button class="btn" onclick="window.print()" style="background:rgba(255,255,255,.1);color:var(--cream);border-color:rgba(255,255,255,.2);">🖨 Print</button>
+</header>
+
+<div class="toolbar">
+  <label>Starting year:</label>
+  <select id="startYear" onchange="renderAll()"></select>
+  <label style="margin-left:8px;">Filter:</label>
+  <input type="text" class="search-box" id="searchBox" placeholder="Search course code or title…" oninput="renderAll()"/>
+  <label style="margin-left:8px;">Show:</label>
+  <button class="btn active" id="btn-all" onclick="setFilter('all',this)">All</button>
+  <button class="btn" id="btn-fall" onclick="setFilter('fall',this)">Fall only</button>
+  <button class="btn" id="btn-spring" onclick="setFilter('spring',this)">Spring only</button>
+  <button class="btn" id="btn-irreg" onclick="setFilter('irreg',this)">Irregular</button>
+</div>
+
+<main>
+  <div class="notice">
+    <strong>Undergraduate courses only.</strong> Irregular courses are offered as enrollment warrants — they are shown separately and not counted in semester totals. Even/Odd refers to the calendar year (e.g. 2026 is even, 2027 is odd).
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" onclick="showView('columns',this)">Semester Columns</button>
+    <button class="view-tab" onclick="showView('table',this)">Full Table</button>
+  </div>
+
+  <div class="view-panel active" id="view-columns">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--all)"></div>Every year</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--even)"></div>Even years only</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--odd)"></div>Odd years only</div>
+      <div class="legend-sep"></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--fall)"></div>Fall</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--spring)"></div>Spring</div>
+    </div>
+    <div class="rotation-grid" id="columnsGrid"></div>
+  </div>
+
+  <div class="view-panel" id="view-table">
+    <div id="tableContainer"></div>
+  </div>
+</main>
+
+<footer>Visual Arts Department · Undergraduate Course Rotation · For internal planning use</footer>
+
+<script>
+const ROTATION = [
+  ["ART 1203","2D FOUNDATIONS","FALL/SPRING","ALL"],
+  ["ART 1213","3D FOUNDATIONS","FALL/SPRING","ALL"],
+  ["ART 1303","DRAWING FOUNDATIONS","FALL/SPRING","ALL"],
+  ["ART 1503","INTRO TO PAINTING","FALL/SPRING","ALL"],
+  ["ART 1603","INTRO TO PHOTOGRAPHY","FALL/SPRING","ALL"],
+  ["ART 2223","DIGITAL ART FOUNDATIONS","FALL/SPRING","ALL"],
+  ["ART 2243","FUNDAMENTALS OF TYPE & IMAGE","FALL/SPRING","ALL"],
+  ["ART 2293","VISUAL IDENTITY AND SYMBOL","FALL/SPRING","ALL"],
+  ["ART 2303","FIGURE DRAWING","FALL/SPRING","ALL"],
+  ["ART 2423","WORLD ART HISTORY I","FALL","ALL"],
+  ["ART 2433","WORLD ART HISTORY II","SPRING","ALL"],
+  ["ART 2613","INTRODUCTION TO PRINTMAKING","FALL/SPRING","ALL"],
+  ["ART 2653","BLACK & WHITE PHOTOGRAPHY","SPRING","EVEN"],
+  ["ART 2713","UNDERSTANDING ARTS-VISUAL ART","FALL/SPRING","ALL"],
+  ["ART 2753","INTRO TO SCULPTURE","FALL","ALL"],
+  ["ART 2823","INTRODUCTION TO CERAMICS","SPRING","ALL"],
+  ["ART 3013","PRINCIPLES OF ART EDUCATION","FALL","EVEN"],
+  ["ART 3053","GLOBAL PERSPECTIVES IN ART","FALL/SPRING","ALL"],
+  ["ART 3153","ANIMATION","FALL","ODD"],
+  ["ART 3173","CONTEMPORARY ISSUES IN ART","FALL/SPRING","ALL"],
+  ["ART 3223","ELEMENTARY ART EDUCATION","FALL","ODD"],
+  ["ART 3233","SECONDARY ART EDUCATION","SPRING","EVEN"],
+  ["ART 3253","MOTION GRAPHICS","SPRING","ALL"],
+  ["ART 3263","EXPERIMENTS IN FUNCTIONAL DESIGN","IRREGULAR",""],
+  ["ART 3333","HISTORY OF CAMERA ARTS","SPRING","EVEN"],
+  ["ART 3343","WOMEN IN THE VISUAL ARTS","FALL/SPRING","ALL"],
+  ["ART 3363","CHARACTER DESIGN","SPRING","EVEN"],
+  ["ART 3383","DIGITAL ILLUSTRATION","FALL","EVEN"],
+  ["ART 3393","PROF PRACTICES VISUAL ARTS","FALL/SPRING","ALL"],
+  ["ART 3613","CERAMICS SURFACES","IRREGULAR",""],
+  ["ART 3673","SCULPTURE: INSTALLATION ART","IRREGULAR",""],
+  ["ART 3683","SCULPT PROCESS/POSSIBILITIES","SPRING","ODD"],
+  ["ART 3693","ALTERNATIVE PHOTO PROCESS","SPRING","ODD"],
+  ["ART 3703","INTERMEDIATE PAINTING","SPRING","ALL"],
+  ["ART 3723","MURAL PAINTING","FALL","ALL"],
+  ["ART 3783","ALTERNATIVE DRAWING","SPRING","ALL"],
+  ["ART 3793","FUNCTIONAL CERAMICS","FALL","EVEN"],
+  ["ART 3893","SCULPTURAL CERAMICS","SPRING","ODD"],
+  ["ART 3913","SCIENTIFIC ILLUSTRATION","FALL/SPRING","ALL"],
+  ["ART 4013","SCULPTURE & THE ENVIRONMENT","SPRING","EVEN"],
+  ["ART 4033","PACKAGING DESIGN","FALL","ODD"],
+  ["ART 4043","LATINX ART","SPRING","ODD"],
+  ["ART 4053","AFRICAN AMERICAN ART","FALL","EVEN"],
+  ["ART 4133","APPROACHES TO ART EDUCATION","SPRING","ODD"],
+  ["ART 4253","PUBLICATION DESIGN","FALL","ALL"],
+  ["ART 4283","WEB AND APP DESIGN","SPRING","ALL"],
+  ["ART 4313","ADVERTISING & SOCIAL MEDIA","SPRING","ALL"],
+  ["ART 4363","COMMUNITY FOCUS DESIGN STUDIO","FALL","ALL"],
+  ["ART 4483","NARRATIVE ILLUSTRATION","SPRING","ODD"],
+  ["ART 4543","INTERDISCIPLINARY INFLUENCES","FALL","ODD"],
+  ["ART 4653","COLOR PHOTOGRAPHY","FALL","EVEN"],
+  ["ART 4683","PHOTOGRAPHIC POSSIBILITIES","FALL","ODD"],
+  ["ART 4703","ADVANCED PAINTING","SPRING","ALL"],
+  ["ART 4903","SPECIAL TOPICS","IRREGULAR",""],
+  ["ART 4953","INTERNSHIP","FALL","ALL"],
+  ["ART 4973","SENIOR RESEARCH IN ART HISTORY","IRREGULAR",""],
+  ["ART 4993","BFA EXHIBITION","FALL/SPRING","ALL"],
+];
+
+let semFilter = 'all';
+
+// Build year selector — start from current year, show 4 options
+const curYear = new Date().getFullYear();
+const sel = document.getElementById('startYear');
+for(let y = curYear - 1; y <= curYear + 3; y++){
+  const opt = document.createElement('option');
+  opt.value = y;
+  opt.textContent = y;
+  if(y === curYear) opt.selected = true;
+  sel.appendChild(opt);
+}
+
+function setFilter(f, btn){
+  semFilter = f;
+  document.querySelectorAll('.toolbar .btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+
+function showView(name, btn){
+  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function isOffered(sem, yr, year){
+  const isEven = year % 2 === 0;
+  const yearType = isEven ? 'EVEN' : 'ODD';
+  if(sem === 'IRREGULAR') return false;
+  const sems = sem.split('/');
+  if(!sems.includes(yr)) return false;
+  if(yr === 'ALL') return true;
+  return yr === 'ALL' || yr === yearType;
+}
+
+function courseOfferedIn(code, title, semPat, yrPat, semester, year){
+  if(semPat === 'IRREGULAR') return false;
+  const sems = semPat.split('/');
+  if(!sems.includes(semester)) return false;
+  if(yrPat === 'ALL') return true;
+  const isEven = year % 2 === 0;
+  return yrPat === (isEven ? 'EVEN' : 'ODD');
+}
+
+function badgeHtml(yrPat){
+  if(!yrPat || yrPat === '') return '';
+  const cls = yrPat === 'ALL' ? 'badge-all' : yrPat === 'EVEN' ? 'badge-even' : 'badge-odd';
+  const lbl = yrPat === 'ALL' ? 'Every yr' : yrPat === 'EVEN' ? 'Even yrs' : 'Odd yrs';
+  return `<span class="year-badge ${cls}">${lbl}</span>`;
+}
+
+function getSearch(){ return (document.getElementById('searchBox').value||'').toLowerCase(); }
+
+function matchesSearch(code, title){
+  const q = getSearch();
+  if(!q) return true;
+  return code.toLowerCase().includes(q) || title.toLowerCase().includes(q);
+}
+
+function renderAll(){
+  renderStats();
+  renderColumns();
+  renderTable();
+}
+
+function renderStats(){
+  const startYear = parseInt(document.getElementById('startYear').value);
+  const semesters = [
+    ['Fall', startYear], ['Spring', startYear+1],
+    ['Fall', startYear+1], ['Spring', startYear+2]
+  ];
+  const counts = semesters.map(([sem, yr]) =>
+    ROTATION.filter(([c,t,sp,yp]) => sp !== 'IRREGULAR' && courseOfferedIn(c,t,sp,yp,sem.toUpperCase(),yr)).length
+  );
+  const irregular = ROTATION.filter(([c,t,sp]) => sp === 'IRREGULAR').length;
+  const total = ROTATION.filter(([c,t,sp]) => sp !== 'IRREGULAR').length;
+
+  document.getElementById('statsRow').innerHTML = [
+    {label:'Total Rotation', value: total},
+    {label:`Fall ${startYear}`, value: counts[0]},
+    {label:`Spring ${startYear+1}`, value: counts[1]},
+    {label:`Fall ${startYear+1}`, value: counts[2]},
+    {label:`Spring ${startYear+2}`, value: counts[3]},
+    {label:'Irregular', value: irregular},
+  ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div></div>`).join('');
+}
+
+function renderColumns(){
+  const startYear = parseInt(document.getElementById('startYear').value);
+  const semesters = [
+    {sem:'FALL', yr:startYear, label:`Fall ${startYear}`, cls:'fall'},
+    {sem:'SPRING', yr:startYear+1, label:`Spring ${startYear+1}`, cls:'spring'},
+    {sem:'FALL', yr:startYear+1, label:`Fall ${startYear+1}`, cls:'fall'},
+    {sem:'SPRING', yr:startYear+2, label:`Spring ${startYear+2}`, cls:'spring'},
+  ];
+
+  const grid = document.getElementById('columnsGrid');
+
+  // Filter based on semFilter
+  let visibleSems = semesters;
+  if(semFilter === 'fall') visibleSems = semesters.filter(s => s.sem === 'FALL');
+  if(semFilter === 'spring') visibleSems = semesters.filter(s => s.sem === 'SPRING');
+  if(semFilter === 'irreg') visibleSems = [];
+
+  const cols = semFilter === 'irreg' ? 1 : visibleSems.length;
+  grid.style.gridTemplateColumns = `repeat(${Math.min(cols || 1, 4)}, 1fr)`;
+
+  if(semFilter === 'irreg'){
+    const irregs = ROTATION.filter(([c,t,sp]) => sp === 'IRREGULAR' && matchesSearch(c,t));
+    grid.innerHTML = `<div class="semester-col">
+      <div class="sem-header" style="border-top:3px solid var(--irreg);">
+        <span>Irregular / As Needed</span>
+        <span class="sem-count">${irregs.length} courses</span>
+      </div>
+      ${irregs.map(([c,t]) => `<div class="course-row irreg-row">
+        <span class="course-code">${c}</span>
+        <span class="course-title">${t}</span>
+      </div>`).join('')}
+      ${irregs.length === 0 ? '<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>' : ''}
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = visibleSems.map(({sem, yr, label, cls}) => {
+    const courses = ROTATION.filter(([c,t,sp,yp]) =>
+      sp !== 'IRREGULAR' && courseOfferedIn(c,t,sp,yp,sem,yr) && matchesSearch(c,t)
+    );
+    return `<div class="semester-col">
+      <div class="sem-header ${cls}">
+        <span>${label}</span>
+        <span class="sem-count">${courses.length} courses</span>
+      </div>
+      ${courses.map(([c,t,sp,yp]) => `<div class="course-row">
+        <span class="course-code">${c}</span>
+        <span class="course-title">${t}</span>
+        ${badgeHtml(yp)}
+      </div>`).join('')}
+      ${courses.length === 0 ? '<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderTable(){
+  const startYear = parseInt(document.getElementById('startYear').value);
+  const cols = [
+    {sem:'FALL', yr:startYear, label:`Fall ${startYear}`},
+    {sem:'SPRING', yr:startYear+1, label:`Spring ${startYear+1}`},
+    {sem:'FALL', yr:startYear+1, label:`Fall ${startYear+1}`},
+    {sem:'SPRING', yr:startYear+2, label:`Spring ${startYear+2}`},
+  ];
+
+  let filtered = ROTATION.filter(([c,t]) => matchesSearch(c,t));
+  if(semFilter === 'fall') filtered = filtered.filter(([c,t,sp]) => sp === 'FALL' || sp === 'FALL/SPRING');
+  if(semFilter === 'spring') filtered = filtered.filter(([c,t,sp]) => sp === 'SPRING' || sp === 'FALL/SPRING');
+  if(semFilter === 'irreg') filtered = filtered.filter(([c,t,sp]) => sp === 'IRREGULAR');
+
+  const rows = filtered.map(([c,t,sp,yp]) => {
+    const cells = cols.map(({sem,yr}) => {
+      if(sp === 'IRREGULAR') return `<td class="cell-yes" style="color:#ddd;">—</td>`;
+      const offered = courseOfferedIn(c,t,sp,yp,sem,yr);
+      const semColor = sem === 'FALL' ? 'var(--fall)' : 'var(--spring)';
+      return offered
+        ? `<td class="cell-yes"><span style="color:${semColor};font-size:1rem;">●</span></td>`
+        : `<td class="cell-yes" style="color:#eee;">○</td>`;
+    }).join('');
+    const irregFlag = sp === 'IRREGULAR' ? ' <span style="font-size:.7rem;color:#aaa;font-style:italic;">irregular</span>' : '';
+    return `<tr>
+      <td><strong style="font-size:.76rem;">${c}</strong></td>
+      <td>${t}${irregFlag}</td>
+      <td>${sp === 'IRREGULAR' ? '—' : sp.replace('/',' & ')}</td>
+      <td>${yp ? `<span class="cell-year badge-${yp.toLowerCase()}">${yp}</span>` : '—'}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableContainer').innerHTML = `
+    <table class="rotation-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Title</th>
+          <th>Semester(s)</th>
+          <th>Year</th>
+          ${cols.map(c => `<th style="text-align:center;white-space:nowrap;">${c.label}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+renderAll();
+</script>
+</body>
+</html>
