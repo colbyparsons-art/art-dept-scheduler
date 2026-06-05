@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Enrollment Tracker — TWU Visual Arts</title>
+<title>Enrollment Tracker — Visual Arts Department</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
@@ -70,7 +70,7 @@
 <header>
   <div>
     <h1>Visual Arts<br>Enrollment Tracker</h1>
-    <p>Texas Woman's University — Department of Visual Arts</p>
+    <p>Department of Visual Arts</p>
   </div>
   <div class="header-right">
     <button class="dl-btn" onclick="downloadTemplate()">⬇ Download CSV Template</button>
@@ -89,7 +89,7 @@
   <!-- OVERVIEW -->
   <div class="tab-panel active" id="tab-overview">
     <div class="notice" id="mainNotice">
-      <strong>Spring 2026 data loaded.</strong> Sample data for prior semesters is shown for trend illustration. Upload a CSV with your historical data to replace the samples, or use the Download CSV Template button to get started.
+      <strong>Spring 2026 data loaded.</strong> This is the first semester of real data. Upload a CSV with historical data to see trends over time, or use the Download CSV Template button to add more semesters.
     </div>
     <div class="summary-grid" id="summaryCards"></div>
     <div class="semester-pills" id="semesterPills"></div>
@@ -141,32 +141,11 @@
     <div class="chart-container"><h3>Minor Enrollment Comparison</h3><div class="chart-wrapper"><canvas id="minorBarChart"></canvas></div></div>
   </div>
 </main>
-<footer>TWU Visual Arts Department &middot; Enrollment Tracker &middot; Data is loaded locally and never transmitted externally.</footer>
+<footer>Visual Arts Department &middot; Enrollment Tracker &middot; Data is loaded locally and never transmitted externally.</footer>
 <script>
 // ── Data ──────────────────────────────────────────────────────────────────
 // Real Spring 2026 data; prior semesters are sample placeholders
 const SAMPLE=[
-  {semester:'Fall',year:2023,mfa:12,ma:2,ba:40,
-   bfa_art_education:28,
-   bfa_studio_3d:3,bfa_studio_painting:18,bfa_studio_photo:5,bfa_studio_undecided:6,bfa_studio_postbacc:2,
-   bfa_gd_viscomm:25,bfa_gd_illus:14,bfa_gd_undecided:10,bfa_gd_postbacc:0,
-   bfa_undeclared:3,bfa_postbacc_other:0,
-   minor_3d:2,minor_arthistory:3,minor_ceramics:2,minor_graphicdesign:3,minor_illustration:2,minor_paintingdrawing:6,minor_photography:3,minor_sciillus:10,minor_sculpture:1,
-   notes:'Sample data'},
-  {semester:'Spring',year:2024,mfa:11,ma:2,ba:38,
-   bfa_art_education:27,
-   bfa_studio_3d:3,bfa_studio_painting:19,bfa_studio_photo:5,bfa_studio_undecided:5,bfa_studio_postbacc:2,
-   bfa_gd_viscomm:26,bfa_gd_illus:15,bfa_gd_undecided:11,bfa_gd_postbacc:0,
-   bfa_undeclared:3,bfa_postbacc_other:0,
-   minor_3d:2,minor_arthistory:3,minor_ceramics:2,minor_graphicdesign:3,minor_illustration:2,minor_paintingdrawing:7,minor_photography:3,minor_sciillus:11,minor_sculpture:1,
-   notes:'Sample data'},
-  {semester:'Fall',year:2024,mfa:13,ma:2,ba:41,
-   bfa_art_education:30,
-   bfa_studio_3d:4,bfa_studio_painting:21,bfa_studio_photo:6,bfa_studio_undecided:6,bfa_studio_postbacc:3,
-   bfa_gd_viscomm:28,bfa_gd_illus:16,bfa_gd_undecided:12,bfa_gd_postbacc:0,
-   bfa_undeclared:3,bfa_postbacc_other:0,
-   minor_3d:1,minor_arthistory:2,minor_ceramics:2,minor_graphicdesign:4,minor_illustration:2,minor_paintingdrawing:8,minor_photography:4,minor_sciillus:13,minor_sculpture:1,
-   notes:'Sample data'},
   // ── REAL Spring 2026 data ──
   {semester:'Spring',year:2026,mfa:14,ma:1,ba:12,
    bfa_art_education:31,
@@ -215,15 +194,11 @@ function renderPills(){
   allData.forEach((r,i)=>{
     const b=document.createElement('button');
     b.className='semester-pill'+(i===curIdx?' active':'');
-    b.textContent=lbl(r)+(r.notes&&r.notes.includes('Sample')?' *':'');
+    b.textContent=lbl(r);
     b.onclick=()=>{curIdx=i;renderAll();};
     c.appendChild(b);
   });
-  // legend
-  const leg=document.createElement('span');
-  leg.style.cssText='font-size:.75rem;opacity:.5;margin-left:4px;align-self:center;';
-  leg.textContent='* sample data';
-  c.appendChild(leg);
+
 }
 
 function renderCards(){
@@ -296,9 +271,9 @@ function renderTables(){
 
   // Detail tables
   const rows=allData.map(calc);
-  document.querySelector('#gradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+(r.notes&&r.notes.includes('Sample')?' <span style="color:#bbb;font-size:.75rem">sample</span>':'')+'</td><td>'+r.mfa+'</td><td>'+r.ma+'</td><td><strong>'+r.grad_total+'</strong></td></tr>').join('');
-  document.querySelector('#undergradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+(r.notes&&r.notes.includes('Sample')?' <span style="color:#bbb;font-size:.75rem">sample</span>':'')+'</td><td>'+r.ba+'</td><td>'+r.bfa_art_education+'</td><td>'+r.studio_total+'</td><td>'+r.gd_total+'</td><td>'+r.bfa_undeclared+'</td><td>'+r.bfa_total+'</td><td><strong>'+r.undergrad_total+'</strong></td></tr>').join('');
-  document.querySelector('#minorsDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+(r.notes&&r.notes.includes('Sample')?' <span style="color:#bbb;font-size:.75rem">sample</span>':'')+'</td><td>'+r.minor_3d+'</td><td>'+r.minor_arthistory+'</td><td>'+r.minor_ceramics+'</td><td>'+r.minor_graphicdesign+'</td><td>'+r.minor_illustration+'</td><td>'+r.minor_paintingdrawing+'</td><td>'+r.minor_photography+'</td><td>'+r.minor_sciillus+'</td><td>'+r.minor_sculpture+'</td><td><strong>'+r.minors_total+'</strong></td></tr>').join('');
+  document.querySelector('#gradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.mfa+'</td><td>'+r.ma+'</td><td><strong>'+r.grad_total+'</strong></td></tr>').join('');
+  document.querySelector('#undergradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.ba+'</td><td>'+r.bfa_art_education+'</td><td>'+r.studio_total+'</td><td>'+r.gd_total+'</td><td>'+r.bfa_undeclared+'</td><td>'+r.bfa_total+'</td><td><strong>'+r.undergrad_total+'</strong></td></tr>').join('');
+  document.querySelector('#minorsDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.minor_3d+'</td><td>'+r.minor_arthistory+'</td><td>'+r.minor_ceramics+'</td><td>'+r.minor_graphicdesign+'</td><td>'+r.minor_illustration+'</td><td>'+r.minor_paintingdrawing+'</td><td>'+r.minor_photography+'</td><td>'+r.minor_sciillus+'</td><td>'+r.minor_sculpture+'</td><td><strong>'+r.minors_total+'</strong></td></tr>').join('');
 }
 
 function mkChart(id,type,labels,datasets){
