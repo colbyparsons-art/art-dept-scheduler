@@ -10,6 +10,11 @@
   :root{--ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;--cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;--grad:#4A6B7C;--undergrad:#7A5C8B;--minor:#5C7A5F;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;display:inline-block;}
+  .site-nav a:hover{opacity:1;}
+  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
+  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
   header{background:var(--ink);color:var(--cream);padding:32px 40px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;}
   header h1{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;line-height:1.1;}
   header p{font-size:.85rem;opacity:.6;margin-top:4px;font-weight:300;}
@@ -63,13 +68,7 @@
   .semester-pill.active{background:var(--ink);color:var(--cream);border-color:var(--ink);}
   .semester-pill:hover:not(.active){background:var(--paper);}
   footer{text-align:center;padding:32px;font-size:.78rem;color:#aaa;border-top:1px solid var(--mist);margin-top:48px;}
-  @media(max-width:600px){header,main,nav{padding-left:20px;padding-right:20px;}header h1{font-size:1.6rem;}.summary-grid{grid-template-columns:1fr 1fr;}}
-
-  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
-  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;display:inline-block;}
-  .site-nav a:hover{opacity:1;}
-  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
-  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
+  @media(max-width:600px){header,main,nav,.site-nav{padding-left:20px;padding-right:20px;}header h1{font-size:1.6rem;}.summary-grid{grid-template-columns:1fr 1fr;}}
 </style>
 </head>
 <body>
@@ -97,7 +96,6 @@
   <button class="nav-tab" onclick="showTab('trends',this)">Trend Charts</button>
 </nav>
 <main>
-  <!-- OVERVIEW -->
   <div class="tab-panel active" id="tab-overview">
     <div class="notice" id="mainNotice">
       <strong>Spring 2026 data loaded.</strong> This is the first semester of real data. Upload a CSV with historical data to see trends over time, or use the Download CSV Template button to add more semesters.
@@ -120,7 +118,6 @@
       <tbody></tbody>
     </table>
   </div>
-  <!-- GRADUATE -->
   <div class="tab-panel" id="tab-graduate">
     <div class="chart-container"><h3>Graduate Enrollment Over Time</h3><div class="chart-wrapper"><canvas id="gradChart"></canvas></div></div>
     <table class="program-table" id="gradDetailTable">
@@ -128,7 +125,6 @@
       <tbody></tbody>
     </table>
   </div>
-  <!-- UNDERGRADUATE -->
   <div class="tab-panel" id="tab-undergraduate">
     <div class="chart-container"><h3>Undergraduate Enrollment Over Time</h3><div class="chart-wrapper"><canvas id="undergradChart"></canvas></div></div>
     <table class="program-table" id="undergradDetailTable">
@@ -136,7 +132,6 @@
       <tbody></tbody>
     </table>
   </div>
-  <!-- MINORS -->
   <div class="tab-panel" id="tab-minors">
     <div class="chart-container"><h3>Minor Enrollment Over Time</h3><div class="chart-wrapper"><canvas id="minorsChart"></canvas></div></div>
     <table class="program-table" id="minorsDetailTable">
@@ -144,7 +139,6 @@
       <tbody></tbody>
     </table>
   </div>
-  <!-- TRENDS -->
   <div class="tab-panel" id="tab-trends">
     <div class="chart-container"><h3>Total Department Enrollment</h3><div class="chart-wrapper"><canvas id="totalChart"></canvas></div></div>
     <div class="chart-container"><h3>Graduate vs. Undergraduate vs. Minors</h3><div class="chart-wrapper"><canvas id="compChart"></canvas></div></div>
@@ -154,10 +148,7 @@
 </main>
 <footer>Visual Arts Department &middot; Enrollment Tracker &middot; Data is loaded locally and never transmitted externally.</footer>
 <script>
-// ── Data ──────────────────────────────────────────────────────────────────
-// Real Spring 2026 data; prior semesters are sample placeholders
 const SAMPLE=[
-  // ── REAL Spring 2026 data ──
   {semester:'Spring',year:2026,mfa:14,ma:1,ba:12,
    bfa_art_education:31,
    bfa_studio_3d:4,bfa_studio_painting:24,bfa_studio_photo:7,bfa_studio_undecided:4,bfa_studio_postbacc:3,
@@ -166,10 +157,8 @@ const SAMPLE=[
    minor_3d:1,minor_arthistory:2,minor_ceramics:2,minor_graphicdesign:4,minor_illustration:2,minor_paintingdrawing:9,minor_photography:4,minor_sciillus:16,minor_sculpture:0,
    notes:'Real data — Spring 2026'},
 ];
-
-let allData=SAMPLE, curIdx=allData.length-1, charts={};
+let allData=SAMPLE,curIdx=allData.length-1,charts={};
 const PAL=['#8B4A2F','#4A6B7C','#7A5C8B','#5C7A5F','#C4922A','#6B7A4A','#7C4A6B','#4A7C6B','#8B6A2F'];
-
 function calc(r){
   const studio=r.bfa_studio_3d+r.bfa_studio_painting+r.bfa_studio_photo+r.bfa_studio_undecided;
   const studio_postbacc=r.bfa_studio_postbacc||0;
@@ -191,7 +180,6 @@ function dH(d){
   if(d<0)return '<span class="trend down">▼ '+Math.abs(d)+'</span>';
   return '<span class="trend flat">— 0</span>';
 }
-
 function showTab(name,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
@@ -199,7 +187,6 @@ function showTab(name,btn){
   btn.classList.add('active');
   if(['graduate','undergraduate','minors','trends'].includes(name))renderCharts();
 }
-
 function renderPills(){
   const c=document.getElementById('semesterPills');c.innerHTML='';
   allData.forEach((r,i)=>{
@@ -209,9 +196,7 @@ function renderPills(){
     b.onclick=()=>{curIdx=i;renderAll();};
     c.appendChild(b);
   });
-
 }
-
 function renderCards(){
   const cur=calc(allData[curIdx]);
   const pri=curIdx>0?calc(allData[curIdx-1]):null;
@@ -229,21 +214,16 @@ function renderCards(){
     return '<div class="summary-card '+c.type+'"><div class="label">'+c.label+'</div><div class="number">'+c.val+'</div>'+t+'</div>';
   }).join('');
 }
-
 function renderTables(){
   const cur=calc(allData[curIdx]);
   const pri=curIdx>0?calc(allData[curIdx-1]):null;
   const d=(f)=>pri?cur[f]-pri[f]:null;
   const priC=pri?calc(pri):null;
-
-  // Grad table
   document.querySelector('#gradTable tbody').innerHTML=[
     {l:'MFA in Art',v:cur.mfa,d:d('mfa'),cl:''},
     {l:'MA in Art',v:cur.ma,d:d('ma'),cl:''},
     {l:'Total Graduate',v:cur.grad_total,d:d('grad_total'),cl:'subtotal'},
   ].map(r=>'<tr class="'+r.cl+'"><td>'+r.l+'</td><td>'+r.v+'</td><td>'+dH(r.d)+'</td></tr>').join('');
-
-  // Undergrad table
   const ugRows=[
     {l:'BA in Art',v:cur.ba,d:d('ba'),cl:''},
     {l:'BFA — Total',v:cur.bfa_total,d:priC?cur.bfa_total-priC.bfa_total:null,cl:'subtotal'},
@@ -264,8 +244,6 @@ function renderTables(){
     {l:'Total Undergraduate',v:cur.undergrad_total,d:d('undergrad_total'),cl:'subtotal'},
   ];
   document.querySelector('#undergradTable tbody').innerHTML=ugRows.map(r=>'<tr class="'+r.cl+'"><td>'+r.l+(r.est?'<span class="estimate-badge">~ est.</span>':'')+(r.pb?'<span class="postbacc-badge">post-bacc</span>':'')+'</td><td>'+r.v+'</td><td>'+dH(r.d)+'</td></tr>').join('');
-
-  // Minors table
   const mRows=[
     ['3D Intermedia',cur.minor_3d,d('minor_3d')],
     ['Art History',cur.minor_arthistory,d('minor_arthistory')],
@@ -279,65 +257,28 @@ function renderTables(){
     ['Total Minors',cur.minors_total,d('minors_total')],
   ];
   document.querySelector('#minorsTable tbody').innerHTML=mRows.map(([l,v,dd],i)=>'<tr'+(i===mRows.length-1?' class="subtotal"':'')+'><td>'+l+'</td><td>'+v+'</td><td>'+dH(dd)+'</td></tr>').join('');
-
-  // Detail tables
   const rows=allData.map(calc);
   document.querySelector('#gradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.mfa+'</td><td>'+r.ma+'</td><td><strong>'+r.grad_total+'</strong></td></tr>').join('');
   document.querySelector('#undergradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.ba+'</td><td>'+r.bfa_art_education+'</td><td>'+r.studio_total+'</td><td>'+r.gd_total+'</td><td>'+r.bfa_undeclared+'</td><td>'+r.bfa_total+'</td><td><strong>'+r.undergrad_total+'</strong></td></tr>').join('');
   document.querySelector('#minorsDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.minor_3d+'</td><td>'+r.minor_arthistory+'</td><td>'+r.minor_ceramics+'</td><td>'+r.minor_graphicdesign+'</td><td>'+r.minor_illustration+'</td><td>'+r.minor_paintingdrawing+'</td><td>'+r.minor_photography+'</td><td>'+r.minor_sciillus+'</td><td>'+r.minor_sculpture+'</td><td><strong>'+r.minors_total+'</strong></td></tr>').join('');
 }
-
 function mkChart(id,type,labels,datasets){
   const el=document.getElementById(id);if(!el)return;
   if(charts[id])charts[id].destroy();
   charts[id]=new Chart(el,{type,data:{labels,datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'DM Sans',size:11},padding:16}}},scales:type!=='pie'&&type!=='doughnut'?{x:{grid:{color:'#F0EBE3'},ticks:{font:{family:'DM Sans',size:11}}},y:{grid:{color:'#F0EBE3'},ticks:{font:{family:'DM Sans',size:11}},beginAtZero:true}}:{}}});
 }
-
 function renderCharts(){
   const rows=allData.map(calc);
   const labels=rows.map(lbl);
-  mkChart('gradChart','line',labels,[
-    {label:'MFA in Art',data:rows.map(r=>r.mfa),borderColor:PAL[0],backgroundColor:PAL[0]+'22',tension:0.3,fill:true},
-    {label:'MA in Art',data:rows.map(r=>r.ma),borderColor:PAL[1],backgroundColor:PAL[1]+'22',tension:0.3,fill:true},
-  ]);
-  mkChart('undergradChart','line',labels,[
-    {label:'BA in Art',data:rows.map(r=>r.ba),borderColor:PAL[0],tension:0.3},
-    {label:'BFA Art Education',data:rows.map(r=>r.bfa_art_education),borderColor:PAL[1],tension:0.3},
-    {label:'BFA Studio Art',data:rows.map(r=>r.studio_total),borderColor:PAL[2],tension:0.3},
-    {label:'BFA Graphic Design',data:rows.map(r=>r.gd_total),borderColor:PAL[3],tension:0.3},
-  ]);
-  mkChart('minorsChart','line',labels,[
-    {label:'3D Intermedia',data:rows.map(r=>r.minor_3d),borderColor:PAL[0],tension:0.3},
-    {label:'Art History',data:rows.map(r=>r.minor_arthistory),borderColor:PAL[1],tension:0.3},
-    {label:'Ceramics',data:rows.map(r=>r.minor_ceramics),borderColor:PAL[2],tension:0.3},
-    {label:'Graphic Design',data:rows.map(r=>r.minor_graphicdesign),borderColor:PAL[3],tension:0.3},
-    {label:'Illustration',data:rows.map(r=>r.minor_illustration),borderColor:PAL[4],tension:0.3},
-    {label:'Painting & Drawing',data:rows.map(r=>r.minor_paintingdrawing),borderColor:PAL[5],tension:0.3},
-    {label:'Photography',data:rows.map(r=>r.minor_photography),borderColor:PAL[6],tension:0.3},
-    {label:'Scientific Illustration',data:rows.map(r=>r.minor_sciillus),borderColor:PAL[7],tension:0.3},
-    {label:'Sculpture',data:rows.map(r=>r.minor_sculpture),borderColor:PAL[8],tension:0.3},
-  ]);
-  mkChart('totalChart','bar',labels,[
-    {label:'Total Department',data:rows.map(r=>r.dept_total),backgroundColor:PAL[0]+'CC',borderColor:PAL[0],borderWidth:1},
-  ]);
-  mkChart('compChart','line',labels,[
-    {label:'Graduate',data:rows.map(r=>r.grad_total),borderColor:PAL[1],backgroundColor:PAL[1]+'22',tension:0.3,fill:true},
-    {label:'Undergraduate',data:rows.map(r=>r.undergrad_total),borderColor:PAL[2],backgroundColor:PAL[2]+'22',tension:0.3,fill:true},
-    {label:'Minors',data:rows.map(r=>r.minors_total),borderColor:PAL[3],backgroundColor:PAL[3]+'22',tension:0.3,fill:true},
-  ]);
-  mkChart('bfaChart','line',labels,[
-    {label:'Art Education',data:rows.map(r=>r.bfa_art_education),borderColor:PAL[0],tension:0.3},
-    {label:'Studio Art',data:rows.map(r=>r.studio_total),borderColor:PAL[1],tension:0.3},
-    {label:'Graphic Design',data:rows.map(r=>r.gd_total),borderColor:PAL[2],tension:0.3},
-  ]);
-  // Minor bar chart for most recent semester
+  mkChart('gradChart','line',labels,[{label:'MFA in Art',data:rows.map(r=>r.mfa),borderColor:PAL[0],backgroundColor:PAL[0]+'22',tension:0.3,fill:true},{label:'MA in Art',data:rows.map(r=>r.ma),borderColor:PAL[1],backgroundColor:PAL[1]+'22',tension:0.3,fill:true}]);
+  mkChart('undergradChart','line',labels,[{label:'BA in Art',data:rows.map(r=>r.ba),borderColor:PAL[0],tension:0.3},{label:'BFA Art Education',data:rows.map(r=>r.bfa_art_education),borderColor:PAL[1],tension:0.3},{label:'BFA Studio Art',data:rows.map(r=>r.studio_total),borderColor:PAL[2],tension:0.3},{label:'BFA Graphic Design',data:rows.map(r=>r.gd_total),borderColor:PAL[3],tension:0.3}]);
+  mkChart('minorsChart','line',labels,[{label:'3D Intermedia',data:rows.map(r=>r.minor_3d),borderColor:PAL[0],tension:0.3},{label:'Art History',data:rows.map(r=>r.minor_arthistory),borderColor:PAL[1],tension:0.3},{label:'Ceramics',data:rows.map(r=>r.minor_ceramics),borderColor:PAL[2],tension:0.3},{label:'Graphic Design',data:rows.map(r=>r.minor_graphicdesign),borderColor:PAL[3],tension:0.3},{label:'Illustration',data:rows.map(r=>r.minor_illustration),borderColor:PAL[4],tension:0.3},{label:'Painting & Drawing',data:rows.map(r=>r.minor_paintingdrawing),borderColor:PAL[5],tension:0.3},{label:'Photography',data:rows.map(r=>r.minor_photography),borderColor:PAL[6],tension:0.3},{label:'Scientific Illustration',data:rows.map(r=>r.minor_sciillus),borderColor:PAL[7],tension:0.3},{label:'Sculpture',data:rows.map(r=>r.minor_sculpture),borderColor:PAL[8],tension:0.3}]);
+  mkChart('totalChart','bar',labels,[{label:'Total Department',data:rows.map(r=>r.dept_total),backgroundColor:PAL[0]+'CC',borderColor:PAL[0],borderWidth:1}]);
+  mkChart('compChart','line',labels,[{label:'Graduate',data:rows.map(r=>r.grad_total),borderColor:PAL[1],backgroundColor:PAL[1]+'22',tension:0.3,fill:true},{label:'Undergraduate',data:rows.map(r=>r.undergrad_total),borderColor:PAL[2],backgroundColor:PAL[2]+'22',tension:0.3,fill:true},{label:'Minors',data:rows.map(r=>r.minors_total),borderColor:PAL[3],backgroundColor:PAL[3]+'22',tension:0.3,fill:true}]);
+  mkChart('bfaChart','line',labels,[{label:'Art Education',data:rows.map(r=>r.bfa_art_education),borderColor:PAL[0],tension:0.3},{label:'Studio Art',data:rows.map(r=>r.studio_total),borderColor:PAL[1],tension:0.3},{label:'Graphic Design',data:rows.map(r=>r.gd_total),borderColor:PAL[2],tension:0.3}]);
   const latest=calc(allData[allData.length-1]);
-  mkChart('minorBarChart','bar',
-    ['3D Intermedia','Art History','Ceramics','Graphic Design','Illustration','Painting & Drawing','Photography','Scientific Illus.','Sculpture'],
-    [{label:'Spring 2026',data:[latest.minor_3d,latest.minor_arthistory,latest.minor_ceramics,latest.minor_graphicdesign,latest.minor_illustration,latest.minor_paintingdrawing,latest.minor_photography,latest.minor_sciillus,latest.minor_sculpture],backgroundColor:PAL.map(c=>c+'CC'),borderColor:PAL,borderWidth:1}]
-  );
+  mkChart('minorBarChart','bar',['3D Intermedia','Art History','Ceramics','Graphic Design','Illustration','Painting & Drawing','Photography','Scientific Illus.','Sculpture'],[{label:'Spring 2026',data:[latest.minor_3d,latest.minor_arthistory,latest.minor_ceramics,latest.minor_graphicdesign,latest.minor_illustration,latest.minor_paintingdrawing,latest.minor_photography,latest.minor_sciillus,latest.minor_sculpture],backgroundColor:PAL.map(c=>c+'CC'),borderColor:PAL,borderWidth:1}]);
 }
-
 function handleFileUpload(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
@@ -360,7 +301,6 @@ function handleFileUpload(e){
   };
   reader.readAsText(file);
 }
-
 function downloadTemplate(){
   const h='semester,year,mfa,ma,ba,bfa_art_education,bfa_studio_3d,bfa_studio_painting,bfa_studio_photo,bfa_studio_undecided,bfa_studio_postbacc,bfa_gd_viscomm,bfa_gd_illus,bfa_gd_undecided,bfa_gd_postbacc,bfa_undeclared,bfa_postbacc_other,minor_3d,minor_arthistory,minor_ceramics,minor_graphicdesign,minor_illustration,minor_paintingdrawing,minor_photography,minor_sciillus,minor_sculpture,notes';
   const ex='Spring,2026,14,1,12,31,4,24,7,4,3,32,19,13,0,2,1,1,2,2,4,2,9,4,16,0,Real data';
@@ -368,7 +308,6 @@ function downloadTemplate(){
   a.href=URL.createObjectURL(new Blob([h+'\n'+ex],{type:'text/csv'}));
   a.download='enrollment_template.csv';a.click();
 }
-
 function renderAll(){renderPills();renderCards();renderTables();}
 renderAll();
 </script>
