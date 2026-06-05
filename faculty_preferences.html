@@ -286,12 +286,19 @@
           <strong style="color:#7a5000;">★★ Prefers</strong> — actively wants this course &nbsp;·&nbsp;
           <strong style="color:#2a4a5a;">✓ Can teach</strong> — qualified, comfortable &nbsp;·&nbsp;
           <strong style="color:#888;">~ Rarely</strong> — possible but unusual
-        </p>
-        <div class="course-search-row">
-          <div class="search-wrapper">
-            <input type="text" id="courseSearchInput" placeholder="Search by code or title to add a course…" oninput="updateCourseDropdown()" autocomplete="off"/>
-            <div class="search-dropdown" id="courseDropdown"></div>
-          </div>
+        </p>    
+<div class="course-search-outer">
+  <div class="course-search-row">
+    <input type="text" id="courseSearchInput" placeholder="Search by code or title to add a course…" oninput="updateCourseDropdown()" autocomplete="off"/>
+    <select class="course-pref-select" id="newCoursePref">
+      <option value="can">✓ Can teach</option>
+      <option value="star">★★ Prefers</option>
+      <option value="rare">~ Rarely</option>
+    </select>
+    <button class="btn btn-gold btn-sm" onclick="addCourseFromSearch()">Add</button>
+  </div>
+  <div class="search-dropdown" id="courseDropdown"></div>
+</div>
           <select class="course-pref-select" id="newCoursePref">
             <option value="can">✓ Can teach</option>
             <option value="star">★★ Prefers</option>
