@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Schedule Map — TWU Visual Arts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{
+    --ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;
+    --cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;
+    --mw:#4A6B7C;--tth:#7A5C8B;--once:#5C7A5F;--async:#888;--hidden:#C4922A;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+  header{background:var(--ink);color:var(--cream);padding:24px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  header h1{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;line-height:1.1;}
+  header p{font-size:.8rem;opacity:.5;margin-top:3px;}
+  .header-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .btn{padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;border-radius:2px;border:none;transition:opacity .2s;}
+  .btn-gold{background:var(--gold);color:var(--ink);}
+  .btn-outline{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,.3);}
+  .btn-outline:hover,.btn-gold:hover{opacity:.82;}
+  .btn-sm{padding:5px 10px;font-size:.76rem;}
+  .btn-danger{background:#c0392b;color:white;}
+
+  /* Toolbar */
+  .toolbar{background:var(--paper);border-bottom:1px solid var(--mist);padding:10px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .toolbar label{font-size:.78rem;font-weight:500;opacity:.65;}
+  .toolbar select,.toolbar input{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--ink);background:white;}
+  .toolbar select:focus,.toolbar input:focus{outline:none;border-color:var(--clay);}
+  .view-tabs{display:flex;gap:0;margin-left:auto;}
+  .view-tab{padding:8px 16px;font-size:.8rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--ink);opacity:.5;border-bottom:2px solid transparent;font-family:'DM Sans',sans-serif;}
+  .view-tab.active{opacity:1;border-bottom-color:var(--clay);}
+
+  main{padding:24px 40px;max-width:1400px;margin:0 auto;}
+
+  /* Legend */
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px;font-size:.76rem;}
+  .legend-item{display:flex;align-items:center;gap:5px;}
+  .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+  /* Schedule grid */
+  .schedule-grid{display:grid;grid-template-columns:100px 1fr 1fr;gap:0;border:1px solid var(--mist);border-radius:4px;overflow:hidden;background:white;margin-bottom:24px;}
+  .grid-header{background:var(--paper);padding:10px 14px;font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:#666;border-bottom:1px solid var(--mist);}
+  .grid-header.mw{border-left:3px solid var(--mw);}
+  .grid-header.tth{border-left:3px solid var(--tth);}
+  .time-label{background:var(--paper);padding:12px 10px;font-size:.75rem;font-weight:500;color:#888;border-bottom:1px solid var(--mist);border-right:1px solid var(--mist);display:flex;align-items:flex-start;justify-content:center;text-align:center;line-height:1.3;}
+  .cell{padding:8px;border-bottom:1px solid var(--mist);border-right:1px solid var(--mist);min-height:100px;vertical-align:top;display:flex;flex-direction:column;gap:5px;}
+  .cell.last-col{border-right:none;}
+  .cell.drop-target{background:var(--light-clay);}
+
+  /* Course chips */
+  .course-chip{border-radius:3px;padding:6px 8px;font-size:.76rem;line-height:1.35;position:relative;border-left:3px solid transparent;}
+  .course-chip.mw{background:#EBF1F5;border-left-color:var(--mw);}
+  .course-chip.tth{background:#F0EBF5;border-left-color:var(--tth);}
+  .course-chip.once{background:#EAF3EB;border-left-color:var(--once);}
+  .course-chip.async{background:#F5F5F5;border-left-color:var(--async);}
+  .course-chip.hidden{background:#FDF3E0;border-left-color:var(--hidden);opacity:.75;}
+  .course-chip.bracketed{border-style:dashed;}
+  .chip-code{font-weight:500;font-size:.72rem;opacity:.7;}
+  .chip-title{font-weight:500;margin:1px 0;}
+  .chip-meta{font-size:.7rem;opacity:.65;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
+  .chip-actions{position:absolute;top:4px;right:4px;display:none;gap:3px;}
+  .course-chip:hover .chip-actions{display:flex;}
+  .chip-btn{background:rgba(255,255,255,.9);border:1px solid var(--mist);border-radius:2px;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
+  .chip-btn:hover{background:white;}
+  .add-chip{background:none;border:1px dashed var(--mist);border-radius:3px;padding:6px 8px;font-size:.75rem;color:#bbb;cursor:pointer;text-align:left;width:100%;font-family:'DM Sans',sans-serif;}
+  .add-chip:hover{border-color:var(--clay);color:var(--clay);}
+
+  /* Faculty load bar */
+  .load-section{margin-bottom:24px;}
+  .load-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
+  .load-card{background:white;border:1px solid var(--mist);border-radius:4px;padding:14px 16px;}
+  .load-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;margin-bottom:8px;}
+  .load-bar-wrap{height:6px;background:var(--mist);border-radius:3px;margin-bottom:6px;overflow:hidden;}
+  .load-bar{height:100%;border-radius:3px;transition:width .3s;}
+  .load-bar.ok{background:var(--sage);}
+  .load-bar.over{background:#c0392b;}
+  .load-bar.under{background:var(--gold);}
+  .load-details{font-size:.75rem;color:#777;}
+  .load-courses{font-size:.72rem;color:#999;margin-top:4px;line-height:1.5;}
+
+  /* Once/week and async sections */
+  .section-header{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--mist);display:flex;align-items:center;gap:8px;}
+  .flat-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+
+  /* Rotation checker */
+  .rotation-section{margin-bottom:24px;}
+  .rotation-table{width:100%;border-collapse:collapse;font-size:.8rem;background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
+  .rotation-table th{background:var(--paper);padding:8px 12px;text-align:left;font-weight:500;font-size:.73rem;text-transform:uppercase;letter-spacing:.06em;color:#666;border-bottom:1px solid var(--mist);}
+  .rotation-table td{padding:8px 12px;border-bottom:1px solid var(--mist);}
+  .rotation-table tr:last-child td{border-bottom:none;}
+  .status-badge{display:inline-block;padding:2px 7px;border-radius:2px;font-size:.7rem;font-weight:500;}
+  .status-scheduled{background:#EAF3EB;color:#2e6b31;}
+  .status-missing{background:#FDECEA;color:#8b1a10;}
+  .status-irregular{background:var(--paper);color:#888;}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:white;border-radius:6px;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+  .modal-header{padding:18px 24px;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;}
+  .modal-header h2{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;}
+  .modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:#aaa;}
+  .modal-close:hover{color:var(--ink);}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{padding:14px 24px;border-top:1px solid var(--mist);display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;bottom:0;background:white;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .form-row.single{grid-template-columns:1fr;}
+  .form-row.three{grid-template-columns:1fr 1fr 1fr;}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-group label{font-size:.74rem;font-weight:500;opacity:.65;text-transform:uppercase;letter-spacing:.05em;}
+  .form-group input,.form-group select,.form-group textarea{padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--ink);}
+  .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--clay);}
+  .checkbox-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
+  .checkbox-label{display:flex;align-items:center;gap:6px;font-size:.82rem;cursor:pointer;}
+
+  .notice{background:var(--light-clay);border-left:3px solid var(--clay);padding:10px 14px;font-size:.8rem;margin-bottom:18px;border-radius:0 4px 4px 0;line-height:1.5;}
+  .notice strong{color:var(--clay);}
+
+  .view-panel{display:none;}
+  .view-panel.active{display:block;}
+
+  footer{text-align:center;padding:24px;font-size:.74rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
+  @media print{header,.toolbar,.header-btns,.add-chip,.chip-actions,footer{display:none!important;}main{padding:0;}body{background:white;}}
+  @media(max-width:700px){.schedule-grid{grid-template-columns:60px 1fr 1fr;}main,.toolbar,header{padding-left:16px;padding-right:16px;}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Schedule Map</h1>
+    <p>TWU Visual Arts — Private Planning Tool</p>
+  </div>
+  <div class="header-btns">
+    <button class="btn btn-outline" onclick="exportData()">⬇ Export</button>
+    <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">⬆ Import</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
+    <button class="btn btn-outline" onclick="window.print()">🖨 Print</button>
+    <button class="btn btn-gold" onclick="openAddModal(null,null)">+ Add Course</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <label>Semester</label>
+  <select id="semSelect" onchange="switchSemester()"></select>
+  <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);background:white;" onclick="newSemester()">+ New Semester</button>
+  <button class="btn btn-danger btn-sm" onclick="deleteSemester()">Delete</button>
+  <div class="view-tabs">
+    <button class="view-tab active" onclick="showView('grid',this)">Schedule Grid</button>
+    <button class="view-tab" onclick="showView('load',this)">Faculty Load</button>
+    <button class="view-tab" onclick="showView('rotation',this)">Rotation Check</button>
+  </div>
+</div>
+
+<main>
+  <!-- GRID VIEW -->
+  <div class="view-panel active" id="view-grid">
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--mw)"></div>Mon/Wed</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--tth)"></div>Tue/Thu</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--once)"></div>Once/week</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--async)"></div>Async/Online</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--hidden);"></div>Hidden section</div>
+      <div class="legend-item"><div style="width:10px;height:10px;border-radius:2px;border:2px dashed #888;flex-shrink:0;"></div>Bracketed/co-listed</div>
+    </div>
+    <div class="schedule-grid" id="scheduleGrid"></div>
+    <div class="section-header"><span style="width:8px;height:8px;border-radius:50%;background:var(--once);display:inline-block;"></span>Once-a-Week Classes</div>
+    <div class="flat-list" id="onceList"></div>
+    <div class="section-header"><span style="width:8px;height:8px;border-radius:50%;background:var(--async);display:inline-block;"></span>Asynchronous / Online</div>
+    <div class="flat-list" id="asyncList"></div>
+  </div>
+
+  <!-- LOAD VIEW -->
+  <div class="view-panel" id="view-load">
+    <div class="notice"><strong>Load rules:</strong> Standard load is 3 courses. One faculty member teaches 4 (lecture/seminar). Bracketed co-listed pairs count as 1 course. Student teaching observation (4+ students) counts as 1 course. Department head has 2-course work release.</div>
+    <div class="load-grid" id="loadGrid"></div>
+  </div>
+
+  <!-- ROTATION CHECK VIEW -->
+  <div class="view-panel" id="view-rotation">
+    <div class="notice"><strong>Rotation check</strong> compares committed courses for this semester against what is actually scheduled. Irregular courses are not flagged as missing.</div>
+    <div id="rotationContent"></div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Course</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Course Code</label>
+          <input type="text" id="c_code" placeholder="e.g. ART 1203" list="rotationList"/>
+          <datalist id="rotationList"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Section</label>
+          <input type="text" id="c_section" placeholder="e.g. .01"/>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label>Course Title</label>
+          <input type="text" id="c_title" placeholder="e.g. 2D FOUNDATIONS"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Faculty</label>
+          <input type="text" id="c_faculty" placeholder="e.g. GIOVANNI or staff" list="facultyList"/>
+          <datalist id="facultyList">
+            <option value="GIOVANNI"/><option value="SARA"/><option value="SHELI"/>
+            <option value="MEG"/><option value="JULIE"/><option value="TANYA"/>
+            <option value="LAURA LEE"/><option value="CHRISTINE"/><option value="COLBY"/>
+            <option value="staff"/>
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Room</label>
+          <select id="c_room">
+            <option value="">-- select --</option>
+            <option value="002">002 — Sculpture (cap 15)</option>
+            <option value="011">011 — Ceramics (cap 18)</option>
+            <option value="101">101 — Lecture/Seminar (cap 24)</option>
+            <option value="106">106 — Graphic Design Lab (cap 20)</option>
+            <option value="110">110 — Drawing (cap 20)</option>
+            <option value="201">201 — Critique Seminar (cap 20)</option>
+            <option value="202">202 — Computer Lab (cap 20)</option>
+            <option value="204">204 — Printmaking (cap 20)</option>
+            <option value="206">206 — Painting (cap 20)</option>
+            <option value="301">301 — Photo Lab (cap 18)</option>
+            <option value="302">302 — Digital Craft Lab (paired)</option>
+            <option value="306">306 — Art Education (cap 20)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Meeting Pattern</label>
+          <select id="c_pattern" onchange="updateTimeOptions()">
+            <option value="mw">Mon/Wed</option>
+            <option value="tth">Tue/Thu</option>
+            <option value="once">Once a week</option>
+            <option value="async">Async/Online</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Time Block</label>
+          <select id="c_time">
+          </select>
+        </div>
+      </div>
+      <div class="form-row" id="onceDay_row" style="display:none">
+        <div class="form-group">
+          <label>Day (for once/week)</label>
+          <select id="c_onceday">
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+          </select>
+        </div>
+        <div class="form-group"></div>
+      </div>
+      <div class="checkbox-row">
+        <label class="checkbox-label"><input type="checkbox" id="c_hidden"/> Hidden section</label>
+        <label class="checkbox-label"><input type="checkbox" id="c_bracketed"/> Bracketed / co-listed</label>
+        <label class="checkbox-label"><input type="checkbox" id="c_hybrid"/> Hybrid</label>
+        <label class="checkbox-label"><input type="checkbox" id="c_grad"/> Grad section</label>
+      </div>
+      <div class="form-row" id="bracketPair_row" style="display:none">
+        <div class="form-group single">
+          <label>Paired with (course code + section)</label>
+          <input type="text" id="c_bracketpair" placeholder="e.g. ART 5743.01"/>
+        </div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group">
+          <label>Notes</label>
+          <input type="text" id="c_notes" placeholder="e.g. Hybrid Wednesday, Monday only, etc."/>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteCourse()" style="display:none">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-gold btn-sm" onclick="saveCourse()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>TWU Visual Arts · Schedule Map · Private — do not upload to GitHub</footer>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const ROOMS={
+  '002':'Sculpture (15)','011':'Ceramics (18)','101':'Lecture (24)',
+  '106':'GD Lab (20)','110':'Drawing (20)','201':'Critique (20)',
+  '202':'Computer Lab (20)','204':'Printmaking (20)','206':'Painting (20)',
+  '301':'Photo Lab (18)','302':'Digital Craft (paired)','306':'Art Ed (20)'
+};
+
+const TIME_OPTIONS={
+  mw:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)'],
+  tth:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)'],
+  once:['6:00–8:50','8:00–10:50','11:00–1:50','2:30–5:20','Other'],
+  async:['No set time']
+};
+
+const BLOCKS=['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50'];
+
+// Rotation data — undergrad only
+const ROTATION=[
+  {code:'ART 1203',title:'2D FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1213',title:'3D FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1303',title:'DRAWING FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1503',title:'INTRO TO PAINTING',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 1603',title:'INTRO TO PHOTOGRAPHY',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2223',title:'DIGITAL ART FOUNDATIONS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2243',title:'FUNDAMENTALS OF TYPE & IMAGE',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2293',title:'VISUAL IDENTITY AND SYMBOL',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2303',title:'FIGURE DRAWING',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2423',title:'WORLD ART HISTORY I',sem:'FALL',yr:'ALL'},
+  {code:'ART 2433',title:'WORLD ART HISTORY II',sem:'SPRING',yr:'ALL'},
+  {code:'ART 2653',title:'BLACK & WHITE PHOTOGRAPHY',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 2713',title:'UNDERSTANDING ARTS-VISUAL ART',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 2753',title:'INTRO TO SCULPTURE',sem:'FALL',yr:'ALL'},
+  {code:'ART 2823',title:'INTRODUCTION TO CERAMICS',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3013',title:'PRINCIPLES OF ART EDUCATION',sem:'FALL',yr:'EVEN'},
+  {code:'ART 3053',title:'GLOBAL PERSPECTIVES IN ART',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3153',title:'ANIMATION',sem:'FALL',yr:'ODD'},
+  {code:'ART 3173',title:'CONTEMPORARY ISSUES IN ART',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3223',title:'ELEMENTARY ART EDUCATION',sem:'FALL',yr:'ODD'},
+  {code:'ART 3233',title:'SECONDARY ART EDUCATION',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 3253',title:'MOTION GRAPHICS',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3263',title:'EXPERIMENTS FUNCTIONAL DESIGN',sem:'IRREGULAR',yr:''},
+  {code:'ART 3323',title:'DATA VISUALIZATION',sem:'IRREGULAR',yr:''},
+  {code:'ART 3333',title:'HISTORY OF CAMERA ARTS',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 3343',title:'WOMEN IN THE VISUAL ARTS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3363',title:'CHARACTER DESIGN',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 3383',title:'DIGITAL ILLUSTRATION',sem:'FALL',yr:'EVEN'},
+  {code:'ART 3393',title:'PROF PRACTICES VISUAL ARTS',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 3613',title:'CERAMICS SURFACES',sem:'IRREGULAR',yr:''},
+  {code:'ART 3673',title:'SCULPTURE: INSTALLATION ART',sem:'IRREGULAR',yr:''},
+  {code:'ART 3683',title:'SCULPT PROCESS/POSSIBILITIES',sem:'SPRING',yr:'ODD'},
+  {code:'ART 3693',title:'ALTERNATIVE PHOTO PROCESS',sem:'SPRING',yr:'ODD'},
+  {code:'ART 3703',title:'INTERMEDIATE PAINTING',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3723',title:'MURAL PAINTING',sem:'FALL',yr:'ALL'},
+  {code:'ART 3783',title:'ALTERNATIVE DRAWING',sem:'SPRING',yr:'ALL'},
+  {code:'ART 3793',title:'FUNCTIONAL CERAMICS',sem:'FALL',yr:'EVEN'},
+  {code:'ART 3893',title:'SCULPTURAL CERAMICS',sem:'SPRING',yr:'ODD'},
+  {code:'ART 3913',title:'SCIENTIFIC ILLUSTRATION',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'ART 4013',title:'SCULPTURE & THE ENVIRONMENT',sem:'SPRING',yr:'EVEN'},
+  {code:'ART 4033',title:'PACKAGING DESIGN',sem:'FALL',yr:'ODD'},
+  {code:'ART 4043',title:'LATINX ART',sem:'SPRING',yr:'ODD'},
+  {code:'ART 4053',title:'AFRICAN AMERICAN ART',sem:'FALL',yr:'EVEN'},
+  {code:'ART 4063',title:'BOOK ARTS',sem:'IRREGULAR',yr:''},
+  {code:'ART 4133',title:'APPROACHES TO ART EDUCATION',sem:'SPRING',yr:'ODD'},
+  {code:'ART 4253',title:'PUBLICATION DESIGN',sem:'FALL',yr:'ALL'},
+  {code:'ART 4283',title:'WEB AND APP DESIGN',sem:'SPRING',yr:'ALL'},
+  {code:'ART 4313',title:'ADVERTISING & SOCIAL MEDIA',sem:'SPRING',yr:'ALL'},
+  {code:'ART 4363',title:'COMMUNITY FOCUS DESIGN STUDIO',sem:'FALL',yr:'ALL'},
+  {code:'ART 4483',title:'NARRATIVE ILLUSTRATION',sem:'SPRING',yr:'ODD'},
+  {code:'ART 4543',title:'INTERDISCIPLINARY INFLUENCES',sem:'FALL',yr:'ODD'},
+  {code:'ART 4653',title:'COLOR PHOTOGRAPHY',sem:'FALL',yr:'EVEN'},
+  {code:'ART 4683',title:'PHOTOGRAPHIC POSSIBILITIES',sem:'FALL',yr:'ODD'},
+  {code:'ART 4703',title:'ADVANCED PAINTING',sem:'SPRING',yr:'ALL'},
+  {code:'ART 4903',title:'SPECIAL TOPICS',sem:'IRREGULAR',yr:''},
+  {code:'ART 4993',title:'BFA EXHIBITION',sem:'FALL/SPRING',yr:'ALL'},
+];
+
+const FACULTY_LOADS={
+  'GIOVANNI':3,'SARA':4,'SHELI':3,'MEG':3,'JULIE':3,
+  'TANYA':3,'LAURA LEE':3,'CHRISTINE':3,'COLBY':1,'staff':99
+};
+
+// ── Data ───────────────────────────────────────────────────────────────────
+function loadData(){try{return JSON.parse(localStorage.getItem('twu_schedule')||'{}');}catch(e){return {};}}
+function saveData(d){localStorage.setItem('twu_schedule',JSON.stringify(d));}
+
+let db=loadData();
+let currentSem=Object.keys(db)[0]||null;
+let editingId=null;
+
+// ── Semester management ────────────────────────────────────────────────────
+function semKey(sem,year){return sem+' '+year;}
+
+function buildSemSelect(){
+  const sel=document.getElementById('semSelect');
+  sel.innerHTML='';
+  Object.keys(db).forEach(k=>{
+    const opt=document.createElement('option');
+    opt.value=k;opt.textContent=k;
+    if(k===currentSem)opt.selected=true;
+    sel.appendChild(opt);
+  });
+}
+
+function switchSemester(){
+  currentSem=document.getElementById('semSelect').value;
+  renderAll();
+}
+
+function newSemester(){
+  const sem=prompt('Semester name (e.g. "Fall 2027"):');
+  if(!sem||!sem.trim())return;
+  const key=sem.trim();
+  if(db[key]){alert('That semester already exists.');return;}
+  db[key]={courses:[]};
+  saveData(db);
+  currentSem=key;
+  buildSemSelect();
+  renderAll();
+}
+
+function deleteSemester(){
+  if(!currentSem)return;
+  if(!confirm('Delete '+currentSem+' and all its courses?'))return;
+  delete db[currentSem];
+  saveData(db);
+  currentSem=Object.keys(db)[0]||null;
+  buildSemSelect();
+  renderAll();
+}
+
+function getSemCourses(){return currentSem&&db[currentSem]?db[currentSem].courses:[];}
+
+// ── Views ──────────────────────────────────────────────────────────────────
+function showView(name,btn){
+  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  renderAll();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function renderAll(){
+  buildSemSelect();
+  renderGrid();
+  renderLoad();
+  renderRotation();
+}
+
+function chipHtml(c,idx){
+  const cls=[c.pattern,c.hidden?'hidden':'',c.bracketed?'bracketed':''].filter(Boolean).join(' ');
+  const meta=[c.faculty,c.room?'Rm '+c.room:'',c.notes].filter(Boolean).join(' · ');
+  return `<div class="course-chip ${cls}" data-idx="${idx}">
+    <div class="chip-actions">
+      <button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button>
+    </div>
+    <div class="chip-code">${c.code||''}${c.section||''} ${c.hidden?'⚠ hidden':''} ${c.bracketed?'⟦paired⟧':''} ${c.grad?'[G]':''}</div>
+    <div class="chip-title">${c.title||''}</div>
+    <div class="chip-meta">${meta}</div>
+  </div>`;
+}
+
+function renderGrid(){
+  const grid=document.getElementById('scheduleGrid');
+  const onceList=document.getElementById('onceList');
+  const asyncList=document.getElementById('asyncList');
+  const courses=getSemCourses();
+
+  if(!currentSem){
+    grid.innerHTML='<div style="grid-column:1/-1;padding:40px;text-align:center;color:#bbb;">No semester selected. Create one using the toolbar above.</div>';
+    onceList.innerHTML='';asyncList.innerHTML='';return;
+  }
+
+  // Headers
+  let html='<div class="grid-header"></div><div class="grid-header mw">Monday / Wednesday</div><div class="grid-header tth last-col">Tuesday / Thursday</div>';
+
+  BLOCKS.forEach(block=>{
+    const mwCourses=courses.filter(c=>c.pattern==='mw'&&c.time&&c.time.startsWith(block.split('–')[0]));
+    const tthCourses=courses.filter(c=>c.pattern==='tth'&&c.time&&c.time.startsWith(block.split('–')[0]));
+    // Also include lecture blocks that fall within this studio block
+    const mwLec=courses.filter(c=>c.pattern==='mw'&&c.time&&!c.time.startsWith(block.split('–')[0])&&blockContains(block,c.time));
+    const tthLec=courses.filter(c=>c.pattern==='tth'&&c.time&&!c.time.startsWith(block.split('–')[0])&&blockContains(block,c.time));
+    const allMw=[...mwCourses,...mwLec];
+    const allTth=[...tthCourses,...tthLec];
+
+    html+=`<div class="time-label">${block}</div>`;
+    html+=`<div class="cell">${allMw.map(c=>chipHtml(c,courses.indexOf(c))).join('')}<button class="add-chip" onclick="openAddModal('mw','${block}')">+ add</button></div>`;
+    html+=`<div class="cell last-col">${allTth.map(c=>chipHtml(c,courses.indexOf(c))).join('')}<button class="add-chip" onclick="openAddModal('tth','${block}')">+ add</button></div>`;
+  });
+
+  grid.innerHTML=html;
+
+  // Once/week
+  const once=courses.filter(c=>c.pattern==='once');
+  onceList.innerHTML=once.length
+    ? once.map(c=>`<div class="course-chip once" data-idx="${courses.indexOf(c)}" style="min-width:200px;">
+        <div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${courses.indexOf(c)})" title="Edit">✏</button></div>
+        <div class="chip-code">${c.code||''}${c.section||''} ${c.oncedday?'· '+c.oncedday:''}</div>
+        <div class="chip-title">${c.title||''}</div>
+        <div class="chip-meta">${[c.faculty,c.time,c.room?'Rm '+c.room:'',c.notes].filter(Boolean).join(' · ')}</div>
+      </div>`).join('')
+    : '<span style="color:#bbb;font-size:.82rem;">None scheduled</span>';
+
+  // Async
+  const async_=courses.filter(c=>c.pattern==='async');
+  asyncList.innerHTML=async_.length
+    ? async_.map(c=>`<div class="course-chip async" data-idx="${courses.indexOf(c)}" style="min-width:200px;">
+        <div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${courses.indexOf(c)})" title="Edit">✏</button></div>
+        <div class="chip-code">${c.code||''}${c.section||''}</div>
+        <div class="chip-title">${c.title||''}</div>
+        <div class="chip-meta">${[c.faculty,c.notes].filter(Boolean).join(' · ')}</div>
+      </div>`).join('')
+    : '<span style="color:#bbb;font-size:.82rem;">None scheduled</span>';
+}
+
+function blockContains(block,time){
+  // Check if a lecture time slot falls within a studio block range
+  const blockStart=parseTime(block.split('–')[0]);
+  const blockEnd=parseTime(block.split('–')[1]);
+  const slotStart=parseTime(time.split('–')[0]);
+  return slotStart>=blockStart&&slotStart<blockEnd;
+}
+function parseTime(t){
+  if(!t)return 0;
+  t=t.trim().replace(/[^\d:apm]/gi,'');
+  const m=t.match(/(\d+):?(\d*)(am|pm)?/i);
+  if(!m)return 0;
+  let h=parseInt(m[1]),mn=parseInt(m[2]||0);
+  const ap=(m[3]||'').toLowerCase();
+  if(ap==='pm'&&h<12)h+=12;
+  if(ap==='am'&&h===12)h=0;
+  if(!ap&&h<8)h+=12; // assume pm for afternoon times
+  return h*60+mn;
+}
+
+// ── Faculty Load ───────────────────────────────────────────────────────────
+function renderLoad(){
+  const grid=document.getElementById('loadGrid');
+  if(!currentSem){grid.innerHTML='';return;}
+  const courses=getSemCourses();
+
+  // Get unique faculty
+  const faculty=new Set(courses.map(c=>c.faculty).filter(f=>f&&f!=='staff'));
+  if(!faculty.size){grid.innerHTML='<p style="color:#bbb;font-size:.83rem;">No courses with assigned faculty yet.</p>';return;}
+
+  grid.innerHTML=[...faculty].sort().map(f=>{
+    const mine=courses.filter(c=>c.faculty===f);
+    // Bracketed pairs count as 1
+    const bracketGroups=new Set();
+    let load=0;
+    mine.forEach(c=>{
+      if(c.bracketed&&c.bracketpair){
+        const key=[c.code+c.section,c.bracketpair].sort().join('|');
+        if(!bracketGroups.has(key)){bracketGroups.add(key);load++;}
+      } else {
+        load++;
+      }
+    });
+    const target=FACULTY_LOADS[f]||3;
+    const pct=Math.min(100,Math.round(load/target*100));
+    const barClass=load===target?'ok':load>target?'over':'under';
+    const courseList=mine.map(c=>`${c.code||''} ${c.title||''}${c.bracketed?' ⟦⟧':''}`).join(', ');
+    return `<div class="load-card">
+      <div class="load-name">${f}</div>
+      <div class="load-bar-wrap"><div class="load-bar ${barClass}" style="width:${pct}%"></div></div>
+      <div class="load-details">${load} of ${target} courses${load>target?' — ⚠ OVER LOAD':load<target?' — under load':' — ✓ full load'}</div>
+      <div class="load-courses">${courseList||'No courses assigned'}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── Rotation Check ─────────────────────────────────────────────────────────
+function renderRotation(){
+  const container=document.getElementById('rotationContent');
+  if(!currentSem){container.innerHTML='';return;}
+
+  // Parse semester
+  const parts=currentSem.split(' ');
+  const semName=(parts[0]||'').toUpperCase(); // FALL or SPRING
+  const year=parseInt(parts[1]||new Date().getFullYear());
+  const isEven=year%2===0;
+  const yearType=isEven?'EVEN':'ODD';
+
+  // Get committed courses for this semester
+  const committed=ROTATION.filter(r=>{
+    if(r.sem==='IRREGULAR')return false;
+    const sems=r.sem.split('/');
+    if(!sems.includes(semName))return false;
+    if(r.yr==='ALL')return true;
+    return r.yr===yearType;
+  });
+
+  const courses=getSemCourses();
+  const scheduledCodes=new Set(courses.map(c=>(c.code||'').replace(/\s+/g,'').toUpperCase()));
+
+  let missing=0,scheduled=0;
+  const rows=committed.map(r=>{
+    const clean=r.code.replace(/\s+/g,'').toUpperCase();
+    const isScheduled=scheduledCodes.has(clean);
+    if(isScheduled)scheduled++;else missing++;
+    return `<tr>
+      <td>${r.code}</td>
+      <td>${r.title}</td>
+      <td>${r.sem}</td>
+      <td>${r.yr}</td>
+      <td><span class="status-badge ${isScheduled?'status-scheduled':'status-missing'}">${isScheduled?'✓ Scheduled':'⚠ Missing'}</span></td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML=`
+    <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
+      <div style="background:white;border:1px solid var(--mist);border-radius:4px;padding:12px 20px;font-size:.83rem;">
+        <div style="font-size:1.4rem;font-family:'Cormorant Garamond',serif;font-weight:600;">${committed.length}</div>
+        <div style="opacity:.6;">Committed this semester</div>
+      </div>
+      <div style="background:#EAF3EB;border:1px solid #B8D8BA;border-radius:4px;padding:12px 20px;font-size:.83rem;">
+        <div style="font-size:1.4rem;font-family:'Cormorant Garamond',serif;font-weight:600;color:#2e6b31;">${scheduled}</div>
+        <div style="opacity:.7;color:#2e6b31;">Scheduled</div>
+      </div>
+      <div style="background:#FDECEA;border:1px solid #F5C0BB;border-radius:4px;padding:12px 20px;font-size:.83rem;">
+        <div style="font-size:1.4rem;font-family:'Cormorant Garamond',serif;font-weight:600;color:#8b1a10;">${missing}</div>
+        <div style="opacity:.7;color:#8b1a10;">Not yet scheduled</div>
+      </div>
+    </div>
+    <table class="rotation-table">
+      <thead><tr><th>Code</th><th>Title</th><th>Semester</th><th>Year</th><th>Status</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+function updateTimeOptions(){
+  const pat=document.getElementById('c_pattern').value;
+  const sel=document.getElementById('c_time');
+  sel.innerHTML=(TIME_OPTIONS[pat]||[]).map(t=>`<option value="${t}">${t}</option>`).join('');
+  document.getElementById('onceDay_row').style.display=pat==='once'?'grid':'none';
+}
+
+function openAddModal(pattern,block){
+  if(!currentSem){alert('Please create or select a semester first.');return;}
+  editingId=null;
+  document.getElementById('modalTitle').textContent='Add Course';
+  document.getElementById('deleteBtn').style.display='none';
+  ['c_code','c_section','c_title','c_faculty','c_notes','c_bracketpair'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c_room').value='';
+  document.getElementById('c_hidden').checked=false;
+  document.getElementById('c_bracketed').checked=false;
+  document.getElementById('c_hybrid').checked=false;
+  document.getElementById('c_grad').checked=false;
+  document.getElementById('bracketPair_row').style.display='none';
+  if(pattern)document.getElementById('c_pattern').value=pattern;
+  updateTimeOptions();
+  if(block){
+    const sel=document.getElementById('c_time');
+    for(let i=0;i<sel.options.length;i++){if(sel.options[i].value.startsWith(block.split('–')[0])){sel.selectedIndex=i;break;}}
+  }
+  // Populate rotation datalist
+  const dl=document.getElementById('rotationList');
+  dl.innerHTML=ROTATION.map(r=>`<option value="${r.code}">${r.code} — ${r.title}</option>`).join('');
+  document.getElementById('c_code').addEventListener('change',autofillTitle);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function autofillTitle(){
+  const code=document.getElementById('c_code').value.trim().toUpperCase();
+  const match=ROTATION.find(r=>r.code.replace(/\s+/g,'')===code.replace(/\s+/g,''));
+  if(match&&!document.getElementById('c_title').value)
+    document.getElementById('c_title').value=match.title;
+}
+
+function openEditModal(idx){
+  if(!currentSem)return;
+  editingId=idx;
+  const c=db[currentSem].courses[idx];
+  document.getElementById('modalTitle').textContent='Edit Course';
+  document.getElementById('deleteBtn').style.display='block';
+  document.getElementById('c_code').value=c.code||'';
+  document.getElementById('c_section').value=c.section||'';
+  document.getElementById('c_title').value=c.title||'';
+  document.getElementById('c_faculty').value=c.faculty||'';
+  document.getElementById('c_room').value=c.room||'';
+  document.getElementById('c_pattern').value=c.pattern||'mw';
+  updateTimeOptions();
+  document.getElementById('c_time').value=c.time||'';
+  document.getElementById('c_oncedday').value=c.oncedday||'Monday';
+  document.getElementById('c_hidden').checked=!!c.hidden;
+  document.getElementById('c_bracketed').checked=!!c.bracketed;
+  document.getElementById('c_hybrid').checked=!!c.hybrid;
+  document.getElementById('c_grad').checked=!!c.grad;
+  document.getElementById('c_bracketpair').value=c.bracketpair||'';
+  document.getElementById('bracketPair_row').style.display=c.bracketed?'grid':'none';
+  document.getElementById('onceDay_row').style.display=c.pattern==='once'?'grid':'none';
+  document.getElementById('c_notes').value=c.notes||'';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+document.getElementById('c_bracketed').addEventListener('change',function(){
+  document.getElementById('bracketPair_row').style.display=this.checked?'grid':'none';
+});
+
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+function saveCourse(){
+  if(!currentSem)return;
+  const record={
+    code:document.getElementById('c_code').value.trim().toUpperCase(),
+    section:document.getElementById('c_section').value.trim(),
+    title:document.getElementById('c_title').value.trim().toUpperCase(),
+    faculty:document.getElementById('c_faculty').value.trim(),
+    room:document.getElementById('c_room').value,
+    pattern:document.getElementById('c_pattern').value,
+    time:document.getElementById('c_time').value,
+    oncedday:document.getElementById('c_oncedday').value,
+    hidden:document.getElementById('c_hidden').checked,
+    bracketed:document.getElementById('c_bracketed').checked,
+    hybrid:document.getElementById('c_hybrid').checked,
+    grad:document.getElementById('c_grad').checked,
+    bracketpair:document.getElementById('c_bracketpair').value.trim(),
+    notes:document.getElementById('c_notes').value.trim(),
+  };
+  if(!record.code){alert('Please enter a course code.');return;}
+  if(editingId===null){
+    db[currentSem].courses.push(record);
+  } else {
+    db[currentSem].courses[editingId]=record;
+  }
+  saveData(db);
+  closeModal();
+  renderAll();
+}
+
+function deleteCourse(){
+  if(editingId===null||!currentSem)return;
+  const c=db[currentSem].courses[editingId];
+  if(!confirm('Delete '+c.code+' '+c.title+'?'))return;
+  db[currentSem].courses.splice(editingId,1);
+  saveData(db);
+  closeModal();
+  renderAll();
+}
+
+// ── Export / Import ────────────────────────────────────────────────────────
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='twu_schedule_map.json';a.click();
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const d=JSON.parse(ev.target.result);
+      db=d;saveData(db);
+      currentSem=Object.keys(db)[0]||null;
+      buildSemSelect();renderAll();
+      alert('Imported successfully.');
+    }catch(err){alert('Error: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+// Close on overlay click
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+// Pre-load Fall 2026 if no data exists
+const FALL26_DATA = {"Fall 2026":{"courses":[{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30\u201310:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid Monday, 9:30-10:50","oncedday":""},{"code":"ART 4053","section":".01","title":"AFRICAN AMERICAN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30\u201310:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid Wednesday, 9:30-10:50","oncedday":""},{"code":"ART 4363","section":".01","title":"COMMUNITY FOCUS DESIGN","faculty":"SHELI","room":"106","pattern":"mw","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"mw","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5533","section":".01","title":"ART & SOCIAL MOVEMENTS","faculty":"SARA","room":"101","pattern":"mw","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday only","oncedday":""},{"code":"ART 3723","section":".01","title":"MURAL PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".02","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Laura Lee student teaching observation","oncedday":""},{"code":"ART 3383","section":".01","title":"DIGITAL ILLUSTRATION","faculty":"SHELI","room":"106","pattern":"mw","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"MEG","room":"301","pattern":"mw","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid Wednesday","oncedday":""},{"code":"ART 3793","section":".01","title":"FUNCTIONAL CERAMICS","faculty":"staff","room":"011","pattern":"mw","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2753","section":".01","title":"INTRO TO SCULPTURE","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3913","section":".01","title":"SCIENTIFIC ILLUSTRATION","faculty":"SHELI","room":"204","pattern":"mw","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4253","section":".01","title":"PUBLICATION DESIGN","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5703","section":".01","title":"PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30\u20135:20","hidden":false,"bracketed":true,"grad":true,"hybrid":false,"bracketpair":"ART 4903.01","notes":"Bracketed with 4903.01","oncedday":""},{"code":"ART 4903","section":".01","title":"ST: PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30\u20135:20","hidden":false,"bracketed":true,"grad":false,"hybrid":false,"bracketpair":"ART 5703.01","notes":"Bracketed with 5703.01","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"6:00\u20138:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid","oncedday":""},{"code":"ART 2303","section":".02","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"mw","time":"6:00\u20138:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".02","title":"2D FOUNDATIONS","faculty":"staff","room":"204","pattern":"tth","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1213","section":".02","title":"3D FOUNDATIONS","faculty":"staff","room":"002","pattern":"tth","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1503","section":".02","title":"INTRO TO PAINTING","faculty":"staff","room":"206","pattern":"tth","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4033","section":".01","title":"PACKAGING DESIGN","faculty":"JULIE","room":"106","pattern":"tth","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Also uses 302","oncedday":""},{"code":"ART 2223","section":".02","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"8:00\u201310:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3343","section":".01","title":"WOMEN IN THE VISUAL ARTS","faculty":"JULIE","room":"110","pattern":"tth","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid Tuesday 11-12:20","oncedday":""},{"code":"ART 4013","section":".01","title":"SCULPTURE & THE ENVIRONMENT","faculty":"TANYA","room":"002","pattern":"tth","time":"11:00\u20131:50","hidden":false,"bracketed":true,"grad":false,"hybrid":false,"bracketpair":"ART 5743.01","notes":"Bracketed with 5743.01","oncedday":""},{"code":"ART 5743","section":".01","title":"SCULPTURE & THE ENVIRONMENT","faculty":"TANYA","room":"002","pattern":"tth","time":"11:00\u20131:50","hidden":false,"bracketed":true,"grad":true,"hybrid":false,"bracketpair":"ART 4013.01","notes":"Bracketed with 4013.01","oncedday":""},{"code":"ART 3013","section":".01","title":"PRINCIPLES OF ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE AND IMAGE","faculty":"CHRISTINE","room":"106","pattern":"tth","time":"11:00\u20131:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2293","section":".01","title":"VISUAL ID AND SYMBOLS","faculty":"JULIE","room":"106","pattern":"tth","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4653","section":".01","title":"COLOR PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"tth","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".03","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: MUSEUM PRACTICES","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Thursday f2f, hybrid","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"2:30\u20135:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"COLBY","room":"201","pattern":"once","time":"6:00\u20138:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":"Wednesday"},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"once","time":"6:00\u20138:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid Tuesday","oncedday":"Tuesday"},{"code":"ART 2423","section":".01","title":"WORLD ART HISTORY I","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2423","section":".02","title":"WORLD ART HISTORY I","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".02","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"","pattern":"once","time":"Other","oncedday":"","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site observation \u2014 counts as studio class if 4+ students. Education Dept course."}]}};
+if(!Object.keys(db).length){
+  db = FALL26_DATA;
+  saveData(db);
+  currentSem='Fall 2026';
+}
+updateTimeOptions();
+buildSemSelect();
+renderAll();
+</script>
+</body>
+</html>

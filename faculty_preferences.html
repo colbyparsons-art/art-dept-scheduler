@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Faculty Scheduling Preferences — TWU Visual Arts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  :root{--ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;--cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+  header{background:var(--ink);color:var(--cream);padding:28px 40px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  header h1{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;line-height:1.1;}
+  header p{font-size:.82rem;opacity:.55;margin-top:4px;font-weight:300;}
+  .header-btns{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+  .btn{padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:.82rem;font-weight:500;cursor:pointer;border-radius:2px;border:none;}
+  .btn-gold{background:var(--gold);color:var(--ink);}
+  .btn-gold:hover{opacity:.85;}
+  .btn-outline{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,.35);}
+  .btn-outline:hover{background:rgba(255,255,255,.1);}
+  .btn-danger{background:#c0392b;color:white;}
+  .btn-danger:hover{opacity:.85;}
+  .btn-sm{padding:5px 12px;font-size:.78rem;}
+  main{padding:32px 40px;max-width:1200px;margin:0 auto;}
+  .notice{background:var(--light-clay);border-left:3px solid var(--clay);padding:12px 16px;font-size:.83rem;margin-bottom:24px;border-radius:0 4px 4px 0;line-height:1.5;}
+  .notice strong{color:var(--clay);}
+  .view-tabs{display:flex;gap:0;margin-bottom:24px;border-bottom:2px solid var(--mist);}
+  .view-tab{padding:10px 20px;font-size:.83rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--ink);opacity:.5;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'DM Sans',sans-serif;}
+  .view-tab.active{opacity:1;border-bottom-color:var(--clay);}
+  .view-panel{display:none;}
+  .view-panel.active{display:block;}
+
+  /* Faculty cards */
+  .faculty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px;}
+  .faculty-card{background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;cursor:pointer;transition:box-shadow .2s,transform .2s;}
+  .faculty-card:hover{box-shadow:0 3px 12px rgba(0,0,0,.08);transform:translateY(-1px);}
+  .card-header{padding:16px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--mist);}
+  .card-name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;}
+  .card-load{font-size:.75rem;background:var(--paper);border:1px solid var(--mist);padding:2px 8px;border-radius:10px;color:#666;}
+  .card-body{padding:14px 18px;font-size:.8rem;line-height:1.6;color:#555;}
+  .card-tag{display:inline-block;background:var(--paper);border:1px solid var(--mist);padding:2px 7px;border-radius:2px;font-size:.72rem;margin:2px 2px 2px 0;}
+  .card-tag.conflict{background:#FDF3E0;border-color:#E8D5A0;color:#8B6A2F;}
+  .card-tag.pref{background:#EAF3EB;border-color:#B8D8BA;color:#3a6b3d;}
+  .card-tag.course-star{background:#FDF3E0;border-color:#E8D5A0;color:#7a5000;}
+  .card-tag.course-can{background:#EBF1F5;border-color:#B8CDD8;color:#2a4a5a;}
+  .card-tag.course-rare{background:var(--paper);border-color:var(--mist);color:#888;}
+  .add-faculty-btn{background:white;border:2px dashed var(--mist);border-radius:4px;padding:28px;text-align:center;cursor:pointer;color:#aaa;font-size:.85rem;transition:all .2s;}
+  .add-faculty-btn:hover{border-color:var(--clay);color:var(--clay);}
+
+  /* Course lookup view */
+  .course-lookup{margin-bottom:24px;}
+  .lookup-controls{display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap;}
+  .lookup-controls input,.lookup-controls select{padding:8px 12px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--ink);}
+  .lookup-controls input{width:280px;}
+  .lookup-result{background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
+  .lookup-result table{width:100%;border-collapse:collapse;font-size:.83rem;}
+  .lookup-result th{background:var(--paper);padding:9px 14px;text-align:left;font-weight:500;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#666;border-bottom:1px solid var(--mist);}
+  .lookup-result td{padding:9px 14px;border-bottom:1px solid var(--mist);}
+  .lookup-result tr:last-child td{border-bottom:none;}
+  .pref-pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:500;}
+  .pref-star{background:#FDF3E0;color:#7a5000;}
+  .pref-can{background:#EBF1F5;color:#2a4a5a;}
+  .pref-rare{background:var(--paper);color:#888;border:1px solid var(--mist);}
+
+  /* Summary table */
+  .summary-table{width:100%;border-collapse:collapse;font-size:.8rem;background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;margin-bottom:24px;}
+  .summary-table th{background:var(--paper);padding:9px 14px;text-align:left;font-weight:500;font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:#666;border-bottom:1px solid var(--mist);}
+  .summary-table td{padding:9px 14px;border-bottom:1px solid var(--mist);vertical-align:top;}
+  .summary-table tr:last-child td{border-bottom:none;}
+  .summary-table tr:hover td{background:var(--cream);}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:white;border-radius:6px;width:100%;max-width:720px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+  .modal-header{padding:20px 28px;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;}
+  .modal-header h2{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:600;}
+  .modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:#aaa;}
+  .modal-close:hover{color:var(--ink);}
+  .modal-body{padding:22px 28px;}
+  .modal-footer{padding:14px 28px;border-top:1px solid var(--mist);display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;bottom:0;background:white;}
+  .form-section{margin-bottom:26px;}
+  .form-section-title{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--mist);}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+  .form-row.single{grid-template-columns:1fr;}
+  .form-group{display:flex;flex-direction:column;gap:4px;}
+  .form-group label{font-size:.74rem;font-weight:500;opacity:.65;text-transform:uppercase;letter-spacing:.05em;}
+  .form-group input,.form-group select,.form-group textarea{padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--ink);}
+  .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--clay);}
+  .form-group textarea{resize:vertical;min-height:65px;line-height:1.5;}
+  .time-group-label{font-size:.74rem;font-weight:500;text-transform:uppercase;letter-spacing:.06em;opacity:.5;margin-top:8px;margin-bottom:4px;}
+  .time-blocks{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px;}
+  .time-block{padding:6px 10px;border:1px solid var(--mist);border-radius:3px;font-size:.78rem;cursor:pointer;background:white;transition:all .15s;user-select:none;}
+  .time-block.prefer{background:#EAF3EB;border-color:#B8D8BA;color:#2e5c31;}
+  .time-block.avoid{background:#FDF3E0;border-color:#E8D5A0;color:#7a5c00;}
+  .time-block.conflict{background:#FDECEA;border-color:#F5C0BB;color:#8b1a10;}
+  .block-legend{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+  .legend-item{display:flex;align-items:center;gap:4px;font-size:.73rem;color:#666;}
+  .legend-dot{width:9px;height:9px;border-radius:2px;}
+  .day-conflict-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .day-btn{padding:8px;text-align:center;border:1px solid var(--mist);border-radius:3px;cursor:pointer;font-size:.82rem;background:white;font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .day-btn.selected{background:#FDECEA;border-color:#F5C0BB;color:#8b1a10;font-weight:500;}
+  .day-btn:hover:not(.selected){background:var(--paper);}
+
+  /* Course capability section */
+  .course-search-row{display:flex;gap:8px;margin-bottom:10px;align-items:center;}
+  .course-search-row input{flex:1;padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.83rem;}
+  .course-search-row input:focus{outline:none;border-color:var(--clay);}
+  .course-pref-select{padding:6px 8px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.8rem;}
+  .course-list{max-height:260px;overflow-y:auto;border:1px solid var(--mist);border-radius:3px;background:white;}
+  .course-list-item{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--mist);font-size:.8rem;}
+  .course-list-item:last-child{border-bottom:none;}
+  .course-list-item:hover{background:var(--cream);}
+  .course-item-left{display:flex;flex-direction:column;gap:1px;}
+  .course-item-code{font-weight:500;font-size:.76rem;}
+  .course-item-title{font-size:.74rem;color:#777;}
+  .course-item-right{display:flex;align-items:center;gap:6px;}
+  .pref-toggle{padding:3px 8px;border-radius:10px;font-size:.71rem;font-weight:500;cursor:pointer;border:1px solid transparent;transition:all .15s;}
+  .pref-toggle.star{background:#FDF3E0;border-color:#E8D5A0;color:#7a5000;}
+  .pref-toggle.can{background:#EBF1F5;border-color:#B8CDD8;color:#2a4a5a;}
+  .pref-toggle.rare{background:var(--paper);border-color:var(--mist);color:#888;}
+  .pref-toggle.inactive{background:white;border-color:var(--mist);color:#bbb;}
+  .remove-course{background:none;border:none;color:#ccc;cursor:pointer;font-size:.9rem;padding:2px 4px;}
+  .remove-course:hover{color:#c0392b;}
+  .search-dropdown{border:1px solid var(--mist);border-top:none;border-radius:0 0 3px 3px;background:white;max-height:180px;overflow-y:auto;display:none;position:absolute;z-index:10;width:100%;}
+  .search-dropdown.open{display:block;}
+  .search-option{padding:7px 10px;font-size:.8rem;cursor:pointer;border-bottom:1px solid var(--mist);}
+  .search-option:last-child{border-bottom:none;}
+  .search-option:hover{background:var(--cream);}
+  .search-wrapper{position:relative;flex:1;}
+  .empty-msg{padding:20px;text-align:center;color:#bbb;font-size:.8rem;}
+  footer{text-align:center;padding:24px;font-size:.75rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
+  @media(max-width:600px){header,main{padding-left:20px;padding-right:20px;}.form-row{grid-template-columns:1fr;}.day-conflict-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Faculty Scheduling Preferences</h1>
+    <p>TWU Visual Arts — Private Planning Tool — Not for distribution</p>
+  </div>
+  <div class="header-btns">
+    <button class="btn btn-outline" onclick="exportData()">⬇ Export JSON</button>
+    <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
+    <button class="btn btn-gold" onclick="openAddModal()">+ Add Faculty</button>
+  </div>
+</header>
+<main>
+  <div class="notice">
+    <strong>Private planning tool.</strong> Data is saved in your browser's local storage and never transmitted. Use Export JSON to back up. Course lists are pre-populated from FA25, SP25, SP26, and FA26 schedule maps — add or adjust as needed.
+  </div>
+  <div class="view-tabs">
+    <button class="view-tab active" onclick="showView('cards',this)">Faculty Cards</button>
+    <button class="view-tab" onclick="showView('summary',this)">Summary Table</button>
+    <button class="view-tab" onclick="showView('schedule',this)">Schedule Grid</button>
+    <button class="view-tab" onclick="showView('lookup',this)">Course Lookup</button>
+  </div>
+
+  <!-- CARDS -->
+  <div class="view-panel active" id="view-cards">
+    <div class="faculty-grid" id="facultyGrid"></div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="view-panel" id="view-summary">
+    <table class="summary-table" id="summaryTable">
+      <thead><tr><th>Faculty</th><th>Load</th><th>Preferred Times</th><th>Conflicts</th><th>Spread</th><th>Prefers to Teach</th><th>Notes</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- SCHEDULE GRID -->
+  <div class="view-panel" id="view-schedule">
+    <p style="font-size:.82rem;opacity:.6;margin-bottom:14px;">Green = preferred · Yellow = will teach but prefers not · Red = hard conflict</p>
+    <div id="scheduleGrid"></div>
+  </div>
+
+  <!-- COURSE LOOKUP -->
+  <div class="view-panel" id="view-lookup">
+    <div class="course-lookup">
+      <div class="lookup-controls">
+        <input type="text" id="lookupInput" placeholder="Search course code or title…" oninput="renderLookup()"/>
+        <select onchange="renderLookup()" id="lookupPref">
+          <option value="">All preference levels</option>
+          <option value="star">★★ Prefers</option>
+          <option value="can">✓ Can teach</option>
+          <option value="rare">~ Rarely</option>
+        </select>
+      </div>
+      <div class="lookup-result" id="lookupResult"></div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Add Faculty Member</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Basic Info -->
+      <div class="form-section">
+        <div class="form-section-title">👤 Basic Information</div>
+        <div class="form-row">
+          <div class="form-group"><label>Full Name</label><input type="text" id="f_name" placeholder="e.g. Dr. Jane Smith"/></div>
+          <div class="form-group"><label>Teaching Area</label><input type="text" id="f_area" placeholder="e.g. Graphic Design, Painting"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Target Course Load</label>
+            <select id="f_load">
+              <option value="3">3 courses (standard studio)</option>
+              <option value="4">4 courses (lecture/seminar)</option>
+              <option value="2">2 courses (reduced load)</option>
+              <option value="1">1 course (dept head release)</option>
+              <option value="other">Other (see notes)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Class Type</label>
+            <select id="f_classtype">
+              <option value="studio">Studio only</option>
+              <option value="lecture">Lecture/seminar only</option>
+              <option value="mixed">Mixed studio & lecture</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row single">
+          <div class="form-group">
+            <label>Spread Preference</label>
+            <select id="f_spread">
+              <option value="backtoback">Prefers back-to-back</option>
+              <option value="spread">Prefers spread out</option>
+              <option value="no_preference">No strong preference</option>
+              <option value="compact_days">Prefers fewest days possible</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Preferences -->
+      <div class="form-section">
+        <div class="form-section-title">🕐 Time of Day Preferences</div>
+        <div class="block-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#C8E6C9;border:1px solid #B8D8BA"></div>Click once = Preferred</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFF9C4;border:1px solid #E8D5A0"></div>Click twice = Will teach, prefers not</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#FFCDD2;border:1px solid #F5C0BB"></div>Click three times = Hard conflict</div>
+          <div class="legend-item"><div class="legend-dot" style="background:white;border:1px solid #E8E2D9"></div>Click four times = Reset</div>
+        </div>
+        <div class="time-group-label">Studio Blocks (single day, 3 hrs)</div>
+        <div class="time-blocks" id="studioBlocks"></div>
+        <div class="time-group-label" style="margin-top:12px;">Lecture/Seminar Blocks (MW or TTh)</div>
+        <div class="time-blocks" id="lectureBlocks"></div>
+      </div>
+
+      <!-- Day Conflicts -->
+      <div class="form-section">
+        <div class="form-section-title">📅 Day Conflicts</div>
+        <p style="font-size:.79rem;opacity:.65;margin-bottom:10px;">Days this faculty member cannot teach at all.</p>
+        <div class="day-conflict-grid" id="dayConflicts">
+          <button class="day-btn" data-day="Monday" onclick="toggleDay(this)">Monday</button>
+          <button class="day-btn" data-day="Tuesday" onclick="toggleDay(this)">Tuesday</button>
+          <button class="day-btn" data-day="Wednesday" onclick="toggleDay(this)">Wednesday</button>
+          <button class="day-btn" data-day="Thursday" onclick="toggleDay(this)">Thursday</button>
+        </div>
+      </div>
+
+      <!-- Courses -->
+      <div class="form-section">
+        <div class="form-section-title">📚 Courses This Faculty Can Teach</div>
+        <p style="font-size:.79rem;opacity:.65;margin-bottom:10px;">
+          <strong style="color:#7a5000;">★★ Prefers</strong> — actively wants this course &nbsp;·&nbsp;
+          <strong style="color:#2a4a5a;">✓ Can teach</strong> — qualified, comfortable &nbsp;·&nbsp;
+          <strong style="color:#888;">~ Rarely</strong> — possible but unusual
+        </p>
+        <div class="course-search-row">
+          <div class="search-wrapper">
+            <input type="text" id="courseSearchInput" placeholder="Search by code or title to add a course…" oninput="updateCourseDropdown()" autocomplete="off"/>
+            <div class="search-dropdown" id="courseDropdown"></div>
+          </div>
+          <select class="course-pref-select" id="newCoursePref">
+            <option value="can">✓ Can teach</option>
+            <option value="star">★★ Prefers</option>
+            <option value="rare">~ Rarely</option>
+          </select>
+          <button class="btn btn-gold btn-sm" onclick="addCourseFromSearch()">Add</button>
+        </div>
+        <div class="course-list" id="courseList"><div class="empty-msg">No courses added yet. Search above to add.</div></div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-section">
+        <div class="form-section-title">📝 Notes</div>
+        <div class="form-row single">
+          <div class="form-group"><label>Known constraints or special considerations</label>
+          <textarea id="f_notes" placeholder="e.g. Has childcare pickup Tuesdays at 3pm, prefers not to repeat same course consecutive semesters…"></textarea></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteCurrentFaculty()" style="display:none">Delete Faculty</button>
+      <div style="display:flex;gap:10px;margin-left:auto;">
+        <button class="btn btn-sm" style="background:var(--paper);border:1px solid var(--mist);" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-gold btn-sm" onclick="saveFaculty()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>TWU Visual Arts · Faculty Scheduling Preferences · Private — keep this file local, do not upload to GitHub</footer>
+
+<script>
+// ── All courses (rotation) ─────────────────────────────────────────────────
+const ALL_COURSES = [
+  {code:'ART 1203',title:'2D FOUNDATIONS'},{code:'ART 1213',title:'3D FOUNDATIONS'},
+  {code:'ART 1303',title:'DRAWING FOUNDATIONS'},{code:'ART 1503',title:'INTRO TO PAINTING'},
+  {code:'ART 1603',title:'INTRO TO PHOTOGRAPHY'},{code:'ART 2223',title:'DIGITAL ART FOUNDATIONS'},
+  {code:'ART 2243',title:'FUNDAMENTALS OF TYPE & IMAGE'},{code:'ART 2293',title:'VISUAL IDENTITY AND SYMBOL'},
+  {code:'ART 2303',title:'FIGURE DRAWING'},{code:'ART 2423',title:'WORLD ART HISTORY I'},
+  {code:'ART 2433',title:'WORLD ART HISTORY II'},{code:'ART 2653',title:'BLACK & WHITE PHOTOGRAPHY'},
+  {code:'ART 2713',title:'UNDERSTANDING ARTS-VISUAL ART'},{code:'ART 2753',title:'INTRO TO SCULPTURE'},
+  {code:'ART 2823',title:'INTRODUCTION TO CERAMICS'},{code:'ART 3013',title:'PRINCIPLES OF ART EDUCATION'},
+  {code:'ART 3053',title:'GLOBAL PERSPECTIVES IN ART'},{code:'ART 3153',title:'ANIMATION'},
+  {code:'ART 3173',title:'CONTEMPORARY ISSUES IN ART'},{code:'ART 3223',title:'ELEMENTARY ART EDUCATION'},
+  {code:'ART 3233',title:'SECONDARY ART EDUCATION'},{code:'ART 3253',title:'MOTION GRAPHICS'},
+  {code:'ART 3263',title:'EXPERIMENTS IN FUNCTIONAL DESIGN'},{code:'ART 3323',title:'DATA VISUALIZATION'},
+  {code:'ART 3333',title:'HISTORY OF CAMERA ARTS'},{code:'ART 3343',title:'WOMEN IN THE VISUAL ARTS'},
+  {code:'ART 3363',title:'CHARACTER DESIGN'},{code:'ART 3383',title:'DIGITAL ILLUSTRATION'},
+  {code:'ART 3393',title:'PROF PRACTICES VISUAL ARTS'},{code:'ART 3613',title:'CERAMICS SURFACES'},
+  {code:'ART 3663',title:'THE CONSTRUCTED DIGITAL IMAGE'},{code:'ART 3673',title:'SCULPTURE: INSTALLATION ART'},
+  {code:'ART 3683',title:'SCULPT PROCESS/POSSIBILITIES'},{code:'ART 3693',title:'ALTERNATIVE PHOTO PROCESS'},
+  {code:'ART 3703',title:'INTERMEDIATE PAINTING'},{code:'ART 3723',title:'MURAL PAINTING'},
+  {code:'ART 3783',title:'ALTERNATIVE DRAWING'},{code:'ART 3793',title:'FUNCTIONAL CERAMICS'},
+  {code:'ART 3893',title:'SCULPTURAL CERAMICS'},{code:'ART 3913',title:'SCIENTIFIC ILLUSTRATION'},
+  {code:'ART 4013',title:'SCULPTURE & THE ENVIRONMENT'},{code:'ART 4033',title:'PACKAGING DESIGN'},
+  {code:'ART 4043',title:'LATINX ART'},{code:'ART 4053',title:'AFRICAN AMERICAN ART'},
+  {code:'ART 4063',title:'BOOK ARTS'},{code:'ART 4083',title:'FIBERS POSSIBILITIES'},
+  {code:'ART 4133',title:'APPROACHES TO ART EDUCATION'},{code:'ART 4253',title:'PUBLICATION DESIGN'},
+  {code:'ART 4283',title:'WEB AND APP DESIGN'},{code:'ART 4313',title:'ADVERTISING & SOCIAL MEDIA'},
+  {code:'ART 4363',title:'COMMUNITY FOCUS DESIGN STUDIO'},{code:'ART 4483',title:'NARRATIVE ILLUSTRATION'},
+  {code:'ART 4543',title:'INTERDISCIPLINARY INFLUENCES'},{code:'ART 4613',title:'PRINTMAKING'},
+  {code:'ART 4653',title:'COLOR PHOTOGRAPHY'},{code:'ART 4683',title:'PHOTOGRAPHIC POSSIBILITIES'},
+  {code:'ART 4703',title:'ADVANCED PAINTING'},{code:'ART 4903',title:'SPECIAL TOPICS'},
+  {code:'ART 4993',title:'BFA EXHIBITION'},{code:'ART 5003',title:'CRITIQUE SEMINAR'},
+  {code:'ART 5053',title:'BOOK ARTS (GRAD)'},{code:'ART 5063',title:'THEORIES OF ART'},
+  {code:'ART 5123',title:'INTERDISCIPLINARY CERAMICS'},{code:'ART 5353',title:'CURRICULUM IN ART LEARNING'},
+  {code:'ART 5503',title:'HISTORY OF ART'},{code:'ART 5533',title:'ART & SOCIAL MOVEMENTS'},
+  {code:'ART 5543',title:'ART & DECOLONIALITY'},{code:'ART 5573',title:'RESHAPING THE ART HIST CANON'},
+  {code:'ART 5613',title:'PRINTMAKING (GRAD)'},{code:'ART 5653',title:'CREATIVE PHOTOGRAPHY'},
+  {code:'ART 5663',title:'ALTERNATIVE PHOTO PROCESS (GRAD)'},{code:'ART 5693',title:'ACADEMIC PRACTICES'},
+  {code:'ART 5703',title:'PAINTING (GRAD)'},{code:'ART 5733',title:'SCULPTURE: INSTALLATION ART (GRAD)'},
+  {code:'ART 5743',title:'SCULPTURE & THE ENVIRONMENT (GRAD)'},{code:'ART 5753',title:'SCULPTURE (GRAD)'},
+  {code:'ART 5793',title:'PROFESSIONAL PRACTICES IN ART (GRAD)'},{code:'ART 5843',title:'ART-BASED RESEARCH WRITING'},
+  {code:'ART 5883',title:'MFA THESIS EXHIBITION'},{code:'ART 5903',title:'SPECIAL TOPICS (GRAD)'},
+  {code:'ART 5943',title:'ART-BASED RESEARCH WRITING (GRAD)'},{code:'ART 5993',title:'THESIS'},
+  {code:'EDUC 4946',title:'CLINICAL STUDENT TEACHING'},{code:'ENG 3433',title:'PROFESSIONAL WRITING'},
+];
+
+// ── Time blocks ────────────────────────────────────────────────────────────
+const STUDIO_BLOCKS=[
+  {id:'s1',label:'8:00–10:50am'},{id:'s2',label:'11:00am–1:50pm'},
+  {id:'s3',label:'2:30–5:20pm'},{id:'s4',label:'6:00–8:50pm (evening)'},
+];
+const LECTURE_BLOCKS=[
+  {id:'l1',label:'9:30–10:50am (MW)'},{id:'l2',label:'9:30–10:50am (TTh)'},
+  {id:'l3',label:'11:00am–12:20pm (MW)'},{id:'l4',label:'11:00am–12:20pm (TTh)'},
+  {id:'l5',label:'2:30–4:50pm (MW)'},{id:'l6',label:'2:30–4:50pm (TTh)'},
+];
+const STATES=['','prefer','avoid','conflict'];
+
+// ── Pre-populated course data from 4 semesters ─────────────────────────────
+const SEED_COURSES = {
+  'CHRISTINE': {
+    'ART 2223':'can','ART 2243':'can','ART 3153':'can','ART 3253':'star',
+    'ART 4253':'star','ART 4613':'can','ART 4993':'can',
+    'ART 5003':'can','ART 5843':'can','ART 5883':'can'
+  },
+  'COLBY': {
+    'ART 2823':'can','ART 3263':'can','ART 4903':'can',
+    'ART 5003':'can','ART 5123':'can'
+  },
+  'GIOVANNI': {
+    'ART 1303':'can','ART 1503':'can','ART 3703':'star','ART 3723':'star',
+    'ART 4703':'star','ART 4903':'can','ART 5003':'can',
+    'ART 5703':'can','ART 5903':'can'
+  },
+  'JULIE': {
+    'ART 2293':'star','ART 3343':'can','ART 4033':'star','ART 4283':'star',
+    'ART 4313':'can','ART 4993':'can','ART 5843':'can',
+    'ART 5883':'can','ART 5903':'can'
+  },
+  'LAURA LEE': {
+    'ART 2713':'can','ART 3013':'star','ART 3223':'star','ART 3233':'star',
+    'ART 4133':'star','ART 4903':'can','EDUC 4946':'star'
+  },
+  'MEG': {
+    'ART 1603':'star','ART 2713':'can','ART 3393':'can','ART 3693':'can',
+    'ART 4653':'star','ART 4903':'can','ART 5003':'can','ART 5653':'can'
+  },
+  'SARA': {
+    'ART 2423':'star','ART 2433':'star','ART 3173':'star','ART 4043':'star',
+    'ART 4053':'star','ART 4543':'can','ART 5063':'can','ART 5533':'can',
+    'ART 5543':'can','ART 5573':'can','ART 5993':'can'
+  },
+  'SHELI': {
+    'ART 2243':'can','ART 3363':'can','ART 3383':'star','ART 3393':'can',
+    'ART 3913':'star','ART 4313':'can','ART 4363':'star','ART 4483':'star'
+  },
+  'TANYA': {
+    'ART 1213':'star','ART 2753':'star','ART 3683':'star','ART 3783':'can',
+    'ART 4013':'star','ART 5743':'can','ART 5843':'can','ART 5883':'can'
+  },
+};
+
+// ── Storage ────────────────────────────────────────────────────────────────
+function loadData(){try{return JSON.parse(localStorage.getItem('twu_faculty_prefs')||'[]');}catch(e){return [];}}
+function saveData(d){localStorage.setItem('twu_faculty_prefs',JSON.stringify(d));}
+
+let facultyList=loadData();
+let editingIdx=null;
+let blockStates={};
+let modalCourses={};
+
+// ── Seed default faculty if empty ──────────────────────────────────────────
+const DEFAULT_FACULTY=[
+  {name:'GIOVANNI',area:'Painting, Drawing',load:'3',classtype:'studio',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['GIOVANNI'],notes:''},
+  {name:'SARA',area:'Art History, Visual Culture',load:'4',classtype:'lecture',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['SARA'],notes:'Teaches lecture/seminar classes only — 4 course load'},
+  {name:'SHELI',area:'Graphic Design, Illustration, Scientific Illustration',load:'3',classtype:'studio',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['SHELI'],notes:''},
+  {name:'MEG',area:'Photography',load:'3',classtype:'studio',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['MEG'],notes:''},
+  {name:'JULIE',area:'Graphic Design, Web Design',load:'3',classtype:'studio',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['JULIE'],notes:''},
+  {name:'TANYA',area:'Sculpture, Ceramics',load:'3',classtype:'studio',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['TANYA'],notes:''},
+  {name:'LAURA LEE',area:'Art Education',load:'3',classtype:'studio',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['LAURA LEE'],notes:'Student teaching observation counts as studio class with 4+ students'},
+  {name:'CHRISTINE',area:'Graphic Design, Animation, Printmaking',load:'3',classtype:'studio',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['CHRISTINE'],notes:''},
+  {name:'COLBY',area:'Ceramics, Department Head',load:'1',classtype:'mixed',spread:'no_preference',blocks:{},dayConflicts:[],courses:SEED_COURSES['COLBY'],notes:'Department head — 2 course work release. Teaches Critique Seminar + 1 additional course typically.'},
+];
+
+if(!facultyList.length){
+  facultyList=DEFAULT_FACULTY;
+  saveData(facultyList);
+}
+
+// ── Views ──────────────────────────────────────────────────────────────────
+function showView(name,btn){
+  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='summary')renderSummary();
+  if(name==='schedule')renderScheduleGrid();
+  if(name==='lookup')renderLookup();
+}
+
+// ── Cards ──────────────────────────────────────────────────────────────────
+function renderCards(){
+  const grid=document.getElementById('facultyGrid');
+  grid.innerHTML='';
+  facultyList.forEach((f,i)=>{
+    const preferred=Object.entries(f.blocks||{}).filter(([k,v])=>v==='prefer').map(([k])=>blockLabel(k));
+    const conflicts=[...Object.entries(f.blocks||{}).filter(([k,v])=>v==='conflict').map(([k])=>blockLabel(k)),...(f.dayConflicts||[])];
+    const starCourses=Object.entries(f.courses||{}).filter(([k,v])=>v==='star').map(([k])=>k);
+    const canCourses=Object.entries(f.courses||{}).filter(([k,v])=>v==='can').map(([k])=>k);
+    const rareCourses=Object.entries(f.courses||{}).filter(([k,v])=>v==='rare').map(([k])=>k);
+    const card=document.createElement('div');
+    card.className='faculty-card';
+    card.onclick=()=>openEditModal(i);
+    card.innerHTML=`
+      <div class="card-header">
+        <span class="card-name">${f.name||'Unnamed'}</span>
+        <span class="card-load">${f.load||3} courses · ${f.classtype||'studio'}</span>
+      </div>
+      <div class="card-body">
+        <div style="margin-bottom:6px;"><strong style="font-size:.72rem;opacity:.55;text-transform:uppercase;letter-spacing:.05em;">Area</strong><br>${f.area||'—'}</div>
+        ${preferred.length?'<div style="margin-bottom:5px;"><strong style="font-size:.72rem;opacity:.55;text-transform:uppercase;letter-spacing:.05em;">Preferred Times</strong><br>'+preferred.map(p=>'<span class="card-tag pref">'+p+'</span>').join('')+'</div>':''}
+        ${conflicts.length?'<div style="margin-bottom:5px;"><strong style="font-size:.72rem;opacity:.55;text-transform:uppercase;letter-spacing:.05em;">Conflicts</strong><br>'+conflicts.map(c=>'<span class="card-tag conflict">'+c+'</span>').join('')+'</div>':''}
+        ${starCourses.length?'<div style="margin-bottom:4px;"><strong style="font-size:.72rem;opacity:.55;text-transform:uppercase;letter-spacing:.05em;">★★ Prefers</strong><br>'+starCourses.slice(0,5).map(c=>'<span class="card-tag course-star">'+c+'</span>').join('')+(starCourses.length>5?'<span class="card-tag" style="color:#aaa;">+'+( starCourses.length-5)+' more</span>':'')+'</div>':''}
+        ${canCourses.length?'<div style="margin-bottom:4px;"><strong style="font-size:.72rem;opacity:.55;text-transform:uppercase;letter-spacing:.05em;">✓ Can teach</strong><br>'+canCourses.slice(0,5).map(c=>'<span class="card-tag course-can">'+c+'</span>').join('')+(canCourses.length>5?'<span class="card-tag" style="color:#aaa;">+'+(canCourses.length-5)+' more</span>':'')+'</div>':''}
+        ${rareCourses.length?'<div style="margin-bottom:4px;"><strong style="font-size:.72rem;opacity:.55;text-transform:uppercase;letter-spacing:.05em;">~ Rarely</strong><br>'+rareCourses.map(c=>'<span class="card-tag course-rare">'+c+'</span>').join('')+'</div>':''}
+        ${f.notes?'<div style="margin-top:6px;font-size:.76rem;opacity:.6;font-style:italic;">'+f.notes.substring(0,100)+(f.notes.length>100?'…':'')+'</div>':''}
+      </div>`;
+    grid.appendChild(card);
+  });
+  const add=document.createElement('div');
+  add.className='add-faculty-btn';add.onclick=openAddModal;
+  add.innerHTML='<div style="font-size:1.8rem;margin-bottom:8px;opacity:.4;">+</div>Add Faculty Member';
+  grid.appendChild(add);
+}
+
+function spreadLabel(s){
+  return {backtoback:'Back-to-back',spread:'Spread out',no_preference:'No preference',compact_days:'Fewest days'}[s]||'—';
+}
+function blockLabel(id){
+  return [...STUDIO_BLOCKS,...LECTURE_BLOCKS].find(x=>x.id===id)?.label||id;
+}
+function prefLabel(p){
+  return {star:'★★ Prefers',can:'✓ Can teach',rare:'~ Rarely'}[p]||p;
+}
+
+// ── Summary ────────────────────────────────────────────────────────────────
+function renderSummary(){
+  const tbody=document.querySelector('#summaryTable tbody');
+  if(!facultyList.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#bbb;padding:28px;">No faculty added yet.</td></tr>';return;}
+  tbody.innerHTML=facultyList.map(f=>{
+    const preferred=Object.entries(f.blocks||{}).filter(([k,v])=>v==='prefer').map(([k])=>blockLabel(k)).join(', ')||'—';
+    const conflicts=[...Object.entries(f.blocks||{}).filter(([k,v])=>v==='conflict').map(([k])=>blockLabel(k)),...(f.dayConflicts||[])].join(', ')||'—';
+    const stars=Object.entries(f.courses||{}).filter(([k,v])=>v==='star').map(([k])=>k).join(', ')||'—';
+    return `<tr>
+      <td><strong>${f.name||'—'}</strong><br><span style="font-size:.73rem;color:#888;">${f.area||''}</span></td>
+      <td>${f.load||3} (${f.classtype||'studio'})</td>
+      <td style="color:#2e5c31;font-size:.78rem;">${preferred}</td>
+      <td style="color:#8b1a10;font-size:.78rem;">${conflicts}</td>
+      <td>${spreadLabel(f.spread)}</td>
+      <td style="font-size:.76rem;color:#7a5000;">${stars}</td>
+      <td style="font-size:.76rem;color:#666;">${f.notes||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Schedule grid ──────────────────────────────────────────────────────────
+function renderScheduleGrid(){
+  const container=document.getElementById('scheduleGrid');
+  if(!facultyList.length){container.innerHTML='<p style="color:#bbb;">No faculty added yet.</p>';return;}
+  const allBlocks=[...STUDIO_BLOCKS,...LECTURE_BLOCKS];
+  let html='<div style="overflow-x:auto;"><table class="summary-table"><thead><tr><th>Time Block</th>';
+  facultyList.forEach(f=>{html+=`<th style="font-size:.72rem;">${f.name||'?'}</th>`;});
+  html+='</tr></thead><tbody>';
+  allBlocks.forEach(b=>{
+    html+=`<tr><td style="font-size:.76rem;white-space:nowrap;">${b.label}</td>`;
+    facultyList.forEach(f=>{
+      const state=(f.blocks||{})[b.id]||'';
+      const bg=state==='prefer'?'#C8E6C9':state==='avoid'?'#FFF9C4':state==='conflict'?'#FFCDD2':'white';
+      const sym=state==='prefer'?'✓':state==='avoid'?'~':state==='conflict'?'✕':'';
+      html+=`<td style="background:${bg};text-align:center;" title="${f.name}: ${state||'no preference'}">${sym}</td>`;
+    });
+    html+='</tr>';
+  });
+  ['Monday','Tuesday','Wednesday','Thursday'].forEach(day=>{
+    html+=`<tr><td style="font-size:.76rem;font-weight:500;">${day} (all day)</td>`;
+    facultyList.forEach(f=>{
+      const has=(f.dayConflicts||[]).includes(day);
+      html+=`<td style="background:${has?'#FFCDD2':'white'};text-align:center;">${has?'✕':''}</td>`;
+    });
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  container.innerHTML=html;
+}
+
+// ── Course lookup ──────────────────────────────────────────────────────────
+function renderLookup(){
+  const query=(document.getElementById('lookupInput').value||'').toLowerCase();
+  const prefFilter=document.getElementById('lookupPref').value;
+  const result=document.getElementById('lookupResult');
+
+  // Get all courses that match search
+  const matchingCourses=ALL_COURSES.filter(c=>
+    !query || c.code.toLowerCase().includes(query) || c.title.toLowerCase().includes(query)
+  );
+
+  // For each course find who can teach it
+  const rows=[];
+  matchingCourses.forEach(c=>{
+    const teachers=[];
+    facultyList.forEach(f=>{
+      const pref=(f.courses||{})[c.code];
+      if(pref && (!prefFilter || pref===prefFilter)){
+        teachers.push({name:f.name,pref});
+      }
+    });
+    if(teachers.length||!query){
+      rows.push({course:c,teachers});
+    }
+  });
+
+  if(!rows.length){
+    result.innerHTML='<div class="empty-msg">No results found.</div>';return;
+  }
+
+  result.innerHTML=`<table>
+    <thead><tr><th>Course</th><th>Faculty Who Can Teach</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr>
+      <td><strong style="font-size:.78rem;">${r.course.code}</strong><br><span style="font-size:.74rem;color:#777;">${r.course.title}</span></td>
+      <td>${r.teachers.length
+        ? r.teachers.map(t=>`<span class="pref-pill pref-${t.pref}" style="margin:2px;">${t.name} — ${prefLabel(t.pref)}</span>`).join(' ')
+        : '<span style="color:#bbb;font-size:.76rem;">None assigned yet</span>'
+      }</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── Modal ──────────────────────────────────────────────────────────────────
+function buildTimeBlocks(){
+  const sb=document.getElementById('studioBlocks');
+  sb.innerHTML='';
+  STUDIO_BLOCKS.forEach(b=>{
+    const el=document.createElement('div');
+    el.className='time-block'+(blockStates[b.id]?' '+blockStates[b.id]:'');
+    el.dataset.id=b.id;el.textContent=b.label;
+    el.onclick=()=>{
+      const cur=blockStates[b.id]||'';
+      const next=STATES[(STATES.indexOf(cur)+1)%STATES.length];
+      blockStates[b.id]=next;
+      el.className='time-block'+(next?' '+next:'');
+    };
+    sb.appendChild(el);
+  });
+  const lb=document.getElementById('lectureBlocks');
+  lb.innerHTML='';
+  LECTURE_BLOCKS.forEach(b=>{
+    const el=document.createElement('div');
+    el.className='time-block'+(blockStates[b.id]?' '+blockStates[b.id]:'');
+    el.dataset.id=b.id;el.textContent=b.label;
+    el.onclick=()=>{
+      const cur=blockStates[b.id]||'';
+      const next=STATES[(STATES.indexOf(cur)+1)%STATES.length];
+      blockStates[b.id]=next;
+      el.className='time-block'+(next?' '+next:'');
+    };
+    lb.appendChild(el);
+  });
+}
+
+function toggleDay(btn){btn.classList.toggle('selected');}
+
+function renderCourseList(){
+  const list=document.getElementById('courseList');
+  const entries=Object.entries(modalCourses).sort((a,b)=>a[0].localeCompare(b[0]));
+  if(!entries.length){list.innerHTML='<div class="empty-msg">No courses added yet.</div>';return;}
+  list.innerHTML=entries.map(([code,pref])=>{
+    const course=ALL_COURSES.find(c=>c.code===code);
+    const title=course?.title||'';
+    return `<div class="course-list-item">
+      <div class="course-item-left">
+        <span class="course-item-code">${code}</span>
+        <span class="course-item-title">${title}</span>
+      </div>
+      <div class="course-item-right">
+        <button class="pref-toggle star${pref==='star'?'':' inactive'}" onclick="setCoursePreference('${code}','star')" title="Prefers">★★</button>
+        <button class="pref-toggle can${pref==='can'?'':' inactive'}" onclick="setCoursePreference('${code}','can')" title="Can teach">✓</button>
+        <button class="pref-toggle rare${pref==='rare'?'':' inactive'}" onclick="setCoursePreference('${code}','rare')" title="Rarely">~</button>
+        <button class="remove-course" onclick="removeCourse('${code}')" title="Remove">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setCoursePreference(code,pref){
+  modalCourses[code]=pref;
+  renderCourseList();
+}
+
+function removeCourse(code){
+  delete modalCourses[code];
+  renderCourseList();
+}
+
+function updateCourseDropdown(){
+  const q=(document.getElementById('courseSearchInput').value||'').toLowerCase();
+  const dd=document.getElementById('courseDropdown');
+  if(!q){dd.classList.remove('open');return;}
+  const matches=ALL_COURSES.filter(c=>
+    (c.code.toLowerCase().includes(q)||c.title.toLowerCase().includes(q))&&!modalCourses[c.code]
+  ).slice(0,12);
+  if(!matches.length){dd.classList.remove('open');return;}
+  dd.innerHTML=matches.map(c=>`<div class="search-option" onclick="selectCourseFromDropdown('${c.code}','${c.title.replace(/'/g,"\\'")}')">
+    <strong>${c.code}</strong> — ${c.title}
+  </div>`).join('');
+  dd.classList.add('open');
+}
+
+function selectCourseFromDropdown(code,title){
+  const pref=document.getElementById('newCoursePref').value||'can';
+  modalCourses[code]=pref;
+  document.getElementById('courseSearchInput').value='';
+  document.getElementById('courseDropdown').classList.remove('open');
+  renderCourseList();
+}
+
+function addCourseFromSearch(){
+  const q=document.getElementById('courseSearchInput').value.trim().toUpperCase();
+  const match=ALL_COURSES.find(c=>c.code===q||c.code.replace(/\s/g,'')===q.replace(/\s/g,''));
+  if(!match){alert('Course not found. Please select from the dropdown.');return;}
+  const pref=document.getElementById('newCoursePref').value||'can';
+  modalCourses[match.code]=pref;
+  document.getElementById('courseSearchInput').value='';
+  document.getElementById('courseDropdown').classList.remove('open');
+  renderCourseList();
+}
+
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.search-wrapper'))
+    document.getElementById('courseDropdown').classList.remove('open');
+});
+
+function openAddModal(){
+  editingIdx=null;blockStates={};modalCourses={};
+  document.getElementById('modalTitle').textContent='Add Faculty Member';
+  document.getElementById('deleteBtn').style.display='none';
+  ['f_name','f_area','f_notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_load').value='3';
+  document.getElementById('f_classtype').value='studio';
+  document.getElementById('f_spread').value='no_preference';
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('selected'));
+  buildTimeBlocks();renderCourseList();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openEditModal(idx){
+  editingIdx=idx;
+  const f=facultyList[idx];
+  blockStates={...(f.blocks||{})};
+  modalCourses={...(f.courses||{})};
+  document.getElementById('modalTitle').textContent='Edit — '+f.name;
+  document.getElementById('deleteBtn').style.display='block';
+  document.getElementById('f_name').value=f.name||'';
+  document.getElementById('f_area').value=f.area||'';
+  document.getElementById('f_load').value=f.load||'3';
+  document.getElementById('f_classtype').value=f.classtype||'studio';
+  document.getElementById('f_spread').value=f.spread||'no_preference';
+  document.getElementById('f_notes').value=f.notes||'';
+  document.querySelectorAll('.day-btn').forEach(b=>b.classList.toggle('selected',(f.dayConflicts||[]).includes(b.dataset.day)));
+  buildTimeBlocks();renderCourseList();
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+function saveFaculty(){
+  const name=document.getElementById('f_name').value.trim();
+  if(!name){alert('Please enter a name.');return;}
+  const dayConflicts=[];
+  document.querySelectorAll('.day-btn.selected').forEach(b=>dayConflicts.push(b.dataset.day));
+  const blocks={};
+  Object.entries(blockStates).forEach(([k,v])=>{if(v)blocks[k]=v;});
+  const record={
+    name,area:document.getElementById('f_area').value.trim(),
+    load:document.getElementById('f_load').value,
+    classtype:document.getElementById('f_classtype').value,
+    spread:document.getElementById('f_spread').value,
+    blocks,dayConflicts,
+    courses:{...modalCourses},
+    notes:document.getElementById('f_notes').value.trim(),
+  };
+  if(editingIdx===null)facultyList.push(record);
+  else facultyList[editingIdx]=record;
+  saveData(facultyList);closeModal();renderCards();
+}
+
+function deleteCurrentFaculty(){
+  if(editingIdx===null)return;
+  if(!confirm('Delete '+facultyList[editingIdx].name+'?'))return;
+  facultyList.splice(editingIdx,1);
+  saveData(facultyList);closeModal();renderCards();
+}
+
+function exportData(){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(facultyList,null,2)],{type:'application/json'}));
+  a.download='twu_faculty_preferences.json';a.click();
+}
+function importData(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!Array.isArray(d))throw new Error('Invalid format');
+      facultyList=d;saveData(facultyList);renderCards();
+      alert('Imported '+facultyList.length+' faculty records.');
+    }catch(err){alert('Error: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+renderCards();
+</script>
+</body>
+</html>
