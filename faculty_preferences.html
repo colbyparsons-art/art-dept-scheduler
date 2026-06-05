@@ -18,14 +18,7 @@
   .btn-gold:hover{opacity:.85;}
   .btn-outline{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,.35);}
   .btn-outline:hover{background:rgba(255,255,255,.1);}
-  .btn-danger{background:#c0392b;color:white;}
-  .btn-danger:hover{opacity:.85;}
   .btn-sm{padding:5px 12px;font-size:.78rem;}
-  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
-  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;display:inline-block;}
-  .site-nav a:hover{opacity:1;}
-  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
-  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
   main{padding:32px 40px;max-width:1200px;margin:0 auto;}
   .notice{background:var(--light-clay);border-left:3px solid var(--clay);padding:12px 16px;font-size:.83rem;margin-bottom:24px;border-radius:0 4px 4px 0;line-height:1.5;}
   .notice strong{color:var(--clay);}
@@ -49,8 +42,6 @@
   .card-tag.course-star{background:#FDF3E0;border-color:#E8D5A0;color:#7a5000;}
   .card-tag.course-can{background:#EBF1F5;border-color:#B8CDD8;color:#2a4a5a;}
   .card-tag.course-rare{background:var(--paper);border-color:var(--mist);color:#888;}
-  .add-faculty-btn{background:white;border:2px dashed var(--mist);border-radius:4px;padding:28px;text-align:center;cursor:pointer;color:#aaa;font-size:.85rem;transition:all .2s;}
-  .add-faculty-btn:hover{border-color:var(--clay);color:var(--clay);}
 
   /* Course lookup view */
   .course-lookup{margin-bottom:24px;}
@@ -108,8 +99,8 @@
   .day-btn:hover:not(.selected){background:var(--paper);}
 
   /* Course capability section */
-.course-search-outer{margin-bottom:10px;}
-.course-search-row{display:flex;gap:8px;align-items:center;}
+  .course-search-outer{margin-bottom:10px;}
+  .course-search-row{display:flex;gap:8px;align-items:center;}
   .course-search-row input{flex:1;padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.83rem;}
   .course-search-row input:focus{outline:none;border-color:var(--clay);}
   .course-pref-select{padding:6px 8px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.8rem;}
@@ -127,8 +118,8 @@
   .pref-toggle.rare{background:var(--paper);border-color:var(--mist);color:#888;}
   .pref-toggle.inactive{background:white;border-color:var(--mist);color:#bbb;}
   .remove-course{background:none;border:none;color:#ccc;cursor:pointer;font-size:.9rem;padding:2px 4px;}
-  .remove-course:hover{color:#c0392b;} 
-  .search-dropdown{border:1px solid var(--mist);border-top:none;border-radius:0 0 3px 3px;background:white;max-height:180px;overflow-y:auto;display:none;width:100%;} .search-dropdown{border:1px solid var(--mist);border-top:none;border-radius:0 0 3px 3px;background:white;max-height:180px;overflow-y:auto;display:none;position:absolute;z-index:10;width:100%;}
+  .remove-course:hover{color:#c0392b;}
+  .search-dropdown{border:1px solid var(--mist);border-top:none;border-radius:0 0 3px 3px;background:white;max-height:180px;overflow-y:auto;display:none;width:100%;}
   .search-dropdown.open{display:block;}
   .search-option{padding:7px 10px;font-size:.8rem;cursor:pointer;border-bottom:1px solid var(--mist);}
   .search-option:last-child{border-bottom:none;}
@@ -140,11 +131,6 @@
 </style>
 </head>
 <body>
-<nav class="site-nav">
-  <a href="index.html">🏠 Home</a>
-  <span class="sep">/</span>
-  <a href="faculty_preferences.html" class="current">Faculty Preferences</a>
-</nav>
 <header>
   <div>
     <h1>Faculty Scheduling Preferences</h1>
@@ -154,7 +140,6 @@
     <button class="btn btn-outline" onclick="exportData()">⬇ Export JSON</button>
     <button class="btn btn-outline" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
-    <button class="btn btn-gold" onclick="openAddModal()">+ Add Faculty</button>
   </div>
 </header>
 <main>
@@ -208,7 +193,7 @@
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <div class="modal-header">
-      <h2 id="modalTitle">Add Faculty Member</h2>
+      <h2 id="modalTitle">Edit Preferences</h2>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -286,25 +271,18 @@
           <strong style="color:#7a5000;">★★ Prefers</strong> — actively wants this course &nbsp;·&nbsp;
           <strong style="color:#2a4a5a;">✓ Can teach</strong> — qualified, comfortable &nbsp;·&nbsp;
           <strong style="color:#888;">~ Rarely</strong> — possible but unusual
-        </p>    
-<div class="course-search-outer">
-  <div class="course-search-row">
-    <input type="text" id="courseSearchInput" placeholder="Search by code or title to add a course…" oninput="updateCourseDropdown()" autocomplete="off"/>
-    <select class="course-pref-select" id="newCoursePref">
-      <option value="can">✓ Can teach</option>
-      <option value="star">★★ Prefers</option>
-      <option value="rare">~ Rarely</option>
-    </select>
-    <button class="btn btn-gold btn-sm" onclick="addCourseFromSearch()">Add</button>
-  </div>
-  <div class="search-dropdown" id="courseDropdown"></div>
-</div>
-          <select class="course-pref-select" id="newCoursePref">
-            <option value="can">✓ Can teach</option>
-            <option value="star">★★ Prefers</option>
-            <option value="rare">~ Rarely</option>
-          </select>
-          <button class="btn btn-gold btn-sm" onclick="addCourseFromSearch()">Add</button>
+        </p>
+        <div class="course-search-outer">
+          <div class="course-search-row">
+            <input type="text" id="courseSearchInput" placeholder="Search by code or title to add a course…" oninput="updateCourseDropdown()" autocomplete="off"/>
+            <select class="course-pref-select" id="newCoursePref">
+              <option value="can">✓ Can teach</option>
+              <option value="star">★★ Prefers</option>
+              <option value="rare">~ Rarely</option>
+            </select>
+            <button class="btn btn-gold btn-sm" onclick="addCourseFromSearch()">Add</button>
+          </div>
+          <div class="search-dropdown" id="courseDropdown"></div>
         </div>
         <div class="course-list" id="courseList"><div class="empty-msg">No courses added yet. Search above to add.</div></div>
       </div>
@@ -319,7 +297,6 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteCurrentFaculty()" style="display:none">Delete Faculty</button>
       <div style="display:flex;gap:10px;margin-left:auto;">
         <button class="btn btn-sm" style="background:var(--paper);border:1px solid var(--mist);" onclick="closeModal()">Cancel</button>
         <button class="btn btn-gold btn-sm" onclick="saveFaculty()">Save</button>
@@ -501,9 +478,7 @@ function renderCards(){
     grid.appendChild(card);
   });
   const add=document.createElement('div');
-  add.className='add-faculty-btn';add.onclick=openAddModal;
-  add.innerHTML='<div style="font-size:1.8rem;margin-bottom:8px;opacity:.4;">+</div>Add Faculty Member';
-  grid.appendChild(add);
+
 }
 
 function spreadLabel(s){
@@ -699,6 +674,7 @@ function selectCourseFromDropdown(code,title){
 function addCourseFromSearch(){
   const q=document.getElementById('courseSearchInput').value.trim();
   if(!q){return;}
+  // First try exact code match
   const exactMatch=ALL_COURSES.find(c=>c.code.toUpperCase()===q.toUpperCase()||c.code.replace(/\s/g,'').toUpperCase()===q.replace(/\s/g,'').toUpperCase());
   if(exactMatch){
     const pref=document.getElementById('newCoursePref').value||'can';
@@ -708,16 +684,19 @@ function addCourseFromSearch(){
     renderCourseList();
     return;
   }
+  // Otherwise find partial matches and add first one
   const partialMatches=ALL_COURSES.filter(c=>
     (c.code.toLowerCase().includes(q.toLowerCase())||c.title.toLowerCase().includes(q.toLowerCase()))&&!modalCourses[c.code]
   );
   if(partialMatches.length===1){
+    // Only one match — add it automatically
     const pref=document.getElementById('newCoursePref').value||'can';
     modalCourses[partialMatches[0].code]=pref;
     document.getElementById('courseSearchInput').value='';
     document.getElementById('courseDropdown').classList.remove('open');
     renderCourseList();
   } else if(partialMatches.length>1){
+    // Multiple matches — prompt user to pick from dropdown
     alert('Multiple courses match "'+q+'". Please click a course from the dropdown list to select it.');
     updateCourseDropdown();
   } else {
@@ -726,30 +705,18 @@ function addCourseFromSearch(){
 }
 
 document.addEventListener('click',function(e){
-if(!e.target.closest('.course-search-outer'))
+  if(!e.target.closest('.course-search-outer'))
     document.getElementById('courseDropdown').classList.remove('open');
 });
 
-function openAddModal(){
-  editingIdx=null;blockStates={};modalCourses={};
-  document.getElementById('modalTitle').textContent='Add Faculty Member';
-  document.getElementById('deleteBtn').style.display='none';
-  ['f_name','f_area','f_notes'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('f_load').value='3';
-  document.getElementById('f_classtype').value='studio';
-  document.getElementById('f_spread').value='no_preference';
-  document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('selected'));
-  buildTimeBlocks();renderCourseList();
-  document.getElementById('modalOverlay').classList.add('open');
-}
+
 
 function openEditModal(idx){
   editingIdx=idx;
   const f=facultyList[idx];
   blockStates={...(f.blocks||{})};
   modalCourses={...(f.courses||{})};
-  document.getElementById('modalTitle').textContent='Edit — '+f.name;
-  document.getElementById('deleteBtn').style.display='block';
+  document.getElementById('modalTitle').textContent='Edit — '+f.name+' Preferences';
   document.getElementById('f_name').value=f.name||'';
   document.getElementById('f_area').value=f.area||'';
   document.getElementById('f_load').value=f.load||'3';
@@ -784,12 +751,7 @@ function saveFaculty(){
   saveData(facultyList);closeModal();renderCards();
 }
 
-function deleteCurrentFaculty(){
-  if(editingIdx===null)return;
-  if(!confirm('Delete '+facultyList[editingIdx].name+'?'))return;
-  facultyList.splice(editingIdx,1);
-  saveData(facultyList);closeModal();renderCards();
-}
+
 
 function exportData(){
   const a=document.createElement('a');
@@ -815,3 +777,4 @@ renderCards();
 </script>
 </body>
 </html>
+
