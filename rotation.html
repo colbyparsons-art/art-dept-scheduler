@@ -132,14 +132,8 @@
 
 <div class="toolbar">
   <label>Starting year:</label>
-  <select id="startYear" onchange="renderAll()"></select>
-  <label style="margin-left:6px;">Filter:</label>
+  <select id="startYear" onchange="onYearChange()"></select>
   <input type="text" class="search-box" id="searchBox" placeholder="Search course code or title…" oninput="renderAll()"/>
-  <label style="margin-left:6px;">Show:</label>
-  <button class="btn active" id="btn-all"    onclick="setFilter('all',this)">All</button>
-  <button class="btn"        id="btn-fall"   onclick="setFilter('fall',this)">Fall only</button>
-  <button class="btn"        id="btn-spring" onclick="setFilter('spring',this)">Spring only</button>
-  <button class="btn"        id="btn-irreg"  onclick="setFilter('irreg',this)">Irregular</button>
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
     <button class="btn btn-edit" id="editBtn" onclick="toggleEdit()">✏ Edit Rotation</button>
     <button class="btn btn-gold" id="addBtn" style="display:none;" onclick="openAddModal()">+ Add Course</button>
@@ -156,17 +150,28 @@
     <button class="view-tab" onclick="showView('table',this)">Full Table</button>
   </div>
   <div class="view-panel active" id="view-columns">
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--all)"></div>Every year</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--even)"></div>Even years only</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--odd)"></div>Odd years only</div>
-      <div class="legend-sep"></div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--fall)"></div>Fall</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--spring)"></div>Spring</div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;">
+      <label style="font-size:.78rem;font-weight:500;opacity:.65;">Semester:</label>
+      <select id="semColSelect" onchange="renderColumns()" style="padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--ink);background:white;"></select>
+      <div class="legend" style="margin-bottom:0;">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--all)"></div>Every year</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--even)"></div>Even yrs</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--odd)"></div>Odd yrs</div>
+        <div class="legend-sep"></div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--fall)"></div>Fall</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--spring)"></div>Spring</div>
+      </div>
     </div>
     <div class="rotation-grid" id="columnsGrid"></div>
   </div>
   <div class="view-panel" id="view-table">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+      <span style="font-size:.78rem;font-weight:500;opacity:.65;">Show:</span>
+      <button class="btn active" id="btn-all"    onclick="setFilter('all',this)">All</button>
+      <button class="btn"        id="btn-fall"   onclick="setFilter('fall',this)">Fall only</button>
+      <button class="btn"        id="btn-spring" onclick="setFilter('spring',this)">Spring only</button>
+      <button class="btn"        id="btn-irreg"  onclick="setFilter('irreg',this)">Irregular</button>
+    </div>
     <div id="tableContainer"></div>
   </div>
 </main>
@@ -515,12 +520,31 @@ for(let y=curYear-1;y<=curYear+3;y++){
   ySel.appendChild(o);
 }
 
+// ── Semester column selector ─────────────────────────────────────────────────
+let _lastSemDropYear=null;
+function refreshSemDropdown(){
+  const sy=parseInt(document.getElementById('startYear').value);
+  if(sy===_lastSemDropYear) return;
+  _lastSemDropYear=sy;
+  const sel=document.getElementById('semColSelect');
+  const prev=sel.selectedIndex;
+  sel.innerHTML=[
+    `<option value="FALL|${sy}">Fall ${sy}</option>`,
+    `<option value="SPRING|${sy+1}">Spring ${sy+1}</option>`,
+    `<option value="FALL|${sy+1}">Fall ${sy+1}</option>`,
+    `<option value="SPRING|${sy+2}">Spring ${sy+2}</option>`,
+    `<option value="IRREG|">Irregular</option>`,
+  ].join('');
+  sel.selectedIndex=Math.min(Math.max(prev,0),4);
+}
+function onYearChange(){ _lastSemDropYear=null; renderAll(); }
+
 // ── Filter / view helpers ────────────────────────────────────────────────────
 function setFilter(f,btn){
   semFilter=f;
   document.querySelectorAll('#btn-all,#btn-fall,#btn-spring,#btn-irreg').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderAll();
+  renderTable();
 }
 function showView(name,btn){
   document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
@@ -544,7 +568,7 @@ function getQ(){ return (document.getElementById('searchBox').value||'').toLower
 function matches(code,title){ const q=getQ(); return !q||code.toLowerCase().includes(q)||title.toLowerCase().includes(q); }
 
 // ── Render ───────────────────────────────────────────────────────────────────
-function renderAll(){ renderStats(); renderColumns(); renderTable(); }
+function renderAll(){ refreshSemDropdown(); renderStats(); renderColumns(); renderTable(); }
 
 function renderStats(){
   const ROT=getRotation();
@@ -565,22 +589,14 @@ function renderStats(){
 
 function renderColumns(){
   const ROT=getRotation();
-  const sy=parseInt(document.getElementById('startYear').value);
-  const sems=[
-    {sem:'FALL',  yr:sy,   label:`Fall ${sy}`,   cls:'fall'},
-    {sem:'SPRING',yr:sy+1, label:`Spring ${sy+1}`,cls:'spring'},
-    {sem:'FALL',  yr:sy+1, label:`Fall ${sy+1}`,  cls:'fall'},
-    {sem:'SPRING',yr:sy+2, label:`Spring ${sy+2}`,cls:'spring'},
-  ];
+  const selVal=document.getElementById('semColSelect').value||'';
+  const pipe=selVal.indexOf('|');
+  const sem=pipe>=0?selVal.substring(0,pipe):'FALL';
+  const yr=pipe>=0?parseInt(selVal.substring(pipe+1))||0:0;
   const grid=document.getElementById('columnsGrid');
-  let vis=sems;
-  if(semFilter==='fall')   vis=sems.filter(s=>s.sem==='FALL');
-  if(semFilter==='spring') vis=sems.filter(s=>s.sem==='SPRING');
-  if(semFilter==='irreg')  vis=[];
-  const cols=semFilter==='irreg'?1:vis.length;
-  grid.style.gridTemplateColumns=`repeat(${Math.min(cols||1,4)},1fr)`;
+  grid.style.gridTemplateColumns='1fr';
 
-  if(semFilter==='irreg'){
+  if(sem==='IRREG'){
     const irregs=ROT.filter(([c,t,sp])=>sp==='IRREGULAR'&&matches(c,t));
     const rows=irregs.map(([c,t])=>{
       const ce=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -600,27 +616,26 @@ function renderColumns(){
     return;
   }
 
-  grid.innerHTML=vis.map(({sem,yr,label,cls})=>{
-    const courses=ROT.filter(([c,t,sp,yp])=>sp!=='IRREGULAR'&&offered(sp,yp,sem,yr)&&matches(c,t));
-    const rows=courses.map(([c,t,sp,yp])=>{
-      const ce=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      return `<div class="course-row">
-        <span class="course-code">${h(c)}</span>
-        <span class="course-title" title="${h(t)}">${h(t)}</span>
-        ${facSelect(c,sem,yr)}
-        ${badgeHtml(yp)}
-        <button class="row-act" title="Edit" onclick="openEditModal('${ce}')">✏</button>
-        <button class="row-act" style="color:#c0392b;" title="Delete" onclick="deleteRow('${ce}')">✕</button>
-      </div>`;
-    }).join('');
-    const semEsc=sem.replace(/'/g,"\\'");
-    return `<div class="semester-col">
-      <div class="sem-header ${cls}">
-        <span>${label}</span><span class="sem-count">${courses.length} courses</span>
-      </div>
-      ${rows||'<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>'}
+  const cls=sem==='FALL'?'fall':'spring';
+  const label=sem==='FALL'?`Fall ${yr}`:`Spring ${yr}`;
+  const courses=ROT.filter(([c,t,sp,yp])=>sp!=='IRREGULAR'&&offered(sp,yp,sem,yr)&&matches(c,t));
+  const rows=courses.map(([c,t,sp,yp])=>{
+    const ce=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="course-row">
+      <span class="course-code">${h(c)}</span>
+      <span class="course-title" title="${h(t)}">${h(t)}</span>
+      ${facSelect(c,sem,yr)}
+      ${badgeHtml(yp)}
+      <button class="row-act" title="Edit" onclick="openEditModal('${ce}')">✏</button>
+      <button class="row-act" style="color:#c0392b;" title="Delete" onclick="deleteRow('${ce}')">✕</button>
     </div>`;
   }).join('');
+  grid.innerHTML=`<div class="semester-col">
+    <div class="sem-header ${cls}">
+      <span>${label}</span><span class="sem-count">${courses.length} courses</span>
+    </div>
+    ${rows||'<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>'}
+  </div>`;
 }
 
 function renderTable(){

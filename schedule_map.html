@@ -123,11 +123,21 @@
   .view-panel.active{display:block;}
 
   footer{text-align:center;padding:24px;font-size:.74rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
-  @media print{header,.toolbar,.header-btns,.add-chip,.chip-actions,footer{display:none!important;}main{padding:0;}body{background:white;}}
-  @media(max-width:700px){.schedule-grid{grid-template-columns:60px 1fr 1fr;}main,.toolbar,header{padding-left:16px;padding-right:16px;}}
+  .site-nav{background:var(--ink);padding:0 40px;display:flex;align-items:center;gap:16px;border-bottom:1px solid rgba(255,255,255,.1);}
+  .site-nav a{color:var(--cream);font-size:.78rem;opacity:.6;text-decoration:none;padding:10px 0;display:inline-block;}
+  .site-nav a:hover{opacity:1;}
+  .site-nav a.current{opacity:1;border-bottom:2px solid var(--gold);}
+  .site-nav .sep{color:var(--cream);opacity:.3;font-size:.7rem;}
+  @media print{header,.toolbar,.header-btns,.add-chip,.chip-actions,.site-nav,footer{display:none!important;}main{padding:0;}body{background:white;}}
+  @media(max-width:700px){.schedule-grid{grid-template-columns:60px 1fr 1fr;}main,.toolbar,header,.site-nav{padding-left:16px;padding-right:16px;}}
 </style>
 </head>
 <body>
+<nav class="site-nav">
+  <a href="index.html">🏠 Home</a>
+  <span class="sep">/</span>
+  <a href="schedule_map.html" class="current">Schedule Map</a>
+</nav>
 <header>
   <div>
     <h1>Schedule Map</h1>
