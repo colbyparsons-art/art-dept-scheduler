@@ -9,7 +9,7 @@
   :root{
     --ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;
     --cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;
-    --fall:#6B3A2A;--spring:#3A5C4A;--both:#4A5C6B;--irreg:#999;
+    --fall:#6B3A2A;--spring:#3A5C4A;--irreg:#999;
     --all:#4A5C6B;--even:#7A5C8B;--odd:#8B7A2F;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -22,38 +22,57 @@
   header{background:var(--ink);color:var(--cream);padding:28px 40px;display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;}
   header h1{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;line-height:1.1;}
   header p{font-size:.82rem;opacity:.55;margin-top:4px;font-weight:300;}
-  .toolbar{background:var(--paper);border-bottom:1px solid var(--mist);padding:12px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .toolbar{background:var(--paper);border-bottom:1px solid var(--mist);padding:12px 40px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
   .toolbar label{font-size:.78rem;font-weight:500;opacity:.65;}
-  .toolbar select,.toolbar input{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--ink);background:white;}
-  .search-box{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;width:220px;}
-  .btn{padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;border-radius:2px;border:1px solid var(--mist);background:white;}
+  .toolbar select{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--ink);background:white;}
+  .search-box{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;width:200px;}
+  .btn{padding:7px 14px;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;cursor:pointer;border-radius:2px;border:1px solid var(--mist);background:white;transition:all .12s;}
   .btn:hover{background:var(--paper);}
   .btn.active{background:var(--ink);color:var(--cream);border-color:var(--ink);}
+  .btn-edit{border-color:var(--clay);color:var(--clay);}
+  .btn-edit.on{background:var(--clay);color:white;border-color:var(--clay);}
+  .btn-gold{background:var(--gold);color:var(--ink);border-color:var(--gold);}
+  .btn-gold:hover{opacity:.85;}
+  .btn-danger{background:#c0392b;color:white;border-color:#c0392b;}
+  .btn-danger:hover{background:#a93226;}
   main{padding:28px 40px;max-width:1400px;margin:0 auto;}
 
-  /* Legend */
   .legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;font-size:.76rem;align-items:center;}
   .legend-item{display:flex;align-items:center;gap:5px;}
   .legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
   .legend-sep{width:1px;height:16px;background:var(--mist);}
 
-  /* Semester columns layout */
   .rotation-grid{display:grid;gap:16px;}
   .semester-col{background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
   .sem-header{padding:12px 16px;font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;}
   .sem-header.fall{border-top:3px solid var(--fall);}
   .sem-header.spring{border-top:3px solid var(--spring);}
   .sem-count{font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;}
-  .course-row{padding:8px 16px;border-bottom:1px solid var(--mist);font-size:.8rem;display:flex;align-items:center;gap:10px;}
+
+  .course-row{padding:6px 14px;border-bottom:1px solid var(--mist);font-size:.8rem;display:flex;align-items:center;gap:7px;}
   .course-row:last-child{border-bottom:none;}
   .course-row:hover{background:var(--cream);}
-  .course-code{font-weight:500;font-size:.76rem;color:#666;min-width:68px;flex-shrink:0;}
-  .course-title{flex:1;}
-  .year-badge{font-size:.68rem;font-weight:500;padding:2px 7px;border-radius:10px;flex-shrink:0;}
+  .course-code{font-weight:500;font-size:.75rem;color:#777;min-width:66px;flex-shrink:0;}
+  .course-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .year-badge{font-size:.67rem;font-weight:500;padding:2px 6px;border-radius:10px;flex-shrink:0;}
   .badge-all{background:#EBF1F5;color:var(--all);}
   .badge-even{background:#F0EBF5;color:var(--even);}
   .badge-odd{background:#F5F0EB;color:var(--odd);}
   .irreg-row{opacity:.5;font-style:italic;}
+
+  /* Faculty dropdown */
+  .fac-sel{font-size:.7rem;font-family:'DM Sans',sans-serif;padding:2px 3px;border:1px solid var(--mist);border-radius:2px;background:var(--paper);color:var(--ink);width:84px;flex-shrink:0;cursor:pointer;}
+  .fac-sel:focus{outline:none;border-color:var(--clay);}
+
+  /* Edit-mode row action buttons — hidden until edit mode active */
+  .row-act{display:none;background:none;border:none;cursor:pointer;font-size:.72rem;padding:2px 4px;border-radius:2px;opacity:.4;flex-shrink:0;line-height:1;}
+  .row-act:hover{opacity:1;background:var(--mist);}
+  body.edit-on .row-act{display:inline-block;}
+
+  /* Add course button at bottom of each column */
+  .col-add-btn{display:none;width:100%;padding:8px;text-align:center;font-size:.75rem;color:var(--clay);border:none;border-top:1px dashed var(--mist);background:none;cursor:pointer;opacity:.65;font-family:'DM Sans',sans-serif;}
+  .col-add-btn:hover{opacity:1;background:var(--light-clay);}
+  body.edit-on .col-add-btn{display:block;}
 
   /* Table view */
   .rotation-table{width:100%;border-collapse:collapse;font-size:.8rem;background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
@@ -63,19 +82,16 @@
   .rotation-table tr:hover td{background:var(--cream);}
   .cell-yes{text-align:center;font-size:.85rem;}
   .cell-year{font-size:.7rem;font-weight:500;padding:2px 6px;border-radius:8px;white-space:nowrap;}
-  .dot-fall{color:var(--fall);}
-  .dot-spring{color:var(--spring);}
-  .dot-both{color:var(--both);}
-  .dot-irreg{color:#ccc;}
+  .tbl-edit-btn{display:none;font-size:.7rem;cursor:pointer;opacity:.35;margin-left:5px;background:none;border:none;font-family:'DM Sans',sans-serif;vertical-align:middle;}
+  .tbl-edit-btn:hover{opacity:.9;}
+  body.edit-on .tbl-edit-btn{display:inline-block;}
 
-  /* View toggle */
   .view-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--mist);}
   .view-tab{padding:9px 18px;font-size:.82rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--ink);opacity:.5;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:'DM Sans',sans-serif;}
   .view-tab.active{opacity:1;border-bottom-color:var(--clay);}
   .view-panel{display:none;}
   .view-panel.active{display:block;}
 
-  /* Summary stats */
   .stats-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px;}
   .stat-card{background:white;border:1px solid var(--mist);border-radius:4px;padding:14px 18px;min-width:130px;}
   .stat-label{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;opacity:.5;margin-bottom:4px;}
@@ -83,6 +99,17 @@
 
   .notice{background:var(--light-clay);border-left:3px solid var(--clay);padding:10px 14px;font-size:.8rem;margin-bottom:20px;border-radius:0 4px 4px 0;line-height:1.5;}
   .notice strong{color:var(--clay);}
+
+  /* Modal */
+  .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:center;justify-content:center;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:white;border-radius:6px;padding:24px;width:360px;max-width:94vw;box-shadow:0 8px 32px rgba(0,0,0,.25);}
+  .modal-box h3{font-family:'Cormorant Garamond',serif;font-size:1.35rem;font-weight:600;margin-bottom:16px;}
+  .modal-field{margin-bottom:12px;}
+  .modal-field label{display:block;font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em;opacity:.55;margin-bottom:4px;}
+  .modal-field input,.modal-field select{width:100%;padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--ink);background:white;}
+  .modal-field input:focus,.modal-field select:focus{outline:none;border-color:var(--clay);}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap;}
 
   footer{text-align:center;padding:24px;font-size:.74rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
   @media print{.site-nav,.toolbar,footer{display:none!important;}main{padding:0;}}
@@ -106,27 +133,28 @@
 <div class="toolbar">
   <label>Starting year:</label>
   <select id="startYear" onchange="renderAll()"></select>
-  <label style="margin-left:8px;">Filter:</label>
+  <label style="margin-left:6px;">Filter:</label>
   <input type="text" class="search-box" id="searchBox" placeholder="Search course code or title…" oninput="renderAll()"/>
-  <label style="margin-left:8px;">Show:</label>
-  <button class="btn active" id="btn-all" onclick="setFilter('all',this)">All</button>
-  <button class="btn" id="btn-fall" onclick="setFilter('fall',this)">Fall only</button>
-  <button class="btn" id="btn-spring" onclick="setFilter('spring',this)">Spring only</button>
-  <button class="btn" id="btn-irreg" onclick="setFilter('irreg',this)">Irregular</button>
+  <label style="margin-left:6px;">Show:</label>
+  <button class="btn active" id="btn-all"    onclick="setFilter('all',this)">All</button>
+  <button class="btn"        id="btn-fall"   onclick="setFilter('fall',this)">Fall only</button>
+  <button class="btn"        id="btn-spring" onclick="setFilter('spring',this)">Spring only</button>
+  <button class="btn"        id="btn-irreg"  onclick="setFilter('irreg',this)">Irregular</button>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+    <button class="btn btn-edit" id="editBtn" onclick="toggleEdit()">✏ Edit Rotation</button>
+    <button class="btn btn-gold" id="addBtn" style="display:none;" onclick="openAddModal()">+ Add Course</button>
+  </div>
 </div>
 
 <main>
   <div class="notice">
-    <strong>Undergraduate courses only.</strong> Irregular courses are offered as enrollment warrants — they are shown separately and not counted in semester totals. Even/Odd refers to the calendar year (e.g. 2026 is even, 2027 is odd).
+    <strong>Undergraduate courses only.</strong> Irregular courses are offered as enrollment warrants and are shown separately. Even/Odd refers to the calendar year (2026 = even, 2027 = odd). Faculty shown are predicted assignments — use the dropdowns to adjust. Changes save automatically.
   </div>
-
   <div class="stats-row" id="statsRow"></div>
-
   <div class="view-tabs">
     <button class="view-tab active" onclick="showView('columns',this)">Semester Columns</button>
     <button class="view-tab" onclick="showView('table',this)">Full Table</button>
   </div>
-
   <div class="view-panel active" id="view-columns">
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:var(--all)"></div>Every year</div>
@@ -138,16 +166,57 @@
     </div>
     <div class="rotation-grid" id="columnsGrid"></div>
   </div>
-
   <div class="view-panel" id="view-table">
     <div id="tableContainer"></div>
   </div>
 </main>
 
+<!-- Add / Edit Course Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3 id="modalTitle">Add Course</h3>
+    <div class="modal-field">
+      <label>Course Code</label>
+      <input type="text" id="m-code" placeholder="ART 0000" style="text-transform:uppercase"/>
+    </div>
+    <div class="modal-field">
+      <label>Course Title</label>
+      <input type="text" id="m-title" placeholder="TITLE IN CAPS" style="text-transform:uppercase"/>
+    </div>
+    <div class="modal-field">
+      <label>Semester(s)</label>
+      <select id="m-sem">
+        <option value="FALL/SPRING">Fall &amp; Spring</option>
+        <option value="FALL">Fall only</option>
+        <option value="SPRING">Spring only</option>
+        <option value="IRREGULAR">Irregular / as needed</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>Year pattern</label>
+      <select id="m-yr">
+        <option value="ALL">Every year</option>
+        <option value="EVEN">Even years only</option>
+        <option value="ODD">Odd years only</option>
+        <option value="">— (use with Irregular)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="m-delete" style="display:none;margin-right:auto;" onclick="confirmDelete()">Delete</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
 <footer>Visual Arts Department · Undergraduate Course Rotation · For internal planning use</footer>
 
 <script>
-const ROTATION = [
+// ── Constants ────────────────────────────────────────────────────────────────
+const ROTATION_KEY = 'twu_rotation';
+const ASSIGN_KEY   = 'twu_assignments';
+
+const DEFAULT_ROTATION = [
   ["ART 1203","2D FOUNDATIONS","FALL/SPRING","ALL"],
   ["ART 1213","3D FOUNDATIONS","FALL/SPRING","ALL"],
   ["ART 1303","DRAWING FOUNDATIONS","FALL/SPRING","ALL"],
@@ -217,194 +286,380 @@ const ROTATION = [
   ["EDUC 4946","CLINICAL STUDENT TEACHING","FALL/SPRING","ALL"],
 ];
 
-let semFilter = 'all';
+// Qualified faculty per course (first = most typical/predicted)
+const CAP = {
+  "ART 1203": ["Sheli","Christine","Gio"],
+  "ART 1213": ["Tanya"],
+  "ART 1303": ["Gio"],
+  "ART 1503": ["Gio"],
+  "ART 1603": ["Meg"],
+  "ART 2223": ["Christine","Julie","Sheli"],
+  "ART 2243": ["Julie","Sheli","Christine"],
+  "ART 2293": ["Julie","Sheli"],
+  "ART 2303": ["Gio"],
+  "ART 2423": ["Sara"],
+  "ART 2433": ["Sara"],
+  "ART 2613": ["Christine"],
+  "ART 2653": ["Meg"],
+  "ART 2713": ["Laura Lee","Sara"],
+  "ART 2753": ["Tanya"],
+  "ART 2823": ["Colby","Tanya"],
+  "ART 3013": ["Laura Lee"],
+  "ART 3053": ["Laura Lee","Sara"],
+  "ART 3153": ["Christine"],
+  "ART 3173": ["Sara"],
+  "ART 3223": ["Laura Lee"],
+  "ART 3233": ["Laura Lee"],
+  "ART 3253": ["Christine","Sheli"],
+  "ART 3263": ["Sheli"],
+  "ART 3333": ["Meg","Sara"],
+  "ART 3343": ["Sara"],
+  "ART 3363": ["Sheli","Christine"],
+  "ART 3383": ["Sheli"],
+  "ART 3393": ["Julie"],
+  "ART 3613": ["Colby"],
+  "ART 3673": ["Tanya"],
+  "ART 3683": ["Tanya"],
+  "ART 3693": ["Meg"],
+  "ART 3703": ["Gio"],
+  "ART 3723": ["Gio"],
+  "ART 3783": ["Gio"],
+  "ART 3793": ["Colby"],
+  "ART 3893": ["Colby"],
+  "ART 3913": ["Sheli"],
+  "ART 4013": ["Tanya"],
+  "ART 4033": ["Julie"],
+  "ART 4043": ["Sara"],
+  "ART 4053": ["Sara"],
+  "ART 4133": ["Laura Lee"],
+  "ART 4253": ["Julie"],
+  "ART 4283": ["Julie"],
+  "ART 4313": ["Sheli","Julie"],
+  "ART 4363": ["Julie"],
+  "ART 4483": ["Sheli","Christine"],
+  "ART 4543": ["Tanya"],
+  "ART 4653": ["Meg"],
+  "ART 4683": ["Meg"],
+  "ART 4703": ["Gio"],
+  "ART 4903": [],
+  "ART 4953": ["Colby"],
+  "ART 4973": ["Sara"],
+  "ART 4993": ["Colby","Julie"],
+  "ART 5003": ["Colby","Tanya","Julie","Sara","Gio","Sheli","Meg","Christine","Laura Lee"],
+  "ART 5063": ["Sara"],
+  "ART 5533": ["Sara"],
+  "ART 5543": ["Sara"],
+  "ART 5573": ["Sara"],
+  "ART 5843": ["Sara"],
+  "ART 5883": ["Sara"],
+  "ART 5993": ["Sara"],
+  "ENG 3433": [],
+  "EDUC 4946": ["Laura Lee"],
+};
 
-// Build year selector — start from current year, show 4 options
-const curYear = new Date().getFullYear();
-const sel = document.getElementById('startYear');
-for(let y = curYear - 1; y <= curYear + 3; y++){
-  const opt = document.createElement('option');
-  opt.value = y;
-  opt.textContent = y;
-  if(y === curYear) opt.selected = true;
-  sel.appendChild(opt);
+// Specific known assignments from schedule data
+const KNOWN = {
+  "ART 5003|||FALL|||2026":   "Colby",
+  "ART 5003|||SPRING|||2027": "Tanya",
+  "ART 5003|||FALL|||2027":   "Julie",
+  "ART 5003|||SPRING|||2028": "Gio",
+  "ART 3173|||SPRING|||2027": "Sara",
+  "ART 3173|||FALL|||2026":   "Sara",
+  "ART 4043|||SPRING|||2027": "Sara",
+  "ART 5063|||SPRING|||2027": "Sara",
+  "ART 2433|||SPRING|||2027": "Sara",
+  "ART 5533|||FALL|||2026":   "Sara",
+  "ART 5573|||FALL|||2027":   "Sara",
+  "ART 5543|||SPRING|||2028": "Sara",
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let semFilter  = 'all';
+let editMode   = false;
+let editingCode = null;
+
+// ── Storage helpers ──────────────────────────────────────────────────────────
+function getRotation(){
+  try{ const s=localStorage.getItem(ROTATION_KEY); if(s) return JSON.parse(s); }catch(e){}
+  return DEFAULT_ROTATION.map(r=>[...r]);
+}
+function saveRotation(arr){ localStorage.setItem(ROTATION_KEY, JSON.stringify(arr)); }
+
+function getAssignments(){
+  try{ const s=localStorage.getItem(ASSIGN_KEY); if(s) return JSON.parse(s); }catch(e){}
+  return {};
+}
+function saveAssign(code,sem,year,fac){
+  const a=getAssignments();
+  a[`${code}|||${sem}|||${year}`]=fac;
+  localStorage.setItem(ASSIGN_KEY, JSON.stringify(a));
 }
 
-function setFilter(f, btn){
-  semFilter = f;
-  document.querySelectorAll('.toolbar .btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+function defaultFac(code,sem,year){
+  const k=`${code}|||${sem}|||${year}`;
+  if(KNOWN[k]) return KNOWN[k];
+  const cap=CAP[code]||[];
+  return cap.length ? cap[0] : 'Staff';
+}
+function currentFac(code,sem,year){
+  const a=getAssignments();
+  const k=`${code}|||${sem}|||${year}`;
+  return (a[k]!==undefined) ? a[k] : defaultFac(code,sem,year);
+}
+
+// ── Faculty select HTML ──────────────────────────────────────────────────────
+function facSelect(code,sem,year){
+  const cap=(CAP[code]||[]).filter(f=>f!=='Staff');
+  const opts = cap.length ? [...cap,'Staff'] : ['Staff'];
+  const cur  = currentFac(code,sem,year);
+  if(!opts.includes(cur)) opts.unshift(cur);
+  const ce = code.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const optHtml = opts.map(f=>`<option value="${h(f)}"${f===cur?' selected':''}>${h(f)}</option>`).join('');
+  return `<select class="fac-sel" onchange="saveAssign('${ce}','${sem}',${year},this.value)">${optHtml}</select>`;
+}
+
+// HTML-escape helper
+function h(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Edit mode toggle ─────────────────────────────────────────────────────────
+function toggleEdit(){
+  editMode=!editMode;
+  document.body.classList.toggle('edit-on', editMode);
+  const btn=document.getElementById('editBtn');
+  btn.textContent = editMode ? '✓ Done Editing' : '✏ Edit Rotation';
+  btn.classList.toggle('on', editMode);
+  document.getElementById('addBtn').style.display = editMode ? 'inline-block' : 'none';
+}
+
+// ── Modal ────────────────────────────────────────────────────────────────────
+function openAddModal(){
+  editingCode=null;
+  document.getElementById('modalTitle').textContent='Add Course';
+  document.getElementById('m-code').value='';
+  document.getElementById('m-code').disabled=false;
+  document.getElementById('m-title').value='';
+  document.getElementById('m-sem').value='FALL';
+  document.getElementById('m-yr').value='ALL';
+  document.getElementById('m-delete').style.display='none';
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-code').focus(),40);
+}
+function openEditModal(code){
+  const r=getRotation().find(x=>x[0]===code);
+  if(!r) return;
+  editingCode=code;
+  document.getElementById('modalTitle').textContent='Edit Course';
+  document.getElementById('m-code').value=r[0];
+  document.getElementById('m-code').disabled=true;
+  document.getElementById('m-title').value=r[1];
+  document.getElementById('m-sem').value=r[2];
+  document.getElementById('m-yr').value=r[3]||'';
+  document.getElementById('m-delete').style.display='inline-block';
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-title').focus(),40);
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+function saveModal(){
+  const code  = document.getElementById('m-code').value.trim().toUpperCase();
+  const title = document.getElementById('m-title').value.trim().toUpperCase();
+  const sem   = document.getElementById('m-sem').value;
+  const yr    = document.getElementById('m-yr').value;
+  if(!code||!title){ alert('Course code and title are required.'); return; }
+  const rot=getRotation();
+  if(editingCode){
+    const idx=rot.findIndex(r=>r[0]===editingCode);
+    if(idx>=0) rot[idx]=[editingCode,title,sem,yr];
+  } else {
+    if(rot.find(r=>r[0]===code)){ alert('A course with that code already exists.'); return; }
+    rot.push([code,title,sem,yr]);
+    rot.sort((a,b)=>a[0].localeCompare(b[0]));
+  }
+  saveRotation(rot);
+  closeModal();
+  renderAll();
+}
+function confirmDelete(){
+  if(!editingCode) return;
+  if(!confirm(`Delete ${editingCode} from the rotation? This cannot be undone.`)) return;
+  const rot=getRotation();
+  const idx=rot.findIndex(r=>r[0]===editingCode);
+  if(idx>=0) rot.splice(idx,1);
+  saveRotation(rot);
+  closeModal();
   renderAll();
 }
 
-function showView(name, btn){
-  document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('view-' + name).classList.add('active');
+// Quick delete from row (edit mode)
+function deleteRow(code){
+  if(!confirm(`Delete ${code} from the rotation?`)) return;
+  const rot=getRotation();
+  const idx=rot.findIndex(r=>r[0]===code);
+  if(idx>=0) rot.splice(idx,1);
+  saveRotation(rot);
+  renderAll();
+}
+
+document.getElementById('modalOverlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modalOverlay')) closeModal();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeModal(); });
+
+// ── Year selector ────────────────────────────────────────────────────────────
+const curYear=new Date().getFullYear();
+const ySel=document.getElementById('startYear');
+for(let y=curYear-1;y<=curYear+3;y++){
+  const o=document.createElement('option');
+  o.value=y; o.textContent=y;
+  if(y===curYear) o.selected=true;
+  ySel.appendChild(o);
+}
+
+// ── Filter / view helpers ────────────────────────────────────────────────────
+function setFilter(f,btn){
+  semFilter=f;
+  document.querySelectorAll('#btn-all,#btn-fall,#btn-spring,#btn-irreg').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAll();
+}
+function showView(name,btn){
+  document.querySelectorAll('.view-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
   btn.classList.add('active');
 }
-
-function isOffered(sem, yr, year){
-  const isEven = year % 2 === 0;
-  const yearType = isEven ? 'EVEN' : 'ODD';
-  if(sem === 'IRREGULAR') return false;
-  const sems = sem.split('/');
-  if(!sems.includes(yr)) return false;
-  if(yr === 'ALL') return true;
-  return yr === 'ALL' || yr === yearType;
+function offered(sp,yp,sem,year){
+  if(sp==='IRREGULAR') return false;
+  if(!sp.split('/').includes(sem)) return false;
+  if(yp==='ALL') return true;
+  return yp===(year%2===0?'EVEN':'ODD');
 }
-
-function courseOfferedIn(code, title, semPat, yrPat, semester, year){
-  if(semPat === 'IRREGULAR') return false;
-  const sems = semPat.split('/');
-  if(!sems.includes(semester)) return false;
-  if(yrPat === 'ALL') return true;
-  const isEven = year % 2 === 0;
-  return yrPat === (isEven ? 'EVEN' : 'ODD');
-}
-
-function badgeHtml(yrPat){
-  if(!yrPat || yrPat === '') return '';
-  const cls = yrPat === 'ALL' ? 'badge-all' : yrPat === 'EVEN' ? 'badge-even' : 'badge-odd';
-  const lbl = yrPat === 'ALL' ? 'Every yr' : yrPat === 'EVEN' ? 'Even yrs' : 'Odd yrs';
+function badgeHtml(yp){
+  if(!yp) return '';
+  const cls=yp==='ALL'?'badge-all':yp==='EVEN'?'badge-even':'badge-odd';
+  const lbl=yp==='ALL'?'Every yr':yp==='EVEN'?'Even yrs':'Odd yrs';
   return `<span class="year-badge ${cls}">${lbl}</span>`;
 }
+function getQ(){ return (document.getElementById('searchBox').value||'').toLowerCase(); }
+function matches(code,title){ const q=getQ(); return !q||code.toLowerCase().includes(q)||title.toLowerCase().includes(q); }
 
-function getSearch(){ return (document.getElementById('searchBox').value||'').toLowerCase(); }
-
-function matchesSearch(code, title){
-  const q = getSearch();
-  if(!q) return true;
-  return code.toLowerCase().includes(q) || title.toLowerCase().includes(q);
-}
-
-function renderAll(){
-  renderStats();
-  renderColumns();
-  renderTable();
-}
+// ── Render ───────────────────────────────────────────────────────────────────
+function renderAll(){ renderStats(); renderColumns(); renderTable(); }
 
 function renderStats(){
-  const startYear = parseInt(document.getElementById('startYear').value);
-  const semesters = [
-    ['Fall', startYear], ['Spring', startYear+1],
-    ['Fall', startYear+1], ['Spring', startYear+2]
-  ];
-  const counts = semesters.map(([sem, yr]) =>
-    ROTATION.filter(([c,t,sp,yp]) => sp !== 'IRREGULAR' && courseOfferedIn(c,t,sp,yp,sem.toUpperCase(),yr)).length
-  );
-  const irregular = ROTATION.filter(([c,t,sp]) => sp === 'IRREGULAR').length;
-  const total = ROTATION.filter(([c,t,sp]) => sp !== 'IRREGULAR').length;
-
-  document.getElementById('statsRow').innerHTML = [
-    {label:'Total Rotation', value: total},
-    {label:`Fall ${startYear}`, value: counts[0]},
-    {label:`Spring ${startYear+1}`, value: counts[1]},
-    {label:`Fall ${startYear+1}`, value: counts[2]},
-    {label:`Spring ${startYear+2}`, value: counts[3]},
-    {label:'Irregular', value: irregular},
-  ].map(s => `<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div></div>`).join('');
+  const ROT=getRotation();
+  const sy=parseInt(document.getElementById('startYear').value);
+  const sems=[['FALL',sy],['SPRING',sy+1],['FALL',sy+1],['SPRING',sy+2]];
+  const counts=sems.map(([s,y])=>ROT.filter(([c,t,sp,yp])=>offered(sp,yp,s,y)).length);
+  const irr=ROT.filter(([c,t,sp])=>sp==='IRREGULAR').length;
+  const tot=ROT.filter(([c,t,sp])=>sp!=='IRREGULAR').length;
+  document.getElementById('statsRow').innerHTML=[
+    {label:'Total Rotation',value:tot},
+    {label:`Fall ${sy}`,value:counts[0]},
+    {label:`Spring ${sy+1}`,value:counts[1]},
+    {label:`Fall ${sy+1}`,value:counts[2]},
+    {label:`Spring ${sy+2}`,value:counts[3]},
+    {label:'Irregular',value:irr},
+  ].map(s=>`<div class="stat-card"><div class="stat-label">${s.label}</div><div class="stat-value">${s.value}</div></div>`).join('');
 }
 
 function renderColumns(){
-  const startYear = parseInt(document.getElementById('startYear').value);
-  const semesters = [
-    {sem:'FALL', yr:startYear, label:`Fall ${startYear}`, cls:'fall'},
-    {sem:'SPRING', yr:startYear+1, label:`Spring ${startYear+1}`, cls:'spring'},
-    {sem:'FALL', yr:startYear+1, label:`Fall ${startYear+1}`, cls:'fall'},
-    {sem:'SPRING', yr:startYear+2, label:`Spring ${startYear+2}`, cls:'spring'},
+  const ROT=getRotation();
+  const sy=parseInt(document.getElementById('startYear').value);
+  const sems=[
+    {sem:'FALL',  yr:sy,   label:`Fall ${sy}`,   cls:'fall'},
+    {sem:'SPRING',yr:sy+1, label:`Spring ${sy+1}`,cls:'spring'},
+    {sem:'FALL',  yr:sy+1, label:`Fall ${sy+1}`,  cls:'fall'},
+    {sem:'SPRING',yr:sy+2, label:`Spring ${sy+2}`,cls:'spring'},
   ];
+  const grid=document.getElementById('columnsGrid');
+  let vis=sems;
+  if(semFilter==='fall')   vis=sems.filter(s=>s.sem==='FALL');
+  if(semFilter==='spring') vis=sems.filter(s=>s.sem==='SPRING');
+  if(semFilter==='irreg')  vis=[];
+  const cols=semFilter==='irreg'?1:vis.length;
+  grid.style.gridTemplateColumns=`repeat(${Math.min(cols||1,4)},1fr)`;
 
-  const grid = document.getElementById('columnsGrid');
-
-  // Filter based on semFilter
-  let visibleSems = semesters;
-  if(semFilter === 'fall') visibleSems = semesters.filter(s => s.sem === 'FALL');
-  if(semFilter === 'spring') visibleSems = semesters.filter(s => s.sem === 'SPRING');
-  if(semFilter === 'irreg') visibleSems = [];
-
-  const cols = semFilter === 'irreg' ? 1 : visibleSems.length;
-  grid.style.gridTemplateColumns = `repeat(${Math.min(cols || 1, 4)}, 1fr)`;
-
-  if(semFilter === 'irreg'){
-    const irregs = ROTATION.filter(([c,t,sp]) => sp === 'IRREGULAR' && matchesSearch(c,t));
-    grid.innerHTML = `<div class="semester-col">
+  if(semFilter==='irreg'){
+    const irregs=ROT.filter(([c,t,sp])=>sp==='IRREGULAR'&&matches(c,t));
+    const rows=irregs.map(([c,t])=>{
+      const ce=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `<div class="course-row irreg-row">
+        <span class="course-code">${h(c)}</span>
+        <span class="course-title">${h(t)}</span>
+        <button class="row-act" title="Edit" onclick="openEditModal('${ce}')">✏</button>
+        <button class="row-act" style="color:#c0392b;" title="Delete" onclick="deleteRow('${ce}')">✕</button>
+      </div>`;
+    }).join('');
+    grid.innerHTML=`<div class="semester-col">
       <div class="sem-header" style="border-top:3px solid var(--irreg);">
-        <span>Irregular / As Needed</span>
-        <span class="sem-count">${irregs.length} courses</span>
+        <span>Irregular / As Needed</span><span class="sem-count">${irregs.length} courses</span>
       </div>
-      ${irregs.map(([c,t]) => `<div class="course-row irreg-row">
-        <span class="course-code">${c}</span>
-        <span class="course-title">${t}</span>
-      </div>`).join('')}
-      ${irregs.length === 0 ? '<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>' : ''}
+      ${rows||'<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>'}
     </div>`;
     return;
   }
 
-  grid.innerHTML = visibleSems.map(({sem, yr, label, cls}) => {
-    const courses = ROTATION.filter(([c,t,sp,yp]) =>
-      sp !== 'IRREGULAR' && courseOfferedIn(c,t,sp,yp,sem,yr) && matchesSearch(c,t)
-    );
+  grid.innerHTML=vis.map(({sem,yr,label,cls})=>{
+    const courses=ROT.filter(([c,t,sp,yp])=>sp!=='IRREGULAR'&&offered(sp,yp,sem,yr)&&matches(c,t));
+    const rows=courses.map(([c,t,sp,yp])=>{
+      const ce=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      return `<div class="course-row">
+        <span class="course-code">${h(c)}</span>
+        <span class="course-title" title="${h(t)}">${h(t)}</span>
+        ${facSelect(c,sem,yr)}
+        ${badgeHtml(yp)}
+        <button class="row-act" title="Edit" onclick="openEditModal('${ce}')">✏</button>
+        <button class="row-act" style="color:#c0392b;" title="Delete" onclick="deleteRow('${ce}')">✕</button>
+      </div>`;
+    }).join('');
+    const semEsc=sem.replace(/'/g,"\\'");
     return `<div class="semester-col">
       <div class="sem-header ${cls}">
-        <span>${label}</span>
-        <span class="sem-count">${courses.length} courses</span>
+        <span>${label}</span><span class="sem-count">${courses.length} courses</span>
       </div>
-      ${courses.map(([c,t,sp,yp]) => `<div class="course-row">
-        <span class="course-code">${c}</span>
-        <span class="course-title">${t}</span>
-        ${badgeHtml(yp)}
-      </div>`).join('')}
-      ${courses.length === 0 ? '<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>' : ''}
+      ${rows||'<div class="course-row" style="color:#bbb;font-style:italic;">No matches</div>'}
     </div>`;
   }).join('');
 }
 
 function renderTable(){
-  const startYear = parseInt(document.getElementById('startYear').value);
-  const cols = [
-    {sem:'FALL', yr:startYear, label:`Fall ${startYear}`},
-    {sem:'SPRING', yr:startYear+1, label:`Spring ${startYear+1}`},
-    {sem:'FALL', yr:startYear+1, label:`Fall ${startYear+1}`},
-    {sem:'SPRING', yr:startYear+2, label:`Spring ${startYear+2}`},
+  const ROT=getRotation();
+  const sy=parseInt(document.getElementById('startYear').value);
+  const cols=[
+    {sem:'FALL',  yr:sy,   label:`Fall ${sy}`},
+    {sem:'SPRING',yr:sy+1, label:`Spring ${sy+1}`},
+    {sem:'FALL',  yr:sy+1, label:`Fall ${sy+1}`},
+    {sem:'SPRING',yr:sy+2, label:`Spring ${sy+2}`},
   ];
-
-  let filtered = ROTATION.filter(([c,t]) => matchesSearch(c,t));
-  if(semFilter === 'fall') filtered = filtered.filter(([c,t,sp]) => sp === 'FALL' || sp === 'FALL/SPRING');
-  if(semFilter === 'spring') filtered = filtered.filter(([c,t,sp]) => sp === 'SPRING' || sp === 'FALL/SPRING');
-  if(semFilter === 'irreg') filtered = filtered.filter(([c,t,sp]) => sp === 'IRREGULAR');
-
-  const rows = filtered.map(([c,t,sp,yp]) => {
-    const cells = cols.map(({sem,yr}) => {
-      if(sp === 'IRREGULAR') return `<td class="cell-yes" style="color:#ddd;">—</td>`;
-      const offered = courseOfferedIn(c,t,sp,yp,sem,yr);
-      const semColor = sem === 'FALL' ? 'var(--fall)' : 'var(--spring)';
-      return offered
-        ? `<td class="cell-yes"><span style="color:${semColor};font-size:1rem;">●</span></td>`
-        : `<td class="cell-yes" style="color:#eee;">○</td>`;
+  let filt=ROT.filter(([c,t])=>matches(c,t));
+  if(semFilter==='fall')   filt=filt.filter(([c,t,sp])=>sp==='FALL'||sp==='FALL/SPRING');
+  if(semFilter==='spring') filt=filt.filter(([c,t,sp])=>sp==='SPRING'||sp==='FALL/SPRING');
+  if(semFilter==='irreg')  filt=filt.filter(([c,t,sp])=>sp==='IRREGULAR');
+  const rows=filt.map(([c,t,sp,yp])=>{
+    const ce=c.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const cells=cols.map(({sem,yr})=>{
+      if(sp==='IRREGULAR') return `<td class="cell-yes" style="color:#ddd;">—</td>`;
+      const ok=offered(sp,yp,sem,yr);
+      const col=sem==='FALL'?'var(--fall)':'var(--spring)';
+      return ok ? `<td class="cell-yes"><span style="color:${col};font-size:1rem;">●</span></td>`
+                : `<td class="cell-yes" style="color:#eee;">○</td>`;
     }).join('');
-    const irregFlag = sp === 'IRREGULAR' ? ' <span style="font-size:.7rem;color:#aaa;font-style:italic;">irregular</span>' : '';
+    const iFlag=sp==='IRREGULAR'?' <span style="font-size:.7rem;color:#aaa;font-style:italic;">irregular</span>':'';
     return `<tr>
-      <td><strong style="font-size:.76rem;">${c}</strong></td>
-      <td>${t}${irregFlag}</td>
-      <td>${sp === 'IRREGULAR' ? '—' : sp.replace('/',' & ')}</td>
-      <td>${yp ? `<span class="cell-year badge-${yp.toLowerCase()}">${yp}</span>` : '—'}</td>
+      <td><strong style="font-size:.76rem;">${h(c)}</strong></td>
+      <td>${h(t)}${iFlag}<button class="tbl-edit-btn" title="Edit" onclick="openEditModal('${ce}')">✏</button></td>
+      <td>${sp==='IRREGULAR'?'—':h(sp.replace('/',' &amp; '))}</td>
+      <td>${yp?`<span class="cell-year badge-${yp.toLowerCase()}">${yp}</span>`:'—'}</td>
       ${cells}
     </tr>`;
   }).join('');
-
-  document.getElementById('tableContainer').innerHTML = `
+  document.getElementById('tableContainer').innerHTML=`
     <table class="rotation-table">
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Title</th>
-          <th>Semester(s)</th>
-          <th>Year</th>
-          ${cols.map(c => `<th style="text-align:center;white-space:nowrap;">${c.label}</th>`).join('')}
-        </tr>
-      </thead>
+      <thead><tr>
+        <th>Code</th><th>Title</th><th>Semester(s)</th><th>Year</th>
+        ${cols.map(c=>`<th style="text-align:center;white-space:nowrap;">${c.label}</th>`).join('')}
+      </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
