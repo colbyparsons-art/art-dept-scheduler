@@ -25,6 +25,8 @@
   .btn:hover{background:var(--paper);}
   .btn-gold{background:var(--gold);color:var(--ink);border-color:var(--gold);}
   .btn-gold:hover{opacity:.85;}
+  .btn-muted{background:#e8e6e3;color:#888;border-color:#d4d0cb;font-size:.72rem;}
+  .btn-muted:hover{background:#dedad5;color:#666;}
   main{padding:24px 40px;max-width:1400px;margin:0 auto;}
 
   /* Two-panel layout */
@@ -176,12 +178,11 @@
     <h1>Schedule Builder</h1>
     <p>Department of Visual Arts — Semester Planning Tool</p>
   </div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;">
-    <button class="btn" onclick="exportSchedule()">⬇ Export JSON</button>
-    <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <button class="btn btn-gold" onclick="generatePDF()">⬇ Download PDF</button>
+    <button class="btn btn-muted" onclick="exportSchedule()">⬇ Export JSON</button>
+    <button class="btn btn-muted" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importSchedule(event)"/>
-    <button class="btn btn-gold" onclick="generatePDF()">⬇ PDF</button>
-    <button class="btn" onclick="printSchedule()">🖨 Print</button>
   </div>
 </header>
 
