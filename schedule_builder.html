@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Schedule Builder — Visual Arts</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
   :root{--ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;--cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;--red:#c0392b;--yellow:#e67e22;}
@@ -136,6 +137,32 @@
 
   footer{text-align:center;padding:24px;font-size:.74rem;color:#aaa;border-top:1px solid var(--mist);margin-top:32px;}
   @media(max-width:900px){.panels{grid-template-columns:1fr;}main,.toolbar,.site-nav,header{padding-left:20px;padding-right:20px;}}
+
+  /* ── Print styles ─────────────────────────────────────────────── */
+  .print-header{display:none;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--ink);}
+  @media print{
+    @page{size:letter landscape;margin:.45in;}
+    .site-nav,header,.toolbar,.pool-panel,.conflict-panel,
+    .notes-area,footer,.modal-overlay,.chip-remove,.chip-flags{display:none!important;}
+    body{background:white!important;}
+    main{padding:0!important;max-width:100%!important;}
+    .panels{display:block!important;}
+    .print-header{display:block!important;}
+    .grid-panel{zoom:.78;gap:8px!important;}
+    .drop-cell{min-height:58px!important;padding:3px!important;}
+    .sched-chip{padding:3px 6px!important;margin-bottom:2px!important;}
+    .chip-code{font-size:.62rem!important;}
+    .chip-title{font-size:.67rem!important;line-height:1.2!important;}
+    .chip-meta{font-size:.58rem!important;margin-top:1px!important;}
+    .grid-col-header{padding:5px 8px!important;font-size:.7rem!important;}
+    .time-label{padding:5px 4px!important;font-size:.64rem!important;}
+    .once-section,.async-section{padding:8px 10px!important;}
+    .once-drop{min-height:38px!important;padding:3px!important;}
+    .async-drop{min-height:24px!important;padding:3px!important;}
+    .section-label{font-size:.82rem!important;padding-bottom:3px!important;margin-bottom:6px!important;}
+    .once-col-header{font-size:.62rem!important;margin-bottom:3px!important;}
+    .once-grid{gap:5px!important;margin-top:6px!important;}
+  }
 </style>
 </head>
 <body>
@@ -153,7 +180,8 @@
     <button class="btn" onclick="exportSchedule()">⬇ Export JSON</button>
     <button class="btn" onclick="document.getElementById('importFile').click()">⬆ Import JSON</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importSchedule(event)"/>
-    <button class="btn btn-gold" onclick="window.print()">🖨 Print</button>
+    <button class="btn btn-gold" onclick="generatePDF()">⬇ PDF</button>
+    <button class="btn" onclick="printSchedule()">🖨 Print</button>
   </div>
 </header>
 
@@ -188,6 +216,7 @@
 
     <!-- RIGHT: Schedule + Tools -->
     <div class="grid-panel">
+      <div class="print-header" id="printHeader"></div>
 
       <!-- Conflict panel -->
       <div class="conflict-panel">
@@ -778,6 +807,221 @@ function saveNotes(){
 }
 function loadNotes(){
   document.getElementById('notesField').value = getNotes();
+}
+
+// ── Print ──────────────────────────────────────────────────────────────────
+function printSchedule(){
+  document.getElementById('printHeader').textContent =
+    (currentSem||'Schedule')+' — Visual Arts Department';
+  window.print();
+}
+
+// ── PDF Export ─────────────────────────────────────────────────────────────
+function generatePDF(){
+  if(!currentSem||!db[currentSem]){alert('No semester loaded.');return;}
+  if(!window.jspdf){alert('PDF library not loaded. Check your internet connection.');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});
+  const PW=279.4,PH=215.9,M=9,W=261.4;
+  const courses=getCourses();
+  const INK=[26,20,16],MIST=[232,226,217],PAPER=[242,237,228];
+  const BLUE=[74,107,124],PURPLE=[122,92,139];
+  const TW=16,DW=(W-TW)/2,SW=DW/2;
+  const COURSE_H=8,ROW_PAD=4;
+
+  function fmtFac(f){
+    if(!f||f==='staff') return 'staff';
+    if(f.trim().toUpperCase()==='LAURA LEE') return 'L.Lee';
+    return f.charAt(0).toUpperCase()+f.slice(1).toLowerCase();
+  }
+  function stripPfx(code){return code.replace(/^(ART|ENG|EDUC) /,'');}
+  function slotList(pat,bi){
+    return courses.filter(c=>c.pattern===pat&&blockForTime(c.time||'')===BLOCKS[bi]);
+  }
+  function calcRowH(bi){
+    const max=Math.max(Math.ceil(slotList('mw',bi).length/2),Math.ceil(slotList('tth',bi).length/2),1);
+    return Math.max(max*COURSE_H+ROW_PAD*2,18);
+  }
+
+  // — HEADER —
+  const HH=17;
+  doc.setFillColor(...INK);
+  doc.rect(0,0,PW,HH,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(255,255,255);
+  doc.text(currentSem+' — Schedule Map',M,7.5);
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(178,172,166);
+  doc.text('Department of Visual Arts · Draft · Subject to change',M,12.5);
+
+  // — COLUMN HEADER ROW —
+  const CH=8;
+  let y=HH;
+  doc.setFillColor(...PAPER);
+  doc.rect(M,y,W,CH,'F');
+  doc.setFillColor(...BLUE);doc.rect(M+TW,y,1.2,CH,'F');
+  doc.setFillColor(...PURPLE);doc.rect(M+TW+DW,y,1.2,CH,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(...INK);
+  doc.text('Monday / Wednesday',M+TW+DW/2,y+5.5,{align:'center'});
+  doc.text('Tuesday / Thursday',M+TW+DW+DW/2,y+5.5,{align:'center'});
+  // Dark borders for column header row
+  doc.setDrawColor(...INK);doc.setLineWidth(0.5);
+  doc.line(M,y+CH,M+W,y+CH);
+  doc.line(M+TW,y,M+TW,y+CH);
+  doc.line(M+TW+DW,y,M+TW+DW,y+CH);
+  y+=CH;
+
+  // — COURSE ENTRY HELPER —
+  function drawEntry(c,cx,cy,maxW){
+    const isH=c.hybrid,isB=c.bracketed;
+    const xOff=isB?2.5:0;
+    // Bracket: thin vertical bar to the left
+    if(isB){
+      doc.setDrawColor(130,110,90);doc.setLineWidth(0.7);
+      doc.line(cx+0.5,cy-3.8,cx+0.5,cy+4.2);
+    }
+    // Shorten title; reserve space for "hybrid" label
+    let title=c.title||'';
+    const maxChars=Math.floor((maxW-xOff-(isH?8:0)-1.5)/1.52);
+    if(title.length>maxChars) title=title.substring(0,maxChars-1)+'.';
+    const codePart=stripPfx(c.code)+' '+title;
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...INK);
+    doc.text(codePart,cx+xOff,cy);
+    // "hybrid" in smaller bold-italic after title
+    if(isH){
+      const tw=doc.getTextWidth(codePart);
+      doc.setFont('helvetica','bolditalic');doc.setFontSize(6);doc.setTextColor(90,90,90);
+      doc.text(' hybrid',cx+xOff+tw,cy);
+    }
+    // Meta: faculty · room [· lecture time]
+    const meta=[];
+    if(c.faculty) meta.push(fmtFac(c.faculty));
+    if(c.room) meta.push('R'+c.room);
+    if(c.time&&c.time.includes('(lecture)')) meta.push(c.time.replace(' (lecture)',''));
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(108,98,88);
+    doc.text(meta.join(' · '),cx+xOff+0.5,cy+3.3,{maxWidth:maxW-xOff-1});
+  }
+
+  function drawCol(list,cx,rowY,rh){
+    let cy=rowY+ROW_PAD+1.5;
+    list.forEach(c=>{
+      if(cy+COURSE_H>rowY+rh-1) return;
+      drawEntry(c,cx,cy,SW-5);
+      cy+=COURSE_H+0.2;
+    });
+  }
+
+  // Pre-calculate all row heights so outer border can be drawn last
+  const rowHeights=BLOCKS.map((_,bi)=>calcRowH(bi));
+  const gridH=rowHeights.reduce((a,b)=>a+b,0);
+
+  // — GRID ROWS: fill + light sub-col dividers + content —
+  BLOCKS.forEach((block,bi)=>{
+    const rh=rowHeights[bi];
+    doc.setFillColor(bi%2===0?255:249,bi%2===0?255:246,bi%2===0?255:241);
+    doc.rect(M,y,W,rh,'F');
+    // Light sub-column dividers (within each day pair)
+    doc.setDrawColor(...MIST);doc.setLineWidth(0.2);
+    doc.line(M+TW+SW,y,M+TW+SW,y+rh);
+    doc.line(M+TW+DW+SW,y,M+TW+DW+SW,y+rh);
+    // Time label
+    const parts=block.split('–');
+    doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(100,90,80);
+    doc.text((parts[0]||'').trim()+' –',M+TW/2,y+rh/2-1.5,{align:'center'});
+    doc.text((parts[1]||'').trim(),M+TW/2,y+rh/2+2.5,{align:'center'});
+    // Courses in each sub-column
+    const mw=slotList('mw',bi),tth=slotList('tth',bi);
+    const mwMid=Math.ceil(mw.length/2),tthMid=Math.ceil(tth.length/2);
+    drawCol(mw.slice(0,mwMid),M+TW+2.5,y,rh);
+    drawCol(mw.slice(mwMid),M+TW+SW+2.5,y,rh);
+    drawCol(tth.slice(0,tthMid),M+TW+DW+2.5,y,rh);
+    drawCol(tth.slice(tthMid),M+TW+DW+SW+2.5,y,rh);
+    y+=rh;
+  });
+
+  // — DARK GRID LINES drawn after content (appear on top) —
+  let yb=HH+CH;
+  doc.setDrawColor(...INK);doc.setLineWidth(0.5);
+  rowHeights.forEach(rh=>{
+    doc.line(M,yb+rh,M+W,yb+rh);         // horizontal row divider
+    doc.line(M+TW,yb,M+TW,yb+rh);        // time | MW
+    doc.line(M+TW+DW,yb,M+TW+DW,yb+rh);  // MW | TTh
+    yb+=rh;
+  });
+  // Outer border of entire grid (drawn last = cleanest edges)
+  doc.setLineWidth(0.7);
+  doc.rect(M,HH,W,CH+gridH,'S');
+
+  // — ONCE/WEEK —
+  const once=courses.filter(c=>c.pattern==='once');
+  if(once.length&&y+8<PH-12){
+    y+=3;
+    const half=Math.ceil(once.length/2);
+    const oh=Math.max(half*9+11,20);
+    if(y+oh<PH-10){
+      doc.setFillColor(...PAPER);doc.rect(M,y,W,oh,'F');
+      doc.setDrawColor(...MIST);doc.setLineWidth(0.25);
+      doc.line(M+W/2,y+9,M+W/2,y+oh);
+      doc.setDrawColor(...INK);doc.setLineWidth(0.5);doc.rect(M,y,W,oh,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...INK);
+      doc.text('Once / Week',M+3,y+6);
+      doc.setDrawColor(...MIST);doc.setLineWidth(0.25);
+      doc.line(M+3,y+7.8,M+W-3,y+7.8);
+      const drawOnce=(c,ox,oy)=>{
+        const day=c.onceday||c.oncedday||'';
+        const codeSection=stripPfx(c.code)+(c.section||'');
+        const titleTrunc=c.title.length>24?c.title.substr(0,23)+'.':c.title;
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...INK);
+        const dayW=doc.getTextWidth(day);
+        doc.text(day,ox,oy);
+        doc.setFont('helvetica','normal');
+        doc.text(' '+codeSection+' '+titleTrunc,ox+dayW,oy);
+        const meta=[fmtFac(c.faculty),c.room?'R'+c.room:'',c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
+        doc.setFontSize(6.5);doc.setTextColor(108,98,88);
+        doc.text(meta,ox+dayW+1,oy+3.5);
+      };
+      let oy=y+12;
+      once.slice(0,half).forEach(c=>{drawOnce(c,M+3,oy);oy+=9;});
+      oy=y+12;
+      once.slice(half).forEach(c=>{drawOnce(c,M+W/2+3,oy);oy+=9;});
+      y+=oh;
+    }
+  }
+
+  // — ASYNC —
+  const async_=courses.filter(c=>c.pattern==='async');
+  if(async_.length&&y+8<PH-10){
+    y+=3;
+    const half=Math.ceil(async_.length/2);
+    const ah=Math.max(half*6.2+11,14);
+    if(y+ah<PH-8){
+      doc.setFillColor(...PAPER);doc.rect(M,y,W,ah,'F');
+      doc.setDrawColor(...MIST);doc.setLineWidth(0.25);
+      doc.line(M+W/2,y+9,M+W/2,y+ah);
+      doc.setDrawColor(...INK);doc.setLineWidth(0.5);doc.rect(M,y,W,ah,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...INK);
+      doc.text('Async / Online',M+3,y+6);
+      doc.setDrawColor(...MIST);doc.setLineWidth(0.25);
+      doc.line(M+3,y+7.8,M+W-3,y+7.8);
+      const drawAsync=(c,ax,ay)=>{
+        const codeSection=stripPfx(c.code)+(c.section||'');
+        const title=c.title.length>30?c.title.substr(0,29)+'.':c.title;
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...INK);
+        doc.text(codeSection+' '+title,ax,ay);
+        doc.setFontSize(6.5);doc.setTextColor(108,98,88);
+        doc.text(fmtFac(c.faculty),ax+1,ay+3.2);
+      };
+      let ay=y+12;
+      async_.slice(0,half).forEach(c=>{drawAsync(c,M+3,ay);ay+=6.2;});
+      ay=y+12;
+      async_.slice(half).forEach(c=>{drawAsync(c,M+W/2+3,ay);ay+=6.2;});
+    }
+  }
+
+  // — FOOTER —
+  doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(158,148,138);
+  doc.text('Visual Arts Department · '+currentSem+' · Draft',M,PH-4);
+  doc.text('Page 1',PW-M,PH-4,{align:'right'});
+
+  doc.save(currentSem.replace(/ /g,'_')+'_Schedule_Map.pdf');
 }
 
 // ── Export/Import ──────────────────────────────────────────────────────────
