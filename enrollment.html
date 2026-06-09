@@ -72,7 +72,7 @@
 </style>
 </head>
 <body>
-<nav class="site-nav">
+<nav class="site-nav" id="siteNav">
   <a href="index.html">🏠 Home</a>
   <span class="sep">/</span>
   <a href="enrollment.html" class="current">Enrollment Tracker</a>
@@ -82,7 +82,7 @@
     <h1>Visual Arts<br>Enrollment Tracker</h1>
     <p>Department of Visual Arts</p>
   </div>
-  <div class="header-right">
+  <div class="header-right" id="headerActions">
     <button class="dl-btn" onclick="downloadTemplate()">⬇ Download CSV Template</button>
     <button class="upload-btn" onclick="document.getElementById('fileInput').click()">Upload Enrollment CSV</button>
     <input type="file" id="fileInput" accept=".csv" onchange="handleFileUpload(event)"/>
@@ -309,6 +309,12 @@ function downloadTemplate(){
   a.download='enrollment_template.csv';a.click();
 }
 function renderAll(){renderPills();renderCards();renderTables();}
+if(new URLSearchParams(window.location.search).has('faculty')){
+  const _n=document.getElementById('siteNav');
+  if(_n)_n.innerHTML='<a href="faculty.html">← Faculty Portal</a><span class="sep">/</span><a href="enrollment.html?faculty=1" class="current">Enrollment Tracker</a>';
+  const _ha=document.getElementById('headerActions');
+  if(_ha)_ha.style.display='none';
+}
 renderAll();
 </script>
 </body>

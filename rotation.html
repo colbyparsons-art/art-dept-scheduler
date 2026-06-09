@@ -117,7 +117,7 @@
 </style>
 </head>
 <body>
-<nav class="site-nav">
+<nav class="site-nav" id="siteNav">
   <a href="index.html">🏠 Home</a>
   <span class="sep">/</span>
   <a href="rotation.html" class="current">Course Rotation</a>
@@ -679,6 +679,10 @@ function renderTable(){
     </table>`;
 }
 
+if(new URLSearchParams(window.location.search).has('faculty')){
+  const _n=document.getElementById('siteNav');
+  if(_n)_n.innerHTML='<a href="faculty.html">← Faculty Portal</a><span class="sep">/</span><a href="rotation.html?faculty=1" class="current">Course Rotation</a>';
+}
 renderAll();
 </script>
 </body>
