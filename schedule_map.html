@@ -807,34 +807,51 @@ function getBlockCourses(pat,block,courses){
   return courses.filter(c=>c.pattern===pat&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time)));
 }
 
-function drawCellCourses(doc,courses,x,y,maxW,maxH,accentRGB,chipH){
+// Faculty display: title case, keep "staff" lowercase
+function pdfFaculty(f){
+  if(!f)return '';
+  if(f.toLowerCase()==='staff')return 'staff';
+  return f.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+}
+// Strip department prefix: "ART 3253" → "3253"
+function pdfCode(code){return(code||'').replace(/^[A-Z]+\s+/,'');}
+// Room with R prefix
+function pdfRoom(r){return r?'R'+r:'';}
+
+function drawMapChips(doc,courses,x,y,maxW,maxH,chipH){
+  const INK=[26,20,16];
   let cy=y;
   courses.forEach(c=>{
     if(cy+chipH>y+maxH+0.5)return;
-    const isMW=accentRGB[0]<100;
-    doc.setFillColor(...(isMW?[247,251,253]:[251,248,254]));
-    doc.roundedRect(x,cy,maxW,chipH-0.4,0.4,0.4,'F');
+    // Bracketed: solid left bar
     if(c.bracketed){
-      doc.setDrawColor(...accentRGB);doc.setLineWidth(0.2);
-      doc.setLineDash([0.6,0.6]);
-      doc.roundedRect(x,cy,maxW,chipH-0.4,0.4,0.4,'S');
-      doc.setLineDash([]);
+      doc.setFillColor(140,120,160);
+      doc.rect(x,cy,1.2,chipH-0.4,'F');
     }
-    doc.setFillColor(...accentRGB);
-    doc.rect(x,cy,1.2,chipH-0.4,'F');
-    const tx=x+2.5;
-    doc.setFont('helvetica','bold');doc.setFontSize(5);doc.setTextColor(100,90,80);
-    doc.text((c.code||'')+(c.section||'')+(c.grad?' [G]':'')+(c.hybrid?' ≈':''),tx,cy+2.2);
-    doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(26,20,16);
-    let t=c.title||'';
-    while(doc.getTextWidth(t)>maxW-3.5&&t.length>2)t=t.slice(0,-1);
-    if(t.length<(c.title||'').length)t=t.slice(0,-1)+'…';
-    doc.text(t,tx,cy+4.8);
-    doc.setFont('helvetica','normal');doc.setFontSize(5);doc.setTextColor(110,100,90);
-    let m=[c.faculty,c.room?'Rm '+c.room:''].filter(Boolean).join(' · ');
-    while(doc.getTextWidth(m)>maxW-3.5&&m.length>2)m=m.slice(0,-1);
-    if(m.length<([c.faculty,c.room?'Rm '+c.room:''].filter(Boolean).join(' · ')).length)m=m.slice(0,-1)+'…';
-    doc.text(m,tx,cy+7);
+    const tx=c.bracketed?x+2.2:x+0.5;
+    // Line 1: code + title (bold), then " hybrid" in bold-italic if applicable
+    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
+    const fullTitle=pdfCode(c.code)+' '+(c.title||'');
+    const hybridW=c.hybrid?doc.setFont('helvetica','bolditalic')&&doc.setFontSize(5.5)&&doc.getTextWidth(' hybrid')||5:0;
+    doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+    let ct=fullTitle;
+    const maxTW=maxW-(tx-x)-hybridW-0.5;
+    while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
+    if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
+    doc.text(ct,tx,cy+2.8);
+    if(c.hybrid){
+      const ctW=doc.getTextWidth(ct);
+      doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);doc.setTextColor(100,90,80);
+      doc.text(' hybrid',tx+ctW,cy+2.8);
+    }
+    // Line 2: faculty · room
+    doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(100,90,80);
+    const fac=pdfFaculty(c.faculty),rm=pdfRoom(c.room);
+    let meta=[fac,rm].filter(Boolean).join(' · ');
+    const metaMaxW=maxW-(tx-x)-0.5;
+    while(doc.getTextWidth(meta)>metaMaxW&&meta.length>2)meta=meta.slice(0,-1);
+    if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
+    doc.text(meta,tx,cy+5.5);
     cy+=chipH;
   });
 }
@@ -845,149 +862,150 @@ function generatePDF(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'letter'});
 
-  const PW=279.4,PH=215.9,ML=11,MR=11,MT=12,MB=9;
-  const cw=PW-ML-MR;
+  const PW=279.4,PH=215.9,ML=12,CW=PW-24;
   const INK=[26,20,16],MIST=[210,205,198],PAPER=[242,237,228];
-  const MW_ACC=[74,107,124],TTH_ACC=[122,92,139];
-  const ONCE_ACC=[92,122,95],ASYNC_ACC=[136,136,136];
 
   const courses=getSemCourses();
   const gridC=courses.filter(c=>c.pattern==='mw'||c.pattern==='tth');
   const onceC=courses.filter(c=>c.pattern==='once');
   const asyncC=courses.filter(c=>c.pattern==='async');
 
-  // Title
-  doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(...INK);
-  doc.text(currentSem,ML,MT);
-  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(140,130,120);
-  doc.text('Visual Arts Department · Texas Wesleyan University',ML,MT+5.5);
-  const ds='Generated '+new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
-  doc.setFontSize(6);doc.text(ds,PW-MR-doc.getTextWidth(ds),MT+5.5);
+  // ── Dark header (full-width) ──────────────────────────────────────────────
+  const HDR_H=22;
+  doc.setFillColor(...INK);doc.rect(0,0,PW,HDR_H,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(17);doc.setTextColor(250,247,242);
+  doc.text(currentSem+' — Schedule Map',ML,13);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(180,165,150);
+  doc.text('Department of Visual Arts · Draft · Subject to change',ML,19);
 
-  // Legend
-  const LY=MT+11;
-  const legItems=[['Mon/Wed',MW_ACC],['Tue/Thu',TTH_ACC],['Once/week',ONCE_ACC],['Async',ASYNC_ACC]];
-  let lx=ML;
-  doc.setFontSize(6);
-  legItems.forEach(([lbl,acc])=>{
-    doc.setFillColor(...acc);doc.rect(lx,LY-2.2,3,3,'F');
-    doc.setTextColor(...INK);const tw=doc.getTextWidth(lbl);
-    doc.text(lbl,lx+4.2,LY);lx+=4.2+tw+4;
-  });
-  doc.setDrawColor(150,140,130);doc.setLineWidth(0.2);doc.setLineDash([0.7,0.7]);
-  doc.rect(lx,LY-2.2,3,3,'S');doc.setLineDash([]);
-  doc.text('Bracketed pair',lx+4.2,LY);
+  // ── Grid (4 sub-columns: MW×2, TTh×2) ────────────────────────────────────
+  const GY=HDR_H+3;
+  const TIME_W=16,colW=(CW-TIME_W)/4;
+  const x1=ML+TIME_W,x2=x1+colW,x3=x2+colW,x4=x3+colW;
+  const HDR_ROW=6,CHIP_H=8.0,CELL_PAD=2;
 
-  // Grid geometry
-  const GY=LY+5,TIME_W=20,colW=(cw-TIME_W)/2,HDR_H=6;
-  const CHIP_H=8.5,CELL_PAD=2;
+  function halves(pat,block){
+    const c=getBlockCourses(pat,block,gridC);
+    const h=Math.ceil(c.length/2);return[c.slice(0,h),c.slice(h)];
+  }
 
   const rowH=BLOCKS.map(block=>{
-    const n=Math.max(getBlockCourses('mw',block,gridC).length,getBlockCourses('tth',block,gridC).length,1);
-    return CELL_PAD*2+n*CHIP_H;
+    const[a,b]=halves('mw',block),[c_,d]=halves('tth',block);
+    return CELL_PAD*2+Math.max(a.length,b.length,c_.length,d.length,1)*CHIP_H;
   });
 
-  const perRowOnce=Math.max(1,Math.floor(cw/44));
-  const perRowAsync=Math.max(1,Math.floor(cw/40));
-  const ONCE_H=onceC.length?8+Math.ceil(onceC.length/perRowOnce)*11+3:0;
-  const ASYNC_H=asyncC.length?8+Math.ceil(asyncC.length/perRowAsync)*9+3:0;
-  const gridAvail=PH-MB-8-GY-HDR_H-ONCE_H-ASYNC_H-4;
+  const ONCE_H=onceC.length?6+Math.ceil(onceC.length/2)*11+2:0;
+  const ASYNC_H=asyncC.length?18:0;
+  const gridAvail=PH-GY-HDR_ROW-ONCE_H-ASYNC_H-10-4;
   const totalH=rowH.reduce((a,b)=>a+b,0);
   const sf=totalH>gridAvail?gridAvail/totalH:1;
   const scaledH=rowH.map(h=>h*sf);
-  const scaledChipH=CHIP_H*sf;
+  const chipH=CHIP_H*sf;
 
-  // Grid header
-  doc.setFillColor(...PAPER);doc.rect(ML,GY,TIME_W,HDR_H,'F');
-  doc.setFillColor(240,245,248);doc.rect(ML+TIME_W,GY,colW,HDR_H,'F');
-  doc.setFillColor(244,240,248);doc.rect(ML+TIME_W+colW,GY,colW,HDR_H,'F');
+  // Column header row
+  let y=GY;
+  doc.setFillColor(...PAPER);doc.rect(ML,y,TIME_W,HDR_ROW,'F');
+  doc.setFillColor(240,245,248);doc.rect(x1,y,colW*2,HDR_ROW,'F');
+  doc.setFillColor(244,240,248);doc.rect(x3,y,colW*2,HDR_ROW,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(7);
-  doc.setTextColor(...MW_ACC);doc.text('MONDAY / WEDNESDAY',ML+TIME_W+3,GY+4);
-  doc.setTextColor(...TTH_ACC);doc.text('TUESDAY / THURSDAY',ML+TIME_W+colW+3,GY+4);
+  doc.setTextColor(50,80,100);doc.text('Monday / Wednesday',x1+colW,y+4,{align:'center'});
+  doc.setTextColor(90,60,100);doc.text('Tuesday / Thursday',x3+colW,y+4,{align:'center'});
+  y+=HDR_ROW;
 
-  // Grid rows
-  let ry=GY+HDR_H;
+  // Time block rows
+  const gridDataTop=y;
   BLOCKS.forEach((block,bi)=>{
     const rh=scaledH[bi];
-    const mwC=getBlockCourses('mw',block,gridC);
-    const tthC=getBlockCourses('tth',block,gridC);
-    doc.setFillColor(255,255,255);doc.rect(ML,ry,cw,rh,'F');
-    doc.setFillColor(...PAPER);doc.rect(ML,ry,TIME_W,rh,'F');
-    doc.setFillColor(247,251,253);doc.rect(ML+TIME_W,ry,colW,rh,'F');
-    doc.setFillColor(251,248,254);doc.rect(ML+TIME_W+colW,ry,colW,rh,'F');
-    const [t1,t2]=block.split('–');
-    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(110,100,90);
-    doc.text(t1,ML+TIME_W/2,ry+rh/2-1.5,{align:'center'});
+    const[mwA,mwB]=halves('mw',block),[tthA,tthB]=halves('tth',block);
+    doc.setFillColor(...PAPER);doc.rect(ML,y,TIME_W,rh,'F');
+    doc.setFillColor(248,252,255);doc.rect(x1,y,colW*2,rh,'F');
+    doc.setFillColor(252,248,255);doc.rect(x3,y,colW*2,rh,'F');
+    const[t1,t2]=block.split('–');
+    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(100,90,80);
+    doc.text(t1,ML+TIME_W/2,y+rh/2-1.5,{align:'center'});
     doc.setFont('helvetica','normal');doc.setFontSize(6);
-    doc.text('–'+t2,ML+TIME_W/2,ry+rh/2+2,{align:'center'});
-    drawCellCourses(doc,mwC,ML+TIME_W+1.5,ry+CELL_PAD*sf,colW-3,rh-CELL_PAD*2*sf,MW_ACC,scaledChipH);
-    drawCellCourses(doc,tthC,ML+TIME_W+colW+1.5,ry+CELL_PAD*sf,colW-3,rh-CELL_PAD*2*sf,TTH_ACC,scaledChipH);
-    ry+=rh;
+    doc.text('–'+t2,ML+TIME_W/2,y+rh/2+2,{align:'center'});
+    drawMapChips(doc,mwA,x1+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
+    drawMapChips(doc,mwB,x2+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
+    drawMapChips(doc,tthA,x3+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
+    drawMapChips(doc,tthB,x4+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
+    y+=rh;
   });
+  const gridBottom=y;
 
-  // Grid borders
-  doc.setDrawColor(...MIST);doc.setLineWidth(0.4);
-  doc.rect(ML,GY,cw,HDR_H+scaledH.reduce((a,b)=>a+b,0),'S');
-  doc.setLineWidth(0.25);
-  let lineY=GY+HDR_H;
-  scaledH.slice(0,-1).forEach(rh=>{doc.line(ML,lineY+rh,PW-MR,lineY+rh);lineY+=rh;});
-  doc.line(ML+TIME_W,GY,ML+TIME_W,ry);
-  doc.line(ML+TIME_W+colW,GY,ML+TIME_W+colW,ry);
+  // Grid borders (drawn after content)
+  doc.setDrawColor(...MIST);doc.setLineWidth(0.5);
+  doc.rect(ML,GY,CW,gridBottom-GY,'S');
+  doc.setLineWidth(0.3);
+  let lineY=gridDataTop;
+  scaledH.slice(0,-1).forEach(rh=>{doc.line(ML,lineY+rh,ML+CW,lineY+rh);lineY+=rh;});
+  doc.setLineWidth(0.6);doc.setDrawColor(...INK);
+  doc.line(ML+TIME_W,GY,ML+TIME_W,gridBottom);  // time | MW
+  doc.line(x3,GY,x3,gridBottom);                 // MW | TTh
+  doc.setLineWidth(0.2);doc.setDrawColor(...MIST);
+  doc.line(x2,gridDataTop,x2,gridBottom);         // MW sub-column divider
+  doc.line(x4,gridDataTop,x4,gridBottom);         // TTh sub-column divider
 
-  ry+=3;
+  y+=3;
 
-  // Once/week
+  // ── Once / Week (dark panel) ──────────────────────────────────────────────
   if(onceC.length){
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...ONCE_ACC);
-    doc.text('ONCE A WEEK',ML,ry+4);
-    doc.setDrawColor(...ONCE_ACC);doc.setLineWidth(0.25);
-    doc.line(ML+30,ry+1,PW-MR,ry+1);ry+=6;
-    const cW2=44,cH2=9.5;let ox=ML;
-    onceC.forEach((c,i)=>{
-      if(ox+cW2>PW-MR+1){ox=ML;ry+=cH2+1.5;}
-      doc.setFillColor(234,243,235);doc.roundedRect(ox,ry,cW2,cH2,0.5,0.5,'F');
-      doc.setFillColor(...ONCE_ACC);doc.rect(ox,ry,1.5,cH2,'F');
-      const maxC=Math.floor((cW2-4)/1.65);
-      doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(...INK);
-      doc.text((c.code||'')+(c.section||''),ox+3,ry+2.8);
-      doc.setFont('helvetica','normal');doc.setFontSize(5.5);
-      const ttl=c.title||'';doc.text(ttl.length>maxC?ttl.slice(0,maxC-1)+'…':ttl,ox+3,ry+5.3);
-      doc.setTextColor(120,110,100);
-      const m2=[c.oncedday,c.faculty].filter(Boolean).join(' · ');
-      doc.text(m2.length>maxC?m2.slice(0,maxC-1)+'…':m2,ox+3,ry+7.8);
-      ox+=cW2+2;
+    doc.setFillColor(...INK);doc.rect(ML,y,CW,ONCE_H,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(200,185,170);
+    doc.text('Once / Week',ML+4,y+6);
+    const chipW=(CW-12)/2;let ox=ML+4;let oy=y+9;let col=0;
+    onceC.forEach(c=>{
+      if(col===2){col=0;ox=ML+4;oy+=11;}
+      const day=c.oncedday||'';
+      const ct=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
+      if(day){
+        doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(220,210,195);
+        doc.text(day+' ',ox,oy);
+        const dw=doc.getTextWidth(day+' ');
+        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(240,235,228);
+        let line=ct;while(doc.getTextWidth(line)>chipW-dw-2&&line.length>3)line=line.slice(0,-1);
+        if(line.length<ct.length)line=line.slice(0,-1)+'…';
+        doc.text(line,ox+dw,oy);
+      } else {
+        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(240,235,228);
+        let line=ct;while(doc.getTextWidth(line)>chipW-2&&line.length>3)line=line.slice(0,-1);
+        if(line.length<ct.length)line=line.slice(0,-1)+'…';
+        doc.text(line,ox,oy);
+      }
+      doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.setTextColor(170,155,140);
+      const meta=[pdfFaculty(c.faculty),pdfRoom(c.room),c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
+      doc.text(meta,ox,oy+4.5);
+      ox+=chipW+4;col++;
     });
-    ry+=cH2+2;
+    y+=ONCE_H;
   }
 
-  // Async
+  // ── Async / Online ────────────────────────────────────────────────────────
   if(asyncC.length){
-    ry+=2;
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...ASYNC_ACC);
-    doc.text('ASYNCHRONOUS / ONLINE',ML,ry+4);
-    doc.setDrawColor(...ASYNC_ACC);doc.setLineWidth(0.25);
-    doc.line(ML+52,ry+1,PW-MR,ry+1);ry+=6;
-    const aW=40,aH=8;let ax=ML;
-    asyncC.forEach((c,i)=>{
-      if(ax+aW>PW-MR+1){ax=ML;ry+=aH+1.5;}
-      doc.setFillColor(245,245,245);doc.roundedRect(ax,ry,aW,aH,0.5,0.5,'F');
-      doc.setFillColor(...ASYNC_ACC);doc.rect(ax,ry,1.5,aH,'F');
-      const maxC=Math.floor((aW-4)/1.65);
-      doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(...INK);
-      doc.text((c.code||'')+(c.section||''),ax+3,ry+2.8);
-      doc.setFont('helvetica','normal');doc.setFontSize(5.5);
-      const ttl=c.title||'';doc.text(ttl.length>maxC?ttl.slice(0,maxC-1)+'…':ttl,ax+3,ry+5.5);
-      doc.setTextColor(120,110,100);
-      doc.text(c.faculty||'',ax+3,ry+8); // won't exceed aH since not drawn
+    y+=3;
+    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(140,130,120);
+    doc.text('Async / Online',ML,y+4);
+    doc.setDrawColor(180,170,160);doc.setLineWidth(0.2);
+    doc.line(ML+32,y+1.5,ML+CW,y+1.5);y+=6;
+    const aW=38;let ax=ML;
+    asyncC.forEach(c=>{
+      if(ax+aW>ML+CW){ax=ML;y+=8.5;}
+      doc.setFillColor(245,243,240);doc.roundedRect(ax,y,aW,7,0.3,0.3,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(5);doc.setTextColor(...INK);
+      doc.text(pdfCode(c.code)+(c.section||''),ax+2,y+2.5);
+      doc.setFont('helvetica','normal');doc.setFontSize(5);doc.setTextColor(100,90,80);
+      let t=c.title||'';const mc=Math.floor((aW-4)/1.52);
+      doc.text(t.length>mc?t.slice(0,mc-1)+'…':t,ax+2,y+5);
       ax+=aW+2;
     });
   }
 
-  // Footer line
-  doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.setTextColor(180,170,160);
-  doc.setDrawColor(...MIST);doc.setLineWidth(0.25);
-  doc.line(ML,PH-MB,PW-MR,PH-MB);
-  doc.text('Visual Arts Department · Draft — for planning purposes only',ML,PH-MB+3.5);
+  // ── Footer ───────────────────────────────────────────────────────────────
+  doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(160,150,140);
+  doc.setDrawColor(...MIST);doc.setLineWidth(0.2);
+  doc.line(ML,PH-8,ML+CW,PH-8);
+  doc.text('Visual Arts Department · '+currentSem+' · Draft',ML,PH-4.5);
+  doc.text('Page 1',ML+CW-doc.getTextWidth('Page 1'),PH-4.5);
 
   doc.save(currentSem.toLowerCase().replace(/\s+/g,'-')+'-schedule.pdf');
 }
