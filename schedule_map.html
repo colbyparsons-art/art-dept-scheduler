@@ -918,51 +918,41 @@ function pdfRoom(r){
 
 function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
   const INK=[26,20,16];
+  const CHIP_GAP=2.0;
   const PATTERN_BG={
-    mw:[242,246,248],
-    tth:[247,241,248],
-    once:[241,247,242],
-    async:[248,248,248],
-    hidden:[255,244,227]
+    mw:[242,246,248],tth:[247,241,248],once:[241,247,242],async:[248,248,248],hidden:[255,244,227]
   };
   const PATTERN_BAR={
-    mw:[74,107,124],
-    tth:[122,92,139],
-    once:[92,122,95],
-    async:[98,98,98],
-    hidden:[247,233,117]
+    mw:[74,107,124],tth:[122,92,139],once:[92,122,95],async:[98,98,98],hidden:[247,233,117]
   };
 
-  // Handle both: array of courses (from once/async) and mix of courses/arrays (from grid)
   const items=coursesOrItems.map(item=>Array.isArray(item)?{type:'bracketed',courses:item}:{type:'single',course:item});
 
   let cy=y;
-  items.forEach(item=>{
+  items.forEach((item,ii)=>{
+    const isLast=(ii===items.length-1);
     if(item.type==='bracketed'){
       const courses=item.courses;
-      const subH=chipH*courses.length;
+      const subH=(chipH-0.4)*courses.length;
       if(cy+subH>y+maxH+0.5)return;
-      
-      const accentColor=PATTERN_BAR[courses[0].pattern]||[26,20,16];
-      doc.setFillColor(255,255,255);
-      doc.roundedRect(x,cy,maxW,subH-0.2,1.5,1.5,'F');
-      doc.setDrawColor(...INK);doc.setLineWidth(0.3);
-      doc.roundedRect(x,cy,maxW,subH-0.2,1.5,1.5,'S');
+      const pat=courses[0].pattern;
+      const fillColor=PATTERN_BG[pat]||[255,255,255];
+      const accentColor=PATTERN_BAR[pat]||[26,20,16];
+      // Single unbroken outline — no dividing line between courses
+      doc.setFillColor(...fillColor);
+      doc.roundedRect(x,cy,maxW,subH,1.5,1.5,'F');
+      doc.setDrawColor(...INK);doc.setLineWidth(0.4);
+      doc.roundedRect(x,cy,maxW,subH,1.5,1.5,'S');
       doc.setFillColor(...accentColor);
-      doc.rect(x,cy,2.0,subH-0.2,'F');
-      
+      doc.rect(x,cy,2.0,subH,'F');
       courses.forEach((c,idx)=>{
-        const ccy=cy+idx*chipH;
-        if(idx>0){
-          doc.setDrawColor(200,200,200);doc.setLineWidth(0.15);
-          doc.line(x,ccy,x+maxW,ccy);
-        }
-        const tx=x+2.0+1.6;
+        const ccy=cy+idx*(chipH-0.4);
+        const tx=x+3.8;
         const hybridLabel=c.hybrid?formatHybridLabel(c):'';
-        const fullTitle=pdfCode(c.code)+' '+(c.title||'');
+        const fullTitle=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
+        let hybridW=0;
+        if(hybridLabel){doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);hybridW=doc.getTextWidth(' '+hybridLabel);}
         doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
-        const hybridW=hybridLabel?doc.setFont('helvetica','bolditalic')&&doc.setFontSize(5.5)&&doc.getTextWidth(' '+hybridLabel)||0:0;
-        doc.setFont('helvetica','bold');doc.setFontSize(6.5);
         let ct=fullTitle;
         const maxTW=maxW-(tx-x)-hybridW-0.7;
         while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
@@ -981,12 +971,11 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
         if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
         doc.text(meta,tx,ccy+5.5);
       });
-      cy+=subH;
+      cy+=subH+(isLast?0:CHIP_GAP);
     } else {
       const c=item.course;
       const chipH2=chipH-0.4;
       if(cy+chipH2>y+maxH+0.5)return;
-      
       const fillColor=PATTERN_BG[c.pattern]||[255,255,255];
       const accentColor=PATTERN_BAR[c.pattern]||[26,20,16];
       doc.setFillColor(...fillColor);
@@ -995,12 +984,12 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'S');
       doc.setFillColor(...accentColor);
       doc.rect(x,cy,1.4,chipH2,'F');
-      const tx=x+1.4+1.6;
+      const tx=x+3.0;
       const hybridLabel=c.hybrid?formatHybridLabel(c):'';
-      const fullTitle=pdfCode(c.code)+' '+(c.title||'');
+      const fullTitle=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
+      let hybridW=0;
+      if(hybridLabel){doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);hybridW=doc.getTextWidth(' '+hybridLabel);}
       doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
-      const hybridW=hybridLabel?doc.setFont('helvetica','bolditalic')&&doc.setFontSize(5.5)&&doc.getTextWidth(' '+hybridLabel)||0:0;
-      doc.setFont('helvetica','bold');doc.setFontSize(6.5);
       let ct=fullTitle;
       const maxTW=maxW-(tx-x)-hybridW-0.7;
       while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
@@ -1018,7 +1007,7 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       while(doc.getTextWidth(meta)>metaMaxW&&meta.length>2)meta=meta.slice(0,-1);
       if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
       doc.text(meta,tx,cy+5.5);
-      cy+=chipH;
+      cy+=chipH2+(isLast?0:CHIP_GAP);
     }
   });
 }
@@ -1080,15 +1069,14 @@ function generatePDF(){
   }
 
   function visualHeight(items){
+    const CHIP_GAP=2.0;
     let h=0;
-    items.forEach(item=>{
-      if(Array.isArray(item)){
-        h+=CHIP_H*item.length; // bracketed pair
-      } else {
-        h+=CHIP_H; // single course
-      }
+    items.forEach((item,i)=>{
+      const gap=i<items.length-1?CHIP_GAP:0;
+      if(Array.isArray(item)){h+=(CHIP_H-0.4)*item.length+gap;}
+      else{h+=(CHIP_H-0.4)+gap;}
     });
-    return h;
+    return Math.max(h,CHIP_H-0.4);
   }
 
   const rowH=BLOCKS.map(block=>{
@@ -1097,8 +1085,12 @@ function generatePDF(){
     return CELL_PAD*2+maxH;
   });
 
-  const ONCE_H=onceC.length?18+Math.max(...onceByDay.map(arr=>arr.length),1)*11:0;
-  const ASYNC_H=asyncC.length?8+Math.ceil(asyncC.length/2)*10:0;
+  const maxOnceDay=onceC.length?Math.max(...onceByDay.map(arr=>arr.length),1):0;
+  const onceDayBodyH=maxOnceDay*(8-0.4)+Math.max(0,maxOnceDay-1)*2.0;
+  const ONCE_H=onceC.length?8+8+onceDayBodyH+6:0;
+  const asyncRows=Math.ceil(asyncC.length/2);
+  const asyncBodyH=asyncRows*(8-0.4)+Math.max(0,asyncRows-1)*2.0;
+  const ASYNC_H=asyncC.length?8+asyncBodyH+8:0;
   const gridAvail=PH-GY-HDR_ROW-ONCE_H-ASYNC_H-10-4;
   const totalH=rowH.reduce((a,b)=>a+b,0);
   const sf=totalH>gridAvail?gridAvail/totalH:1;
@@ -1164,39 +1156,18 @@ function generatePDF(){
     doc.setFillColor(241,247,242);doc.roundedRect(ML,y,CW,ONCE_H,3,3,'F');
     doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.roundedRect(ML,y,CW,ONCE_H,3,3,'S');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
-    doc.text('Once / Week',ML+4,y+6);
+    doc.text('Once / Week',ML+4,y+5.5);
     const dayW=(CW-3)/4;
-    const headerH=8;
-    const dayBodyTop=y+headerH+6;
+    const colHdrH=8,colHdrY=y+8,colBodyY=colHdrY+colHdrH;
     ['Monday','Tuesday','Wednesday','Thursday'].forEach((day,di)=>{
       const dx=ML+di*(dayW+1);
-      doc.setFillColor(...PAPER);doc.rect(dx,dayBodyTop-headerH-2,dayW,headerH,'F');
-      doc.setDrawColor(...MIST);doc.setLineWidth(0.2);doc.rect(dx,dayBodyTop-2,dayW,ONCE_H-headerH-8,'S');
+      doc.setFillColor(...PAPER);doc.rect(dx,colHdrY,dayW,colHdrH,'F');
+      doc.setDrawColor(...MIST);doc.setLineWidth(0.3);
+      doc.line(dx,colHdrY,dx+dayW,colHdrY);doc.line(dx,colHdrY+colHdrH,dx+dayW,colHdrY+colHdrH);
       doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...INK);
-      doc.text(day,dx+dayW/2,dayBodyTop-4.5,{align:'center'});
+      doc.text(day,dx+dayW/2,colHdrY+colHdrH/2+1.5,{align:'center'});
       const dayCourses=onceByDay[di];
-      let dy=dayBodyTop+2;
-      dayCourses.forEach(c=>{
-        const chipH2=9;
-        const chipX=dx+2;
-        const chipW=dayW-4;
-        doc.setFillColor(252,253,249);doc.roundedRect(chipX,dy,chipW,chipH2,1.8,1.8,'F');
-        doc.setDrawColor(...MIST);doc.setLineWidth(0.2);doc.roundedRect(chipX,dy,chipW,chipH2,1.8,1.8,'S');
-        doc.setFillColor(92,122,95);doc.rect(chipX,dy,2.5,chipH2,'F');
-        const display=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
-        doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(...INK);
-        let line=display;
-        const lineMax=chipW-8;
-        while(doc.getTextWidth(line)>lineMax&&line.length>3)line=line.slice(0,-1);
-        if(line.length<display.length)line=line.slice(0,-1)+'…';
-        doc.text(line,chipX+4.5,dy+3.7);
-        doc.setFont('helvetica','normal');doc.setFontSize(5.2);doc.setTextColor(100,90,80);
-        const meta=[pdfFaculty(c.faculty),pdfRoom(c.room),c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
-        let metaText=meta;
-        while(doc.getTextWidth(metaText)>lineMax&&metaText.length>2)metaText=metaText.slice(0,-1);
-        doc.text(metaText,chipX+4.5,dy+7.7);
-        dy+=chipH2+2;
-      });
+      if(dayCourses.length)drawMapChips(doc,dayCourses,dx+2,colBodyY+2,dayW-4,onceDayBodyH,8.0);
     });
     y+=ONCE_H;
   }
@@ -1206,28 +1177,14 @@ function generatePDF(){
     y+=3;
     doc.setFillColor(233,238,255);doc.roundedRect(ML,y,CW,ASYNC_H,3,3,'F');
     doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.roundedRect(ML,y,CW,ASYNC_H,3,3,'S');
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...INK);
-    doc.text('Async / Online',ML+4,y+5);
-    doc.setDrawColor(...MIST);doc.setLineWidth(0.2);
-    doc.line(ML+4+doc.getTextWidth('Async / Online')+3,y+2,ML+CW,y+2);
-    y+=7;
-    const aW=(CW-12)/2;const aH=9;let ax=ML+4;let col=0;
-    asyncC.forEach(c=>{
-      if(col===2){col=0;ax=ML+4;y+=aH+3;}
-      doc.setFillColor(255,255,255);doc.roundedRect(ax,y,aW,aH,1.8,1.8,'F');
-      const fullTitle=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
-      doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
-      let ct=fullTitle;const maxTW=aW-6;
-      while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
-      if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
-      doc.text(ct,ax+2,y+3.2);
-      doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(100,90,80);
-      const fac=pdfFaculty(c.faculty),rm=pdfRoom(c.room);
-      let meta=[fac,rm].filter(Boolean).join(' · ');
-      while(doc.getTextWidth(meta)>maxTW&&meta.length>2)meta=meta.slice(0,-1);
-      doc.text(meta,ax+2,y+6.5);
-      ax+=aW+4;col++;
-    });
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
+    doc.text('Async / Online',ML+4,y+5.5);
+    const aColW=(CW-12)/2;
+    const aBodyY=y+8;
+    const asyncLeft=asyncC.filter((_,i)=>i%2===0);
+    const asyncRight=asyncC.filter((_,i)=>i%2===1);
+    drawMapChips(doc,asyncLeft,ML+4,aBodyY,aColW,asyncBodyH+2,8.0);
+    if(asyncRight.length)drawMapChips(doc,asyncRight,ML+4+aColW+4,aBodyY,aColW,asyncBodyH+2,8.0);
   }
 
   // ── Footer ───────────────────────────────────────────────────────────────
@@ -1247,7 +1204,7 @@ const FUTURE_DATA = {"Spring 2027":{"courses":[{"code":"ART 3253","section":".01
 if(FACULTY_MODE){
   document.body.classList.add('faculty');
   const _nav=document.querySelector('.site-nav');
-  if(_nav)_nav.innerHTML='<a href="faculty.html">← Faculty Portal</a><span class="sep">/</span><a href="schedule_map.html?faculty=1" class="current">Schedule Map</a>';
+  if(_nav)_nav.innerHTML='<a href="index.html">← Scheduling Tools</a><span class="sep">/</span><a href="schedule_map.html?faculty=1" class="current">Schedule Map</a>';
   const _sub=document.querySelector('header p');
   if(_sub)_sub.textContent='Visual Arts — Faculty View';
 }
