@@ -986,11 +986,14 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
         const maxTW=maxW-(tx-x)-hybridW-0.7;
         while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
         if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
-        doc.text(ct,tx,ccy+2.8);
+        const subH2=chipH-0.4;
+        const titleY=ccy+Math.max(1.8,subH2*0.37);
+        const metaY=ccy+Math.min(subH2-0.6,subH2*0.72);
+        doc.text(ct,tx,titleY);
         if(hybridLabel){
           const ctW=doc.getTextWidth(ct);
           doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);doc.setTextColor(100,90,80);
-          doc.text(' '+hybridLabel,tx+ctW,ccy+2.8);
+          doc.text(' '+hybridLabel,tx+ctW,titleY);
         }
         doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(100,90,80);
         const fac=pdfFaculty(c.faculty),rm=pdfRoom(c.room);
@@ -998,7 +1001,7 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
         const metaMaxW=maxW-(tx-x)-0.5;
         while(doc.getTextWidth(meta)>metaMaxW&&meta.length>2)meta=meta.slice(0,-1);
         if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
-        doc.text(meta,tx,ccy+5.5);
+        doc.text(meta,tx,metaY);
       });
       cy+=subH+(isLast?0:CHIP_GAP);
     } else {
@@ -1023,11 +1026,13 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const maxTW=maxW-(tx-x)-hybridW-0.7;
       while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
       if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
-      doc.text(ct,tx,cy+2.8);
+      const titleY=cy+Math.max(1.8,chipH2*0.37);
+      const metaY=cy+Math.min(chipH2-0.6,chipH2*0.72);
+      doc.text(ct,tx,titleY);
       if(hybridLabel){
         const ctW=doc.getTextWidth(ct);
         doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);doc.setTextColor(100,90,80);
-        doc.text(' '+hybridLabel,tx+ctW,cy+2.8);
+        doc.text(' '+hybridLabel,tx+ctW,titleY);
       }
       doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(100,90,80);
       const fac=pdfFaculty(c.faculty),rm=pdfRoom(c.room);
@@ -1035,7 +1040,7 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const metaMaxW=maxW-(tx-x)-0.5;
       while(doc.getTextWidth(meta)>metaMaxW&&meta.length>2)meta=meta.slice(0,-1);
       if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
-      doc.text(meta,tx,cy+5.5);
+      doc.text(meta,tx,metaY);
       cy+=chipH2+(isLast?0:CHIP_GAP);
     }
   });
@@ -1062,11 +1067,8 @@ function generatePDF(){
   doc.text(currentSem+' — Schedule Map',ML,13);
   doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(120,110,100);
   doc.text('Department of Visual Arts · Draft · Subject to change',ML,19);
-  doc.setDrawColor(...MIST);doc.setLineWidth(0.5);
-  doc.line(ML,HDR_H+1,ML+CW,HDR_H+1);
-
   // ── Grid (4 sub-columns: MW×2, TTh×2) ────────────────────────────────────
-  const GY=HDR_H+3;
+  const GY=HDR_H+5;
   const TIME_W=16,colW=(CW-TIME_W)/4;
   const x1=ML+TIME_W,x2=x1+colW,x3=x2+colW,x4=x3+colW;
   const HDR_ROW=6,CHIP_H=8.0,CELL_PAD=2;
@@ -1182,17 +1184,19 @@ function generatePDF(){
 
   // ── Once / Week ──────────────────────────────────────────────────────────────
   if(onceC.length){
-    doc.setFillColor(241,247,242);doc.roundedRect(ML,y,CW,ONCE_H,3,3,'F');
-    doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.roundedRect(ML,y,CW,ONCE_H,3,3,'S');
+    doc.setFillColor(241,247,242);doc.rect(ML,y,CW,ONCE_H,'F');
+    doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.rect(ML,y,CW,ONCE_H,'S');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
     doc.text('Once / Week',ML+4,y+5.5);
-    const dayW=(CW-3)/4;
-    const colHdrH=8,colHdrY=y+8,colBodyY=colHdrY+colHdrH;
+    // Day header: single inset bar with 3mm margins so it stays inside the outline
+    const colHdrH=7,colHdrY=y+8,colBodyY=colHdrY+colHdrH;
+    const innerX=ML+3,innerW=CW-6,dayW=innerW/4;
+    doc.setFillColor(...PAPER);doc.rect(innerX,colHdrY,innerW,colHdrH,'F');
+    doc.setDrawColor(...MIST);doc.setLineWidth(0.25);
+    doc.line(innerX,colHdrY+colHdrH,innerX+innerW,colHdrY+colHdrH);
     ['Monday','Tuesday','Wednesday','Thursday'].forEach((day,di)=>{
-      const dx=ML+di*(dayW+1);
-      doc.setFillColor(...PAPER);doc.rect(dx,colHdrY,dayW,colHdrH,'F');
-      doc.setDrawColor(...MIST);doc.setLineWidth(0.3);
-      doc.line(dx,colHdrY,dx+dayW,colHdrY);doc.line(dx,colHdrY+colHdrH,dx+dayW,colHdrY+colHdrH);
+      const dx=innerX+di*dayW;
+      if(di>0){doc.setDrawColor(...MIST);doc.setLineWidth(0.15);doc.line(dx,colHdrY,dx,colHdrY+colHdrH);}
       doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...INK);
       doc.text(day,dx+dayW/2,colHdrY+colHdrH/2+1.5,{align:'center'});
       const dayCourses=onceByDay[di];
@@ -1204,8 +1208,8 @@ function generatePDF(){
   // ── Async / Online ────────────────────────────────────────────────────────
   if(asyncC.length){
     y+=3;
-    doc.setFillColor(233,238,255);doc.roundedRect(ML,y,CW,ASYNC_H,3,3,'F');
-    doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.roundedRect(ML,y,CW,ASYNC_H,3,3,'S');
+    doc.setFillColor(248,248,248);doc.rect(ML,y,CW,ASYNC_H,'F');
+    doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.rect(ML,y,CW,ASYNC_H,'S');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
     doc.text('Async / Online',ML+4,y+5.5);
     const aColW=(CW-12)/2;
