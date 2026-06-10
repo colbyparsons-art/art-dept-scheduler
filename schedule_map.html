@@ -5,32 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Schedule Map — Visual Arts</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Museo+Sans:wght@300;500;700&display=swap');
   :root{
     --ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;
-    --cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;--light-clay:#F5EBE4;
-    --mw:#4A6B7C;--tth:#7A5C8B;--once:#5C7A5F;--async:#888;--hidden:#C4922A;
+    --sky:#5D8AA8;--lavender:#9A7CA8;--peach:#E8B89B;
+    --cream:#FAF7F2;--paper:#F7EEE6;--mist:#E8E2D9;--light-clay:#F5EBE4;
+    --mw:#4A6B7C;--tth:#7A5C8B;--once:#5C7A5F;--async:#626262;--hidden:#f7e975;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
+  body{font-family:'Bahnschrift',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;}
   header{background:var(--ink);color:var(--cream);padding:24px 40px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
-  header h1{font-family:'Cormorant Garamond',serif;font-size:1.9rem;font-weight:600;line-height:1.1;}
+  header h1{font-family:'Bahnschrift',sans-serif;font-size:1.9rem;font-weight:600;line-height:1.1;}
   header p{font-size:.8rem;opacity:.5;margin-top:3px;}
   .header-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-  .btn{padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;border-radius:2px;border:none;transition:opacity .2s;}
-  .btn-gold{background:var(--gold);color:var(--ink);}
+  .btn{padding:8px 16px;font-family:'Bahnschrift',sans-serif;font-size:.8rem;font-weight:500;cursor:pointer;border-radius:2px;border:1px solid var(--mist);background:white;color:var(--ink);transition:opacity .2s;}
+  .btn-gold{background:var(--gold);color:var(--ink);border-color:var(--gold);}
   .btn-outline{background:transparent;color:var(--cream);border:1px solid rgba(255,255,255,.3);}
   .btn-outline:hover,.btn-gold:hover{opacity:.82;}
   .btn-sm{padding:5px 10px;font-size:.76rem;}
   .btn-danger{background:#c0392b;color:white;}
 
   /* Toolbar */
-  .toolbar{background:var(--paper);border-bottom:1px solid var(--mist);padding:10px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .toolbar{background:#fdf5ed;border-bottom:1px solid rgba(158,133,109,.2);padding:10px 40px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
   .toolbar label{font-size:.78rem;font-weight:500;opacity:.65;}
-  .toolbar select,.toolbar input{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.82rem;color:var(--ink);background:white;}
+  .toolbar select,.toolbar input{padding:6px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'Bahnschrift',sans-serif;font-size:.82rem;color:var(--ink);background:white;}
   .toolbar select:focus,.toolbar input:focus{outline:none;border-color:var(--clay);}
   .view-tabs{display:flex;gap:0;margin-left:auto;}
-  .view-tab{padding:8px 16px;font-size:.8rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--ink);opacity:.5;border-bottom:2px solid transparent;font-family:'DM Sans',sans-serif;}
+  .view-tab{padding:8px 16px;font-size:.8rem;font-weight:500;cursor:pointer;border:none;background:none;color:var(--ink);opacity:.5;border-bottom:2px solid transparent;font-family:'Bahnschrift',sans-serif;}
   .view-tab.active{opacity:1;border-bottom-color:var(--clay);}
 
   main{padding:24px 40px;max-width:1400px;margin:0 auto;}
@@ -42,23 +43,39 @@
 
   /* Schedule grid */
   .grid-wrap{overflow-x:auto;margin-bottom:24px;}
-  .schedule-grid{display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:0;border:1px solid var(--mist);border-radius:4px;overflow:hidden;background:white;min-width:640px;}
-  .grid-header{background:var(--paper);padding:10px 14px;font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:#666;border-bottom:1px solid var(--mist);}
-  .grid-header.mw{border-left:3px solid var(--mw);grid-column:span 2;}
-  .grid-header.tth{border-left:3px solid var(--tth);grid-column:span 2;}
-  .time-label{background:var(--paper);padding:12px 10px;font-size:.75rem;font-weight:500;color:#888;border-bottom:1px solid var(--mist);border-right:1px solid var(--mist);display:flex;align-items:flex-start;justify-content:center;text-align:center;line-height:1.3;}
-  .cell{padding:8px;border-bottom:1px solid var(--mist);border-right:1px solid var(--mist);min-height:100px;vertical-align:top;display:flex;flex-direction:column;gap:5px;}
+  .schedule-grid{display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr;gap:0;border:1px solid #1a1410;border-radius:4px;overflow:hidden;background:white;min-width:640px;}
+  .grid-header{background:var(--paper);padding:10px 14px;font-size:.82rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink);border-bottom:2px solid #1a1410;}
+  .grid-header:first-child{border-right:2px solid #1a1410;}
+  .grid-header.mw{background:rgba(74,107,124,.12);grid-column:span 2;}
+  .grid-header.tth{background:rgba(122,92,139,.12);border-left:1px solid #1a1410;grid-column:span 2;}
+  .time-label{padding:12px 10px;font-size:.84rem;font-weight:700;color:var(--ink);border-bottom:1px solid #1a1410;border-right:2px solid #1a1410;display:flex;align-items:flex-start;justify-content:center;text-align:center;line-height:1.3;white-space:nowrap;}
+  .time-label.time-slot-1{background:#edf6ff;color:var(--ink);}
+  .time-label.time-slot-2{background:#fff3e9;color:var(--ink);}
+  .time-label.time-slot-3{background:#f4eff8;color:var(--ink);}
+  .time-label.time-slot-4{background:#eef7ec;color:var(--ink);}
+  .cell{padding:8px;border-bottom:1px solid #1a1410;border-right:1px solid #1a1410;min-height:100px;vertical-align:top;display:flex;flex-direction:column;gap:5px;}
   .cell.last-col{border-right:none;}
   .cell.drop-target{background:var(--light-clay);}
 
   /* Course chips */
-  .course-chip{border-radius:3px;padding:6px 8px;font-size:.76rem;line-height:1.35;position:relative;border-left:3px solid transparent;}
-  .course-chip.mw{background:#EBF1F5;border-left-color:var(--mw);}
-  .course-chip.tth{background:#F0EBF5;border-left-color:var(--tth);}
-  .course-chip.once{background:#EAF3EB;border-left-color:var(--once);}
-  .course-chip.async{background:#F5F5F5;border-left-color:var(--async);}
+  .course-chip{border-radius:6px;padding:8px 10px;font-size:.76rem;line-height:1.4;position:relative;border:1px solid rgba(26,20,16,.14);border-left:4px solid transparent;background:#fff;}
+  .course-chip.mw{background:rgba(74,107,124,.08);border-left-color:var(--mw);}
+  .course-chip.tth{background:rgba(122,92,139,.08);border-left-color:var(--tth);}
+  .course-chip.once{background:rgba(92,122,95,.08);border-left-color:var(--once);}
+  .course-chip.async{background:rgba(98,98,98,.06);border-left-color:var(--async);}
   .course-chip.hidden{background:#FDF3E0;border-left-color:var(--hidden);opacity:.75;}
-  .course-chip.bracketed{border-left-color:#8A6C8F!important;}
+  .course-chip.bracketed{padding-left:10px;padding-right:14px;margin-bottom:0;border:1px solid rgba(60,60,60,.35);border-left-width:6px;border-left-color:transparent;}
+  .course-chip.bracketed.mw{border-left-color:var(--mw);}
+  .course-chip.bracketed.tth{border-left-color:var(--tth);}
+  .course-chip.bracketed.once{border-left-color:var(--once);}
+  .course-chip.bracketed.async{border-left-color:var(--async);}
+  .course-chip.bracketed.hidden{border-left-color:var(--hidden);}
+  .course-chip.bracketed + .course-chip.bracketed{margin-top:-5px;}
+  .course-chip.bracketed:not(.bracket-start){border-top-width:0;border-top-left-radius:0;border-top-right-radius:0;}
+  .course-chip.bracketed:not(.bracket-end){border-bottom-width:0;border-bottom-left-radius:0;border-bottom-right-radius:0;}
+  .course-chip.bracketed.bracket-start{border-top-left-radius:6px;border-top-right-radius:6px;}
+  .course-chip.bracketed.bracket-end{border-bottom-left-radius:6px;border-bottom-right-radius:6px;}
+  .course-chip.bracketed.bracket-start.bracket-end{border-radius:6px;}
   .chip-code{font-weight:500;font-size:.72rem;opacity:.7;}
   .chip-title{font-weight:500;margin:1px 0;}
   .chip-meta{font-size:.7rem;opacity:.65;display:flex;gap:6px;flex-wrap:wrap;margin-top:2px;}
@@ -66,30 +83,35 @@
   .course-chip:hover .chip-actions{display:flex;}
   .chip-btn{background:rgba(255,255,255,.9);border:1px solid var(--mist);border-radius:2px;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;}
   .chip-btn:hover{background:white;}
-  .add-chip{background:none;border:1px dashed var(--mist);border-radius:3px;padding:6px 8px;font-size:.75rem;color:#bbb;cursor:pointer;text-align:left;width:100%;font-family:'DM Sans',sans-serif;}
+  .add-chip{background:none;border:1px dashed var(--mist);border-radius:3px;padding:6px 8px;font-size:.75rem;color:#bbb;cursor:pointer;text-align:left;width:100%;font-family:'Bahnschrift',sans-serif;}
   .add-chip:hover{border-color:var(--clay);color:var(--clay);}
 
   .chip-hybrid{font-style:italic;font-weight:600;font-size:.68rem;opacity:.7;}
   .chip-grad{font-size:.68rem;opacity:.55;}
   .chip-notes-line{font-size:.66rem;opacity:.42;margin-top:1px;line-height:1.3;}
-  .cell.tth-start{border-left:2px solid rgba(122,92,139,0.2);}
-  .once-panel{background:var(--ink);border-radius:4px;padding:16px 20px;margin-bottom:24px;}
-  .once-panel-header{font-size:.72rem;font-weight:500;text-transform:uppercase;letter-spacing:.1em;color:#C8B89A;margin-bottom:12px;}
-  .once-chips-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .once-chip{padding:8px 10px;line-height:1.4;position:relative;border-radius:3px;}
-  .once-chip .chip-day{font-size:.69rem;font-weight:600;color:#C8B89A;letter-spacing:.04em;margin-bottom:1px;}
-  .once-chip .chip-code-title{color:#F0EBE2;font-size:.78rem;font-weight:500;line-height:1.3;}
-  .once-chip .chip-meta-dark{color:#A89880;font-size:.69rem;margin-top:2px;}
-  .once-chip .chip-actions{position:absolute;top:4px;right:4px;display:none;gap:3px;}
+  .cell.tth-start{border-left:1px solid #1a1410;}
+  .once-panel{background:rgba(232,245,235,.95);border:1px solid #1a1410;border-radius:6px;padding:18px 22px;margin-bottom:24px;font-family:'Bahnschrift',sans-serif;}
+  .once-panel-header{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink);margin-bottom:14px;font-family:'Bahnschrift',sans-serif;}
+  .once-day-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1px;background:#1a1410;}
+  .once-day-column{background:#ffffff;padding:0;}
+  .once-day-header{background:var(--paper);padding:10px 8px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);text-align:center;border-bottom:1px solid #1a1410;}
+  .once-day-courses{display:flex;flex-direction:column;gap:0;padding:6px;}
+  .once-chip{padding:10px 12px;line-height:1.45;position:relative;border-radius:4px;background:#fcfdf9;border-left:4px solid var(--once);box-shadow:0 1px 3px rgba(92,122,95,.12);font-family:'Bahnschrift',sans-serif;}
+  .once-chip .chip-day{font-size:.7rem;font-weight:700;color:var(--once);letter-spacing:.04em;margin-bottom:2px;}
+  .once-chip .chip-code-title{color:var(--ink);font-size:.82rem;font-weight:600;line-height:1.3;}
+  .once-chip .chip-meta-dark{color:#5d5d59;font-size:.72rem;margin-top:4px;}
+  .once-chip .chip-actions{position:absolute;top:6px;right:6px;display:none;gap:3px;}
   .once-chip:hover .chip-actions{display:flex;}
-  .async-section{margin-bottom:24px;}
+  .async-section{background:rgba(229,236,255,.95);border:1px solid #1a1410;border-radius:6px;padding:18px 22px;margin-bottom:24px;font-family:'Bahnschrift',sans-serif;}
+  .async-section .section-header{margin-bottom:14px;font-family:'Bahnschrift',sans-serif;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink);}
   .async-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .placeholder-chip{background:transparent;border-left-color:transparent;box-shadow:none;color:#777;font-style:italic;font-size:.82rem;line-height:1.5;font-family:'Bahnschrift',sans-serif;}
 
   /* Faculty load bar */
   .load-section{margin-bottom:24px;}
   .load-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;}
   .load-card{background:white;border:1px solid var(--mist);border-radius:4px;padding:14px 16px;}
-  .load-name{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;margin-bottom:8px;}
+  .load-name{font-family:'Bahnschrift',sans-serif;font-size:1rem;font-weight:600;margin-bottom:8px;}
   .load-bar-wrap{height:6px;background:var(--mist);border-radius:3px;margin-bottom:6px;overflow:hidden;}
   .load-bar{height:100%;border-radius:3px;transition:width .3s;}
   .load-bar.ok{background:var(--sage);}
@@ -99,7 +121,7 @@
   .load-courses{font-size:.72rem;color:#999;margin-top:4px;line-height:1.5;}
 
   /* Once/week and async sections */
-  .section-header{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--mist);display:flex;align-items:center;gap:8px;}
+  .section-header{font-family:'Bahnschrift',sans-serif;font-size:1.1rem;font-weight:600;margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--mist);display:flex;align-items:center;gap:8px;}
   .flat-list{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
 
   /* Rotation checker */
@@ -118,7 +140,7 @@
   .modal-overlay.open{display:flex;}
   .modal{background:white;border-radius:6px;width:100%;max-width:600px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
   .modal-header{padding:18px 24px;border-bottom:1px solid var(--mist);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:1;}
-  .modal-header h2{font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;}
+  .modal-header h2{font-family:'Bahnschrift',sans-serif;font-size:1.3rem;font-weight:600;}
   .modal-close{background:none;border:none;font-size:1.3rem;cursor:pointer;color:#aaa;}
   .modal-close:hover{color:var(--ink);}
   .modal-body{padding:20px 24px;}
@@ -128,7 +150,7 @@
   .form-row.three{grid-template-columns:1fr 1fr 1fr;}
   .form-group{display:flex;flex-direction:column;gap:4px;}
   .form-group label{font-size:.74rem;font-weight:500;opacity:.65;text-transform:uppercase;letter-spacing:.05em;}
-  .form-group input,.form-group select,.form-group textarea{padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--ink);}
+  .form-group input,.form-group select,.form-group textarea{padding:7px 10px;border:1px solid var(--mist);border-radius:2px;font-family:'Bahnschrift',sans-serif;font-size:.85rem;color:var(--ink);}
   .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--clay);}
   .checkbox-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
   .checkbox-label{display:flex;align-items:center;gap:6px;font-size:.82rem;cursor:pointer;}
@@ -186,12 +208,7 @@
   <!-- GRID VIEW -->
   <div class="view-panel active" id="view-grid">
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--mw)"></div>Mon/Wed</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--tth)"></div>Tue/Thu</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--once)"></div>Once/week</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--async)"></div>Async/Online</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--hidden);"></div>Hidden section</div>
-      <div class="legend-item"><div style="width:10px;height:10px;border-radius:2px;border:2px dashed #888;flex-shrink:0;"></div>Bracketed/co-listed</div>
     </div>
     <div class="grid-wrap"><div class="schedule-grid" id="scheduleGrid"></div></div>
     <div id="oncePanelContainer"></div>
@@ -413,7 +430,7 @@ const FACULTY_LOADS={
 };
 
 // ── Default schedule data (SP27–FA28) ──────────────────────────────────────
-const DEFAULT_SCHEDULE = {"Spring 2027":{"courses":[{"code":"ART 3253","section":".01","title":"MOTION GRAPHICS","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4313","section":".01","title":"AD & SOCIAL MEDIA DESIGN","faculty":"staff","room":"106","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2613","section":".01","title":"INTRODUCTION TO PRINTMAKING","faculty":"staff","room":"204","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3343","section":".01","title":"WOMEN IN THE VISUAL ARTS","faculty":"MEG","room":"101","pattern":"tth","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — Tuesday 9:30-10:50 f2f, Thursday online","oncedday":""},{"code":"ART 3683","section":".01","title":"SCULPT PROCESS/POSSIBILITIES","faculty":"TANYA","room":"002","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"SHELI","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: DIGITAL AND THE HANDMADE","faculty":"CHRISTINE","room":"202/302","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"Bracketed with 4903.02","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: DIGITAL AND THE HANDMADE","faculty":"CHRISTINE","room":"202/302","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"Bracketed with 5903.01","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":""},{"code":"ART 4133","section":".01","title":"APPROACHES TO ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3783","section":".01","title":"ALTERNATIVE DRAWING","faculty":"GIOVANNI","room":"110","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".03","title":"DIGITAL ART FOUNDATIONS","faculty":"CHRISTINE","room":"202","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3693","section":".01","title":"ALTERNATIVE PHOTO PROCESS","faculty":"MEG","room":"301","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4043","section":".01","title":"LATINX ART","faculty":"SARA","room":"101","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4483","section":".01","title":"NARRATIVE ILLUSTRATION","faculty":"staff","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Adjunct: Petersen, Michele","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept — moved to TTh 11:00-12:20 to avoid conflict with ART 3173","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4283","section":".01","title":"WEB & APP DESIGN","faculty":"JULIE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3703","section":".01","title":"INTERMEDIATE PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 4703.01","notes":"Bracketed with 4703.01","oncedday":""},{"code":"ART 4703","section":".01","title":"ADVANCED PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 3703.01","notes":"Bracketed with 3703.01","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"SHELI","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"F2F","oncedday":""},{"code":"ART 4913","section":".01","title":"BA SENIOR CAPSTONE IND STUDY","faculty":"SARA","room":"101","pattern":"once","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Wednesdays 2:00-3:20pm","oncedday":"Wednesday"},{"code":"ART 4083","section":".01","title":"FIBERS POSSIBILITIES","faculty":"JULIE","room":"306/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: FIBERS POSSIBILITIES","faculty":"JULIE","room":"306/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":true,"grad":true,"bracketpair":"ART 4083.01","notes":"","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2823","section":".01","title":"INTRODUCTION TO CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"306/301","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f ratio increases toward end for installation","oncedday":""},{"code":"ART 5063","section":".01","title":"THEORIES OF ART","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"TANYA","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — always","oncedday":"Wednesday"},{"code":"ART 2433","section":".01","title":"WORLD ART HISTORY II","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".02","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — ENG 3433 moved to TTh 11:00-12:20 to avoid conflict with ART 3173."},"Fall 2027":{"courses":[{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 4363","section":".01","title":"COMMUNITY FOCUS DESIGN STUDIO","faculty":"SHELI","room":"106","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Section 2 if needed","oncedday":""},{"code":"ART 4683","section":".01","title":"PHOTOGRAPHIC POSSIBILITIES","faculty":"MEG","room":"301","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3723","section":".01","title":"MURAL PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3913","section":".01","title":"SCIENTIFIC ILLUSTRATION","faculty":"SHELI","room":"204","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: GRAD STUDIO","faculty":"MEG","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.01","notes":"Meg's grad studio — confirm course","oncedday":""},{"code":"ART 4903","section":".01","title":"ST: GRAD STUDIO","faculty":"MEG","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"Bracketed with 5903.01","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":""},{"code":"ART 3153","section":".01","title":"ANIMATION","faculty":"CHRISTINE","room":"202","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4543","section":".01","title":"INTERDISCIPLINARY INFLUENCES","faculty":"SARA","room":"101","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3223","section":".01","title":"ELEMENTARY ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2293","section":".01","title":"VISUAL IDENTITY AND SYMBOL","faculty":"JULIE","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3893","section":".01","title":"SCULPTURAL CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4253","section":".01","title":"PUBLICATION DESIGN","faculty":"SHELI","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".02","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: GRAD STUDIO","faculty":"COLBY","room":"011","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"Colby's grad studio — ceramics-based","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: GRAD STUDIO","faculty":"COLBY","room":"011","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"Bracketed with 5903.02","oncedday":""},{"code":"ART 2753","section":".01","title":"INTRO TO SCULPTURE","faculty":"TANYA","room":"002","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4033","section":".01","title":"PACKAGING DESIGN","faculty":"JULIE","room":"106","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Also uses 302","oncedday":""},{"code":"ART 1203","section":".02","title":"2D FOUNDATIONS","faculty":"staff","room":"204","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"106","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f increases toward end","oncedday":""},{"code":"ART 5573","section":".01","title":"RESHAPING THE ART HIST CANON","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening — AHVC grad seminar","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"JULIE","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — always","oncedday":"Wednesday"},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept — confirm time with them","oncedday":""},{"code":"ART 4953","section":".01","title":"INTERNSHIP","faculty":"JULIE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study format, cap 3","oncedday":""},{"code":"ART 4953","section":".02","title":"INTERNSHIP","faculty":"CHRISTINE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study format, cap 3","oncedday":""},{"code":"ART 4953","section":".03","title":"INTERNSHIP","faculty":"SHELI","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study format, cap 3","oncedday":""},{"code":"ART 2423","section":".01","title":"WORLD ART HISTORY I","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — faculty assignments estimated from rotation chart. Grad studio: Meg + Colby. Crit Seminar: Julie."},"Spring 2028":{"courses":[{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 3253","section":".01","title":"MOTION GRAPHICS","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3343","section":".01","title":"WOMEN IN THE VISUAL ARTS","faculty":"MEG","room":"101","pattern":"tth","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — Tuesday 9:30-10:50 f2f","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2653","section":".01","title":"BLACK & WHITE PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3783","section":".01","title":"ALTERNATIVE DRAWING","faculty":"GIOVANNI","room":"110","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"SHELI","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: GRAD STUDIO","faculty":"TANYA","room":"002","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.01","notes":"Tanya's grad studio","oncedday":""},{"code":"ART 4903","section":".01","title":"ST: GRAD STUDIO","faculty":"TANYA","room":"002","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":""},{"code":"ART 3363","section":".01","title":"CHARACTER DESIGN","faculty":"SHELI","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4133","section":".01","title":"APPROACHES TO ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3233","section":".01","title":"SECONDARY ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Check with Laura Lee — same block as Approaches","oncedday":""},{"code":"ART 2613","section":".01","title":"INTRODUCTION TO PRINTMAKING","faculty":"staff","room":"204","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4013","section":".01","title":"SCULPTURE & THE ENVIRONMENT","faculty":"TANYA","room":"002","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5743.01","notes":"","oncedday":""},{"code":"ART 5743","section":".01","title":"SCULPTURE & THE ENVIRONMENT (GRAD)","faculty":"TANYA","room":"002","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4013.01","notes":"","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4283","section":".01","title":"WEB & APP DESIGN","faculty":"JULIE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".02","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3703","section":".01","title":"INTERMEDIATE PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 4703.01","notes":"","oncedday":""},{"code":"ART 4703","section":".01","title":"ADVANCED PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 3703.01","notes":"","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"SHELI","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2823","section":".01","title":"INTRODUCTION TO CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4313","section":".01","title":"ADVERTISING & SOCIAL MEDIA","faculty":"staff","room":"106","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".02","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"Christine's grad studio","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"106","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f increases toward end","oncedday":""},{"code":"ART 5543","section":".01","title":"ART & DECOLONIALITY","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening — AHVC grad seminar","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"GIO","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — Gio SP28","oncedday":"Wednesday"},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept","oncedday":""},{"code":"ART 2433","section":".01","title":"WORLD ART HISTORY II","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — estimated. Crit Seminar: Gio. Grad studio: Tanya + Christine."},"Fall 2028":{"courses":[{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 4363","section":".01","title":"COMMUNITY FOCUS DESIGN STUDIO","faculty":"SHELI","room":"106","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4053","section":".01","title":"AFRICAN AMERICAN ART","faculty":"SARA","room":"101","pattern":"tth","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4653","section":".01","title":"COLOR PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3723","section":".01","title":"MURAL PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3913","section":".01","title":"SCIENTIFIC ILLUSTRATION","faculty":"SHELI","room":"204","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: GRAD STUDIO","faculty":"JULIE","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.01","notes":"Julie's grad studio","oncedday":""},{"code":"ART 4903","section":".01","title":"ST: GRAD STUDIO","faculty":"JULIE","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":""},{"code":"ART 3383","section":".01","title":"DIGITAL ILLUSTRATION","faculty":"SHELI","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3013","section":".01","title":"PRINCIPLES OF ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3793","section":".01","title":"FUNCTIONAL CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2293","section":".01","title":"VISUAL IDENTITY AND SYMBOL","faculty":"JULIE","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"⚠ Room conflict with 3383 — adjust","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4253","section":".01","title":"PUBLICATION DESIGN","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".02","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"","oncedday":""},{"code":"ART 2753","section":".01","title":"INTRO TO SCULPTURE","faculty":"TANYA","room":"002","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".02","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".02","title":"2D FOUNDATIONS","faculty":"staff","room":"204","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"106","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f increases toward end","oncedday":""},{"code":"ART 5533","section":".01","title":"ART & SOCIAL MOVEMENTS","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening — AHVC grad seminar","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"MEG","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — Meg FA28","oncedday":"Wednesday"},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept","oncedday":""},{"code":"ART 4953","section":".01","title":"INTERNSHIP","faculty":"JULIE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study, cap 3","oncedday":""},{"code":"ART 4953","section":".02","title":"INTERNSHIP","faculty":"CHRISTINE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study, cap 3","oncedday":""},{"code":"ART 4953","section":".03","title":"INTERNSHIP","faculty":"SHELI","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study, cap 3","oncedday":""},{"code":"ART 2423","section":".01","title":"WORLD ART HISTORY I","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — estimated. Crit Seminar: Meg. Grad studio: Julie + Christine. ⚠ Room conflict: 3383 and 2293 both in 106 TTh 11 — adjust."}};
+const DEFAULT_SCHEDULE = {"Spring 2027":{"courses":[{"code":"ART 3253","section":".01","title":"MOTION GRAPHICS","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4313","section":".01","title":"AD & SOCIAL MEDIA DESIGN","faculty":"staff","room":"106","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2613","section":".01","title":"INTRODUCTION TO PRINTMAKING","faculty":"staff","room":"204","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3343","section":".01","title":"WOMEN IN THE VISUAL ARTS","faculty":"MEG","room":"101","pattern":"tth","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — Tuesday 9:30-10:50 f2f, Thursday online","oncedday":""},{"code":"ART 3683","section":".01","title":"SCULPT PROCESS/POSSIBILITIES","faculty":"TANYA","room":"002","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"SHELI","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: DIGITAL AND THE HANDMADE","faculty":"CHRISTINE","room":"202/302","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"Bracketed with 4903.02","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: DIGITAL AND THE HANDMADE","faculty":"CHRISTINE","room":"202/302","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"Bracketed with 5903.01","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":"Monday"},{"code":"ART 4133","section":".01","title":"APPROACHES TO ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3783","section":".01","title":"ALTERNATIVE DRAWING","faculty":"GIOVANNI","room":"110","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".03","title":"DIGITAL ART FOUNDATIONS","faculty":"CHRISTINE","room":"202","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3693","section":".01","title":"ALTERNATIVE PHOTO PROCESS","faculty":"MEG","room":"301","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4043","section":".01","title":"LATINX ART","faculty":"SARA","room":"101","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4483","section":".01","title":"NARRATIVE ILLUSTRATION","faculty":"staff","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Adjunct: Petersen, Michele","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept — moved to TTh 11:00-12:20 to avoid conflict with ART 3173","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4283","section":".01","title":"WEB & APP DESIGN","faculty":"JULIE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3703","section":".01","title":"INTERMEDIATE PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 4703.01","notes":"Bracketed with 4703.01","oncedday":""},{"code":"ART 4703","section":".01","title":"ADVANCED PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 3703.01","notes":"Bracketed with 3703.01","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"SHELI","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"F2F","oncedday":""},{"code":"ART 4913","section":".01","title":"BA SENIOR CAPSTONE IND STUDY","faculty":"SARA","room":"101","pattern":"once","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Wednesdays 2:00-3:20pm","oncedday":"Wednesday"},{"code":"ART 4083","section":".01","title":"FIBERS POSSIBILITIES","faculty":"JULIE","room":"306/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: FIBERS POSSIBILITIES","faculty":"JULIE","room":"306/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":true,"grad":true,"bracketpair":"ART 4083.01","notes":"","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2823","section":".01","title":"INTRODUCTION TO CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"306/301","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f ratio increases toward end for installation","oncedday":""},{"code":"ART 5063","section":".01","title":"THEORIES OF ART","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"TANYA","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — always","oncedday":"Wednesday"},{"code":"ART 2433","section":".01","title":"WORLD ART HISTORY II","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".02","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — ENG 3433 moved to TTh 11:00-12:20 to avoid conflict with ART 3173."},"Fall 2027":{"courses":[{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 4363","section":".01","title":"COMMUNITY FOCUS DESIGN STUDIO","faculty":"SHELI","room":"106","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Section 2 if needed","oncedday":""},{"code":"ART 4683","section":".01","title":"PHOTOGRAPHIC POSSIBILITIES","faculty":"MEG","room":"301","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3723","section":".01","title":"MURAL PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3913","section":".01","title":"SCIENTIFIC ILLUSTRATION","faculty":"SHELI","room":"204","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: GRAD STUDIO","faculty":"MEG","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.01","notes":"Meg's grad studio — confirm course","oncedday":""},{"code":"ART 4903","section":".01","title":"ST: GRAD STUDIO","faculty":"MEG","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"Bracketed with 5903.01","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":""},{"code":"ART 3153","section":".01","title":"ANIMATION","faculty":"CHRISTINE","room":"202","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4543","section":".01","title":"INTERDISCIPLINARY INFLUENCES","faculty":"SARA","room":"101","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3223","section":".01","title":"ELEMENTARY ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2293","section":".01","title":"VISUAL IDENTITY AND SYMBOL","faculty":"JULIE","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3893","section":".01","title":"SCULPTURAL CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4253","section":".01","title":"PUBLICATION DESIGN","faculty":"SHELI","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".02","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: GRAD STUDIO","faculty":"COLBY","room":"011","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"Colby's grad studio — ceramics-based","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: GRAD STUDIO","faculty":"COLBY","room":"011","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"Bracketed with 5903.02","oncedday":""},{"code":"ART 2753","section":".01","title":"INTRO TO SCULPTURE","faculty":"TANYA","room":"002","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4033","section":".01","title":"PACKAGING DESIGN","faculty":"JULIE","room":"106","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Also uses 302","oncedday":""},{"code":"ART 1203","section":".02","title":"2D FOUNDATIONS","faculty":"staff","room":"204","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"106","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f increases toward end","oncedday":""},{"code":"ART 5573","section":".01","title":"RESHAPING THE ART HIST CANON","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening — AHVC grad seminar","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"JULIE","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — always","oncedday":"Wednesday"},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept — confirm time with them","oncedday":""},{"code":"ART 4953","section":".01","title":"INTERNSHIP","faculty":"JULIE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study format, cap 3","oncedday":""},{"code":"ART 4953","section":".02","title":"INTERNSHIP","faculty":"CHRISTINE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study format, cap 3","oncedday":""},{"code":"ART 4953","section":".03","title":"INTERNSHIP","faculty":"SHELI","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study format, cap 3","oncedday":""},{"code":"ART 2423","section":".01","title":"WORLD ART HISTORY I","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — faculty assignments estimated from rotation chart. Grad studio: Meg + Colby. Crit Seminar: Julie."},"Spring 2028":{"courses":[{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 3253","section":".01","title":"MOTION GRAPHICS","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3343","section":".01","title":"WOMEN IN THE VISUAL ARTS","faculty":"MEG","room":"101","pattern":"tth","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — Tuesday 9:30-10:50 f2f","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2653","section":".01","title":"BLACK & WHITE PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3783","section":".01","title":"ALTERNATIVE DRAWING","faculty":"GIOVANNI","room":"110","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"SHELI","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: GRAD STUDIO","faculty":"TANYA","room":"002","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.01","notes":"Tanya's grad studio","oncedday":""},{"code":"ART 4903","section":".01","title":"ST: GRAD STUDIO","faculty":"TANYA","room":"002","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":""},{"code":"ART 3363","section":".01","title":"CHARACTER DESIGN","faculty":"SHELI","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4133","section":".01","title":"APPROACHES TO ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3233","section":".01","title":"SECONDARY ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Check with Laura Lee — same block as Approaches","oncedday":""},{"code":"ART 2613","section":".01","title":"INTRODUCTION TO PRINTMAKING","faculty":"staff","room":"204","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4013","section":".01","title":"SCULPTURE & THE ENVIRONMENT","faculty":"TANYA","room":"002","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5743.01","notes":"","oncedday":""},{"code":"ART 5743","section":".01","title":"SCULPTURE & THE ENVIRONMENT (GRAD)","faculty":"TANYA","room":"002","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4013.01","notes":"","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4283","section":".01","title":"WEB & APP DESIGN","faculty":"JULIE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".02","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3703","section":".01","title":"INTERMEDIATE PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 4703.01","notes":"","oncedday":""},{"code":"ART 4703","section":".01","title":"ADVANCED PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 3703.01","notes":"","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"SHELI","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2823","section":".01","title":"INTRODUCTION TO CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4313","section":".01","title":"ADVERTISING & SOCIAL MEDIA","faculty":"staff","room":"106","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".02","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"Christine's grad studio","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202/302","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"106","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f increases toward end","oncedday":""},{"code":"ART 5543","section":".01","title":"ART & DECOLONIALITY","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening — AHVC grad seminar","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"GIO","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — Gio SP28","oncedday":"Wednesday"},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept","oncedday":""},{"code":"ART 2433","section":".01","title":"WORLD ART HISTORY II","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — estimated. Crit Seminar: Gio. Grad studio: Tanya + Christine."},"Fall 2028":{"courses":[{"code":"ART 1503","section":".01","title":"INTRO TO PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3173","section":".01","title":"CONTEMPORARY ISSUES IN ART","faculty":"SARA","room":"101","pattern":"mw","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — MW 9:30-10:50","oncedday":""},{"code":"ART 4363","section":".01","title":"COMMUNITY FOCUS DESIGN STUDIO","faculty":"SHELI","room":"106","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".01","title":"2D FOUNDATIONS","faculty":"staff","room":"306","pattern":"mw","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".01","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4053","section":".01","title":"AFRICAN AMERICAN ART","faculty":"SARA","room":"101","pattern":"tth","time":"9:30–10:50 (lecture)","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid","oncedday":""},{"code":"ART 2223","section":".01","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4653","section":".01","title":"COLOR PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"8:00–10:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3723","section":".01","title":"MURAL PAINTING","faculty":"GIOVANNI","room":"206","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2243","section":".01","title":"FUNDAMENTALS OF TYPE & IMAGE","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3913","section":".01","title":"SCIENTIFIC ILLUSTRATION","faculty":"SHELI","room":"204","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".01","title":"ST: GRAD STUDIO","faculty":"JULIE","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.01","notes":"Julie's grad studio","oncedday":""},{"code":"ART 4903","section":".01","title":"ST: GRAD STUDIO","faculty":"JULIE","room":"","pattern":"mw","time":"11:00–1:50","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.01","notes":"","oncedday":""},{"code":"EDUC 4946","section":".01","title":"CLINICAL STUDENT TEACHING","faculty":"LAURA LEE","room":"off-site","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Off-site K-12 observation","oncedday":""},{"code":"ART 3383","section":".01","title":"DIGITAL ILLUSTRATION","faculty":"SHELI","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3013","section":".01","title":"PRINCIPLES OF ART EDUCATION","faculty":"LAURA LEE","room":"306","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3793","section":".01","title":"FUNCTIONAL CERAMICS","faculty":"COLBY","room":"011","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2293","section":".01","title":"VISUAL IDENTITY AND SYMBOL","faculty":"JULIE","room":"106","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"⚠ Room conflict with 3383 — adjust","oncedday":""},{"code":"ART 2303","section":".01","title":"FIGURE DRAWING","faculty":"staff","room":"110","pattern":"tth","time":"11:00–1:50","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1213","section":".01","title":"3D FOUNDATIONS","faculty":"TANYA","room":"002","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4253","section":".01","title":"PUBLICATION DESIGN","faculty":"CHRISTINE","room":"106","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1303","section":".02","title":"DRAWING FOUNDATIONS","faculty":"staff","room":"110","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3393","section":".01","title":"PROF PRACTICES VISUAL ARTS","faculty":"MEG","room":"301","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":true,"bracketpair":"ART 4903.02","notes":"","oncedday":""},{"code":"ART 4903","section":".02","title":"ST: GRAD STUDIO","faculty":"CHRISTINE","room":"202","pattern":"mw","time":"2:30–5:20","hidden":false,"bracketed":true,"hybrid":false,"grad":false,"bracketpair":"ART 5903.02","notes":"","oncedday":""},{"code":"ART 2753","section":".01","title":"INTRO TO SCULPTURE","faculty":"TANYA","room":"002","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1603","section":".01","title":"INTRO TO PHOTOGRAPHY","faculty":"MEG","room":"301","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2223","section":".02","title":"DIGITAL ART FOUNDATIONS","faculty":"staff","room":"202","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 1203","section":".02","title":"2D FOUNDATIONS","faculty":"staff","room":"204","pattern":"tth","time":"2:30–5:20","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 4993","section":".01","title":"BFA EXHIBITION","faculty":"JULIE","room":"106","pattern":"mw","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":true,"grad":false,"bracketpair":"","notes":"Hybrid — f2f increases toward end","oncedday":""},{"code":"ART 5533","section":".01","title":"ART & SOCIAL MOVEMENTS","faculty":"SARA","room":"101","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Monday evening — AHVC grad seminar","oncedday":"Monday"},{"code":"ART 5003","section":".01","title":"CRITIQUE SEMINAR","faculty":"MEG","room":"201","pattern":"once","time":"6:00–8:50","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"Wednesday evening — Meg FA28","oncedday":"Wednesday"},{"code":"ENG 3433","section":".01","title":"PROFESSIONAL WRITING","faculty":"staff","room":"","pattern":"tth","time":"11:00–12:20 (lecture)","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Taught by English dept","oncedday":""},{"code":"ART 4953","section":".01","title":"INTERNSHIP","faculty":"JULIE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study, cap 3","oncedday":""},{"code":"ART 4953","section":".02","title":"INTERNSHIP","faculty":"CHRISTINE","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study, cap 3","oncedday":""},{"code":"ART 4953","section":".03","title":"INTERNSHIP","faculty":"SHELI","room":"","pattern":"once","time":"Other","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"Independent study, cap 3","oncedday":""},{"code":"ART 2423","section":".01","title":"WORLD ART HISTORY I","faculty":"SARA","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".01","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 2713","section":".02","title":"UNDERSTANDING ARTS-VISUAL ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 3053","section":".01","title":"GLOBAL PERSPECTIVES IN ART","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":false,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5843","section":".01","title":"ART-BASED RESEARCH WRITING","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5883","section":".01","title":"MFA THESIS EXHIBITION","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""},{"code":"ART 5993","section":".01","title":"THESIS","faculty":"staff","room":"","pattern":"async","time":"No set time","hidden":false,"bracketed":false,"hybrid":false,"grad":true,"bracketpair":"","notes":"","oncedday":""}],"notes":"Draft — estimated. Crit Seminar: Meg. Grad studio: Julie + Christine. ⚠ Room conflict: 3383 and 2293 both in 106 TTh 11 — adjust."}};
 
 // ── Data ───────────────────────────────────────────────────────────────────
 function loadData(){
@@ -489,15 +506,15 @@ function renderAll(){
   renderRotation();
 }
 
-function chipHtml(c,idx){
-  const cls=[c.pattern,c.hidden?'hidden':'',c.bracketed?'bracketed':''].filter(Boolean).join(' ');
+function chipHtml(c,idx,extra=''){
+  const cls=[c.pattern,c.hidden?'hidden':'',c.bracketed?'bracketed':'',extra].filter(Boolean).join(' ');
   const dispCode=(c.code||'').replace(/^[A-Z]+\s+/,'')+(c.section||'');
   const fac=c.faculty?(c.faculty.toLowerCase()==='staff'?'staff':c.faculty.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase())):'';
   const rm=c.room?(/off.?site/i.test(c.room)?c.room:'Room '+c.room):'';
   const meta=[fac,rm].filter(Boolean).join(' · ');
-  const hybridTag=c.hybrid?'<span class="chip-hybrid"> hybrid</span>':'';
+  const hybridTag=c.hybrid?`<span class="chip-hybrid">${formatHybridLabel(c)}</span>`:'';
   const gradTag=c.grad?'<span class="chip-grad"> [G]</span>':'';
-  const notesLine=(!FACULTY_MODE&&c.notes)?`<div class="chip-notes-line admin-only">${c.notes}</div>`:'';
+  const notesLine=(!FACULTY_MODE&&c.notes&&!c.hybrid)?`<div class="chip-notes-line admin-only">${c.notes}</div>`:'';
   const editBtn=FACULTY_MODE?'':
     `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
   return `<div class="course-chip ${cls}" data-idx="${idx}">
@@ -506,6 +523,25 @@ function chipHtml(c,idx){
     <div class="chip-meta">${meta}</div>
     ${notesLine}
   </div>`;
+}
+
+function formatHybridLabel(c){
+  const dayMap={
+    monday:'Mon', tuesday:'Tues', tues:'Tues', tue:'Tues',
+    wednesday:'Wed', wed:'Wed',
+    thursday:'Thurs', thurs:'Thurs', thu:'Thurs',
+    friday:'Fri', fri:'Fri',
+    mw:'MW', 'm/w':'MW',
+    tth:'TTh', 't/th':'TTh'
+  };
+  const note=(c.notes||'').toLowerCase();
+  const match=note.match(/\b(monday|tuesday|tues|tue|wednesday|wed|thursday|thurs|thu|friday|fri|mw|m\/w|tth|t\/th)\b/i);
+  const day=match?dayMap[match[1].toLowerCase()]||match[1]:'';
+  return day?`hybrid - ${day}`:'hybrid';
+}
+
+function isBracketPair(a,b){
+  return a&&b&&a.bracketed&&b.bracketed&&a.bracketpair===`${b.code}${b.section}`&&b.bracketpair===`${a.code}${a.section}`;
 }
 
 function renderGrid(){
@@ -522,7 +558,7 @@ function renderGrid(){
   // Headers (MW and TTh each span 2 sub-columns via CSS grid-column:span 2)
   let html='<div class="grid-header"></div><div class="grid-header mw">Monday / Wednesday</div><div class="grid-header tth last-col">Tuesday / Thursday</div>';
 
-  BLOCKS.forEach(block=>{
+  BLOCKS.forEach((block,idx)=>{
     const bs=block.split('–')[0];
     const allMw=courses.filter(c=>c.pattern==='mw'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time)));
     const allTth=courses.filter(c=>c.pattern==='tth'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time)));
@@ -532,46 +568,79 @@ function renderGrid(){
     const tthA=allTth.slice(0,tthMid),tthB=allTth.slice(tthMid);
     const addMw=FACULTY_MODE?'':`<button class="add-chip" onclick="openAddModal('mw','${block}')">+ add</button>`;
     const addTth=FACULTY_MODE?'':`<button class="add-chip" onclick="openAddModal('tth','${block}')">+ add</button>`;
-    html+=`<div class="time-label">${block}</div>`;
-    html+=`<div class="cell">${mwA.map(c=>chipHtml(c,courses.indexOf(c))).join('')}${addMw}</div>`;
-    html+=`<div class="cell">${mwB.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div>`;
-    html+=`<div class="cell tth-start">${tthA.map(c=>chipHtml(c,courses.indexOf(c))).join('')}${addTth}</div>`;
-    html+=`<div class="cell last-col">${tthB.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div>`;
+    html+=`<div class="time-label time-slot-${idx+1}">${block}</div>`;
+    const mwAHtml=mwA.map((c,i)=>{
+      const prev=mwA[i-1], next=mwA[i+1];
+      const extra=c.bracketed?[
+        !isBracketPair(prev,c)?'bracket-start':'',
+        !isBracketPair(c,next)?'bracket-end':''
+      ].filter(Boolean).join(' '):'';
+      return chipHtml(c,courses.indexOf(c),extra);
+    }).join('');
+    const mwBHtml=mwB.map((c,i)=>{
+      const prev=mwB[i-1], next=mwB[i+1];
+      const extra=c.bracketed?[
+        !isBracketPair(prev,c)?'bracket-start':'',
+        !isBracketPair(c,next)?'bracket-end':''
+      ].filter(Boolean).join(' '):'';
+      return chipHtml(c,courses.indexOf(c),extra);
+    }).join('');
+    const tthAHtml=tthA.map((c,i)=>{
+      const prev=tthA[i-1], next=tthA[i+1];
+      const extra=c.bracketed?[
+        !isBracketPair(prev,c)?'bracket-start':'',
+        !isBracketPair(c,next)?'bracket-end':''
+      ].filter(Boolean).join(' '):'';
+      return chipHtml(c,courses.indexOf(c),extra);
+    }).join('');
+    const tthBHtml=tthB.map((c,i)=>{
+      const prev=tthB[i-1], next=tthB[i+1];
+      const extra=c.bracketed?[
+        !isBracketPair(prev,c)?'bracket-start':'',
+        !isBracketPair(c,next)?'bracket-end':''
+      ].filter(Boolean).join(' '):'';
+      return chipHtml(c,courses.indexOf(c),extra);
+    }).join('');
+    html+=`<div class="cell">${mwAHtml}${addMw}</div>`;
+    html+=`<div class="cell">${mwBHtml}</div>`;
+    html+=`<div class="cell tth-start">${tthAHtml}${addTth}</div>`;
+    html+=`<div class="cell last-col">${tthBHtml}</div>`;
   });
 
   grid.innerHTML=html;
 
-  // Once/week — dark panel, 2-column grid
+  // Once/week — organized by day of week
   const once=courses.filter(c=>c.pattern==='once');
   const onceContainer=document.getElementById('oncePanelContainer');
   if(once.length){
-    const chipsHtml=once.map(c=>{
-      const idx=courses.indexOf(c);
-      const dispCode=(c.code||'').replace(/^[A-Z]+\s+/,'')+(c.section||'');
-      const fac=c.faculty?(c.faculty.toLowerCase()==='staff'?'staff':c.faculty.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase())):'';
-      const rm=c.room?(/off.?site/i.test(c.room)?c.room:'Room '+c.room):'';
-      const meta=[fac,rm,c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
-      const eb=FACULTY_MODE?'':
-        `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
-      return `<div class="once-chip" data-idx="${idx}">
-        ${eb}
-        ${c.oncedday?`<div class="chip-day">${c.oncedday}</div>`:''}
-        <div class="chip-code-title">${dispCode} ${c.title||''}</div>
-        <div class="chip-meta-dark">${meta}</div>
-      </div>`;
+    const days=['Monday','Tuesday','Wednesday','Thursday'];
+    const coursesByDay=days.map(day=>once.filter(c=>c.oncedday===day));
+    const dayColumnsHtml=days.map((day,dayIdx)=>{
+      const dayCourses=coursesByDay[dayIdx];
+      const coursesHtml=dayCourses.map(c=>{
+        const idx=courses.indexOf(c);
+        const dispCode=(c.code||'').replace(/^[A-Z]+\s+/,'')+(c.section||'');
+        const fac=c.faculty?(c.faculty.toLowerCase()==='staff'?'staff':c.faculty.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase())):'';
+        const rm=c.room?(/off.?site/i.test(c.room)?c.room:'Room '+c.room):'';
+        const meta=[fac,rm,c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
+        const eb=FACULTY_MODE?'':
+          `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
+        return `<div class="once-chip" data-idx="${idx}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div></div>`;
+      }).join('');
+      return `<div class="once-day-column"><div class="once-day-header">${day}</div><div class="once-day-courses">${coursesHtml||'<div style="padding:8px;font-size:.7rem;color:#999;text-align:center;">—</div>'}</div></div>`;
     }).join('');
-    onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div class="once-chips-grid">${chipsHtml}</div></div>`;
+    onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div class="once-day-grid">${dayColumnsHtml}</div></div>`;
   } else {
-    onceContainer.innerHTML='';
+    onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div style="padding:20px;text-align:center;color:#999;font-size:.8rem;">No once/week courses scheduled.</div></div>`;
   }
 
   // Async — same chip format as grid, 2-column layout
   const async_=courses.filter(c=>c.pattern==='async');
   const asyncContainer=document.getElementById('asyncPanelContainer');
   if(async_.length){
-    asyncContainer.innerHTML=`<div class="async-section"><div class="section-header"><span style="width:8px;height:8px;border-radius:50%;background:var(--async);display:inline-block;"></span>Async / Online</div><div class="async-grid">${async_.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
+    asyncContainer.innerHTML=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid">${async_.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
   } else {
-    asyncContainer.innerHTML='';
+    asyncContainer.innerHTML=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid"><div class="course-chip placeholder-chip">No async/online courses scheduled.</div></div></div>`;
   }
 }
 
@@ -672,15 +741,15 @@ function renderRotation(){
   container.innerHTML=`
     <div style="display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;">
       <div style="background:white;border:1px solid var(--mist);border-radius:4px;padding:12px 20px;font-size:.83rem;">
-        <div style="font-size:1.4rem;font-family:'Cormorant Garamond',serif;font-weight:600;">${committed.length}</div>
+        <div style="font-size:1.4rem;font-family:'Bahnschrift',sans-serif;font-weight:600;">${committed.length}</div>
         <div style="opacity:.6;">Committed this semester</div>
       </div>
       <div style="background:#EAF3EB;border:1px solid #B8D8BA;border-radius:4px;padding:12px 20px;font-size:.83rem;">
-        <div style="font-size:1.4rem;font-family:'Cormorant Garamond',serif;font-weight:600;color:#2e6b31;">${scheduled}</div>
+        <div style="font-size:1.4rem;font-family:'Bahnschrift',sans-serif;font-weight:600;color:#2e6b31;">${scheduled}</div>
         <div style="opacity:.7;color:#2e6b31;">Scheduled</div>
       </div>
       <div style="background:#FDECEA;border:1px solid #F5C0BB;border-radius:4px;padding:12px 20px;font-size:.83rem;">
-        <div style="font-size:1.4rem;font-family:'Cormorant Garamond',serif;font-weight:600;color:#8b1a10;">${missing}</div>
+        <div style="font-size:1.4rem;font-family:'Bahnschrift',sans-serif;font-weight:600;color:#8b1a10;">${missing}</div>
         <div style="opacity:.7;color:#8b1a10;">Not yet scheduled</div>
       </div>
     </div>
@@ -847,41 +916,110 @@ function pdfRoom(r){
   return 'Room '+r;
 }
 
-function drawMapChips(doc,courses,x,y,maxW,maxH,chipH){
+function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
   const INK=[26,20,16];
+  const PATTERN_BG={
+    mw:[242,246,248],
+    tth:[247,241,248],
+    once:[241,247,242],
+    async:[248,248,248],
+    hidden:[255,244,227]
+  };
+  const PATTERN_BAR={
+    mw:[74,107,124],
+    tth:[122,92,139],
+    once:[92,122,95],
+    async:[98,98,98],
+    hidden:[247,233,117]
+  };
+
+  // Handle both: array of courses (from once/async) and mix of courses/arrays (from grid)
+  const items=coursesOrItems.map(item=>Array.isArray(item)?{type:'bracketed',courses:item}:{type:'single',course:item});
+
   let cy=y;
-  courses.forEach(c=>{
-    if(cy+chipH>y+maxH+0.5)return;
-    // Bracketed: solid left bar
-    if(c.bracketed){
-      doc.setFillColor(140,120,160);
-      doc.rect(x,cy,1.2,chipH-0.4,'F');
+  items.forEach(item=>{
+    if(item.type==='bracketed'){
+      const courses=item.courses;
+      const subH=chipH*courses.length;
+      if(cy+subH>y+maxH+0.5)return;
+      
+      const accentColor=PATTERN_BAR[courses[0].pattern]||[26,20,16];
+      doc.setFillColor(255,255,255);
+      doc.roundedRect(x,cy,maxW,subH-0.2,1.5,1.5,'F');
+      doc.setDrawColor(...INK);doc.setLineWidth(0.3);
+      doc.roundedRect(x,cy,maxW,subH-0.2,1.5,1.5,'S');
+      doc.setFillColor(...accentColor);
+      doc.rect(x,cy,2.0,subH-0.2,'F');
+      
+      courses.forEach((c,idx)=>{
+        const ccy=cy+idx*chipH;
+        if(idx>0){
+          doc.setDrawColor(200,200,200);doc.setLineWidth(0.15);
+          doc.line(x,ccy,x+maxW,ccy);
+        }
+        const tx=x+2.0+1.6;
+        const hybridLabel=c.hybrid?formatHybridLabel(c):'';
+        const fullTitle=pdfCode(c.code)+' '+(c.title||'');
+        doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
+        const hybridW=hybridLabel?doc.setFont('helvetica','bolditalic')&&doc.setFontSize(5.5)&&doc.getTextWidth(' '+hybridLabel)||0:0;
+        doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+        let ct=fullTitle;
+        const maxTW=maxW-(tx-x)-hybridW-0.7;
+        while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
+        if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
+        doc.text(ct,tx,ccy+2.8);
+        if(hybridLabel){
+          const ctW=doc.getTextWidth(ct);
+          doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);doc.setTextColor(100,90,80);
+          doc.text(' '+hybridLabel,tx+ctW,ccy+2.8);
+        }
+        doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(100,90,80);
+        const fac=pdfFaculty(c.faculty),rm=pdfRoom(c.room);
+        let meta=[fac,rm].filter(Boolean).join(' · ');
+        const metaMaxW=maxW-(tx-x)-0.5;
+        while(doc.getTextWidth(meta)>metaMaxW&&meta.length>2)meta=meta.slice(0,-1);
+        if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
+        doc.text(meta,tx,ccy+5.5);
+      });
+      cy+=subH;
+    } else {
+      const c=item.course;
+      const chipH2=chipH-0.4;
+      if(cy+chipH2>y+maxH+0.5)return;
+      
+      const fillColor=PATTERN_BG[c.pattern]||[255,255,255];
+      const accentColor=PATTERN_BAR[c.pattern]||[26,20,16];
+      doc.setFillColor(...fillColor);
+      doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'F');
+      doc.setDrawColor(...INK);doc.setLineWidth(0.2);
+      doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'S');
+      doc.setFillColor(...accentColor);
+      doc.rect(x,cy,1.4,chipH2,'F');
+      const tx=x+1.4+1.6;
+      const hybridLabel=c.hybrid?formatHybridLabel(c):'';
+      const fullTitle=pdfCode(c.code)+' '+(c.title||'');
+      doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
+      const hybridW=hybridLabel?doc.setFont('helvetica','bolditalic')&&doc.setFontSize(5.5)&&doc.getTextWidth(' '+hybridLabel)||0:0;
+      doc.setFont('helvetica','bold');doc.setFontSize(6.5);
+      let ct=fullTitle;
+      const maxTW=maxW-(tx-x)-hybridW-0.7;
+      while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
+      if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
+      doc.text(ct,tx,cy+2.8);
+      if(hybridLabel){
+        const ctW=doc.getTextWidth(ct);
+        doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);doc.setTextColor(100,90,80);
+        doc.text(' '+hybridLabel,tx+ctW,cy+2.8);
+      }
+      doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(100,90,80);
+      const fac=pdfFaculty(c.faculty),rm=pdfRoom(c.room);
+      let meta=[fac,rm].filter(Boolean).join(' · ');
+      const metaMaxW=maxW-(tx-x)-0.5;
+      while(doc.getTextWidth(meta)>metaMaxW&&meta.length>2)meta=meta.slice(0,-1);
+      if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
+      doc.text(meta,tx,cy+5.5);
+      cy+=chipH;
     }
-    const tx=c.bracketed?x+2.2:x+0.5;
-    // Line 1: code + title (bold), then " hybrid" in bold-italic if applicable
-    doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
-    const fullTitle=pdfCode(c.code)+' '+(c.title||'');
-    const hybridW=c.hybrid?doc.setFont('helvetica','bolditalic')&&doc.setFontSize(5.5)&&doc.getTextWidth(' hybrid')||5:0;
-    doc.setFont('helvetica','bold');doc.setFontSize(6.5);
-    let ct=fullTitle;
-    const maxTW=maxW-(tx-x)-hybridW-0.5;
-    while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
-    if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
-    doc.text(ct,tx,cy+2.8);
-    if(c.hybrid){
-      const ctW=doc.getTextWidth(ct);
-      doc.setFont('helvetica','bolditalic');doc.setFontSize(5.5);doc.setTextColor(100,90,80);
-      doc.text(' hybrid',tx+ctW,cy+2.8);
-    }
-    // Line 2: faculty · room
-    doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(100,90,80);
-    const fac=pdfFaculty(c.faculty),rm=pdfRoom(c.room);
-    let meta=[fac,rm].filter(Boolean).join(' · ');
-    const metaMaxW=maxW-(tx-x)-0.5;
-    while(doc.getTextWidth(meta)>metaMaxW&&meta.length>2)meta=meta.slice(0,-1);
-    if(meta.length<([fac,rm].filter(Boolean).join(' · ')).length)meta=meta.slice(0,-1)+'…';
-    doc.text(meta,tx,cy+5.5);
-    cy+=chipH;
   });
 }
 
@@ -898,14 +1036,16 @@ function generatePDF(){
   const gridC=courses.filter(c=>c.pattern==='mw'||c.pattern==='tth');
   const onceC=courses.filter(c=>c.pattern==='once');
   const asyncC=courses.filter(c=>c.pattern==='async');
+  const onceByDay=['Monday','Tuesday','Wednesday','Thursday'].map(day=>onceC.filter(c=>c.oncedday===day));
 
-  // ── Dark header (full-width) ──────────────────────────────────────────────
+  // ── Light header (print-friendly, no heavy ink fill) ─────────────────────
   const HDR_H=22;
-  doc.setFillColor(...INK);doc.rect(0,0,PW,HDR_H,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(17);doc.setTextColor(250,247,242);
+  doc.setFont('helvetica','bold');doc.setFontSize(17);doc.setTextColor(...INK);
   doc.text(currentSem+' — Schedule Map',ML,13);
-  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(180,165,150);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(120,110,100);
   doc.text('Department of Visual Arts · Draft · Subject to change',ML,19);
+  doc.setDrawColor(...MIST);doc.setLineWidth(0.5);
+  doc.line(ML,HDR_H+1,ML+CW,HDR_H+1);
 
   // ── Grid (4 sub-columns: MW×2, TTh×2) ────────────────────────────────────
   const GY=HDR_H+3;
@@ -915,15 +1055,49 @@ function generatePDF(){
 
   function halves(pat,block){
     const c=getBlockCourses(pat,block,gridC);
-    const h=Math.ceil(c.length/2);return[c.slice(0,h),c.slice(h)];
+    // Group bracketed pairs together
+    const processed=new Set();
+    const groups=[];
+    c.forEach(course=>{
+      if(processed.has(course.code+course.section))return;
+      if(course.bracketed&&course.bracketpair){
+        const pair=c.find(p=>!processed.has(p.code+p.section)&&isBracketPair(course,p));
+        if(pair){
+          groups.push([course,pair]); // bracketed pair as array
+          processed.add(course.code+course.section);
+          processed.add(pair.code+pair.section);
+        } else {
+          groups.push(course); // single course
+          processed.add(course.code+course.section);
+        }
+      } else {
+        groups.push(course); // single course
+        processed.add(course.code+course.section);
+      }
+    });
+    const h=Math.ceil(groups.length/2);
+    return[groups.slice(0,h),groups.slice(h)];
+  }
+
+  function visualHeight(items){
+    let h=0;
+    items.forEach(item=>{
+      if(Array.isArray(item)){
+        h+=CHIP_H*item.length; // bracketed pair
+      } else {
+        h+=CHIP_H; // single course
+      }
+    });
+    return h;
   }
 
   const rowH=BLOCKS.map(block=>{
     const[a,b]=halves('mw',block),[c_,d]=halves('tth',block);
-    return CELL_PAD*2+Math.max(a.length,b.length,c_.length,d.length,1)*CHIP_H;
+    const maxH=Math.max(visualHeight(a),visualHeight(b),visualHeight(c_),visualHeight(d),CHIP_H);
+    return CELL_PAD*2+maxH;
   });
 
-  const ONCE_H=onceC.length?6+Math.ceil(onceC.length/2)*11+2:0;
+  const ONCE_H=onceC.length?18+Math.max(...onceByDay.map(arr=>arr.length),1)*11:0;
   const ASYNC_H=asyncC.length?8+Math.ceil(asyncC.length/2)*10:0;
   const gridAvail=PH-GY-HDR_ROW-ONCE_H-ASYNC_H-10-4;
   const totalH=rowH.reduce((a,b)=>a+b,0);
@@ -933,8 +1107,8 @@ function generatePDF(){
 
   // Column header row
   let y=GY;
-  doc.setFillColor(...PAPER);doc.rect(ML,y,TIME_W,HDR_ROW,'F');
-  doc.setFillColor(240,245,248);doc.rect(x1,y,colW*2,HDR_ROW,'F');
+  doc.setFillColor(255,255,255);doc.rect(ML,y,TIME_W,HDR_ROW,'F');
+  doc.setFillColor(242,246,248);doc.rect(x1,y,colW*2,HDR_ROW,'F');
   doc.setFillColor(244,240,248);doc.rect(x3,y,colW*2,HDR_ROW,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(7);
   doc.setTextColor(50,80,100);doc.text('Monday / Wednesday',x1+colW,y+4,{align:'center'});
@@ -946,9 +1120,15 @@ function generatePDF(){
   BLOCKS.forEach((block,bi)=>{
     const rh=scaledH[bi];
     const[mwA,mwB]=halves('mw',block),[tthA,tthB]=halves('tth',block);
-    doc.setFillColor(...PAPER);doc.rect(ML,y,TIME_W,rh,'F');
-    doc.setFillColor(248,252,255);doc.rect(x1,y,colW*2,rh,'F');
-    doc.setFillColor(252,248,255);doc.rect(x3,y,colW*2,rh,'F');
+    const timeBg=[
+      [237,246,255],
+      [255,243,233],
+      [244,239,248],
+      [238,247,236]
+    ][bi]||[255,255,255];
+    doc.setFillColor(...timeBg);doc.rect(ML,y,TIME_W,rh,'F');
+    doc.setFillColor(255,255,255);doc.rect(x1,y,colW*2,rh,'F');
+    doc.setFillColor(255,255,255);doc.rect(x3,y,colW*2,rh,'F');
     const[t1,t2]=block.split('–');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
     doc.text(t1,ML+TIME_W/2,y+rh/2-1.5,{align:'center'});
@@ -965,46 +1145,58 @@ function generatePDF(){
   // Grid borders (drawn after content)
   doc.setDrawColor(...MIST);doc.setLineWidth(0.5);
   doc.rect(ML,GY,CW,gridBottom-GY,'S');
-  doc.setLineWidth(0.3);
-  let lineY=gridDataTop;
-  scaledH.slice(0,-1).forEach(rh=>{doc.line(ML,lineY+rh,ML+CW,lineY+rh);lineY+=rh;});
-  doc.setLineWidth(0.6);doc.setDrawColor(...INK);
-  doc.line(ML+TIME_W,GY,ML+TIME_W,gridBottom);  // time | MW
-  doc.line(x3,GY,x3,gridBottom);                 // MW | TTh
+  doc.setLineWidth(0.5);doc.setDrawColor(...INK);
+  doc.line(ML,GY+HDR_ROW,ML+CW,GY+HDR_ROW);       // header bottom line
+  doc.setLineWidth(0.8);
+  doc.line(ML+TIME_W,GY,ML+TIME_W,gridBottom);    // time | MW
+  doc.line(x3,GY,x3,gridBottom);                  // MW | TTh
   doc.setLineWidth(0.2);doc.setDrawColor(...MIST);
   doc.line(x2,gridDataTop,x2,gridBottom);         // MW sub-column divider
   doc.line(x4,gridDataTop,x4,gridBottom);         // TTh sub-column divider
+  doc.setLineWidth(0.3);doc.setDrawColor(...MIST);
+  let lineY=gridDataTop;
+  scaledH.slice(0,-1).forEach(rh=>{doc.line(ML,lineY+rh,ML+CW,lineY+rh);lineY+=rh;});
 
   y+=3;
 
-  // ── Once / Week (dark panel) ──────────────────────────────────────────────
+  // ── Once / Week ──────────────────────────────────────────────────────────────
   if(onceC.length){
-    doc.setFillColor(...INK);doc.rect(ML,y,CW,ONCE_H,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(200,185,170);
+    doc.setFillColor(241,247,242);doc.roundedRect(ML,y,CW,ONCE_H,3,3,'F');
+    doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.roundedRect(ML,y,CW,ONCE_H,3,3,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
     doc.text('Once / Week',ML+4,y+6);
-    const chipW=(CW-12)/2;let ox=ML+4;let oy=y+9;let col=0;
-    onceC.forEach(c=>{
-      if(col===2){col=0;ox=ML+4;oy+=11;}
-      const day=c.oncedday||'';
-      const ct=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
-      if(day){
-        doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(220,210,195);
-        doc.text(day+' ',ox,oy);
-        const dw=doc.getTextWidth(day+' ');
-        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(240,235,228);
-        let line=ct;while(doc.getTextWidth(line)>chipW-dw-2&&line.length>3)line=line.slice(0,-1);
-        if(line.length<ct.length)line=line.slice(0,-1)+'…';
-        doc.text(line,ox+dw,oy);
-      } else {
-        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(240,235,228);
-        let line=ct;while(doc.getTextWidth(line)>chipW-2&&line.length>3)line=line.slice(0,-1);
-        if(line.length<ct.length)line=line.slice(0,-1)+'…';
-        doc.text(line,ox,oy);
-      }
-      doc.setFont('helvetica','normal');doc.setFontSize(5.5);doc.setTextColor(170,155,140);
-      const meta=[pdfFaculty(c.faculty),pdfRoom(c.room),c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
-      doc.text(meta,ox,oy+4.5);
-      ox+=chipW+4;col++;
+    const dayW=(CW-3)/4;
+    const headerH=8;
+    const dayBodyTop=y+headerH+6;
+    ['Monday','Tuesday','Wednesday','Thursday'].forEach((day,di)=>{
+      const dx=ML+di*(dayW+1);
+      doc.setFillColor(...PAPER);doc.rect(dx,dayBodyTop-headerH-2,dayW,headerH,'F');
+      doc.setDrawColor(...MIST);doc.setLineWidth(0.2);doc.rect(dx,dayBodyTop-2,dayW,ONCE_H-headerH-8,'S');
+      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...INK);
+      doc.text(day,dx+dayW/2,dayBodyTop-4.5,{align:'center'});
+      const dayCourses=onceByDay[di];
+      let dy=dayBodyTop+2;
+      dayCourses.forEach(c=>{
+        const chipH2=9;
+        const chipX=dx+2;
+        const chipW=dayW-4;
+        doc.setFillColor(252,253,249);doc.roundedRect(chipX,dy,chipW,chipH2,1.8,1.8,'F');
+        doc.setDrawColor(...MIST);doc.setLineWidth(0.2);doc.roundedRect(chipX,dy,chipW,chipH2,1.8,1.8,'S');
+        doc.setFillColor(92,122,95);doc.rect(chipX,dy,2.5,chipH2,'F');
+        const display=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
+        doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(...INK);
+        let line=display;
+        const lineMax=chipW-8;
+        while(doc.getTextWidth(line)>lineMax&&line.length>3)line=line.slice(0,-1);
+        if(line.length<display.length)line=line.slice(0,-1)+'…';
+        doc.text(line,chipX+4.5,dy+3.7);
+        doc.setFont('helvetica','normal');doc.setFontSize(5.2);doc.setTextColor(100,90,80);
+        const meta=[pdfFaculty(c.faculty),pdfRoom(c.room),c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
+        let metaText=meta;
+        while(doc.getTextWidth(metaText)>lineMax&&metaText.length>2)metaText=metaText.slice(0,-1);
+        doc.text(metaText,chipX+4.5,dy+7.7);
+        dy+=chipH2+2;
+      });
     });
     y+=ONCE_H;
   }
@@ -1012,17 +1204,20 @@ function generatePDF(){
   // ── Async / Online ────────────────────────────────────────────────────────
   if(asyncC.length){
     y+=3;
+    doc.setFillColor(233,238,255);doc.roundedRect(ML,y,CW,ASYNC_H,3,3,'F');
+    doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.roundedRect(ML,y,CW,ASYNC_H,3,3,'S');
     doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...INK);
     doc.text('Async / Online',ML+4,y+5);
     doc.setDrawColor(...MIST);doc.setLineWidth(0.2);
-    doc.line(ML+4+doc.getTextWidth('Async / Online')+3,y+2,ML+CW,y+2);y+=7;
+    doc.line(ML+4+doc.getTextWidth('Async / Online')+3,y+2,ML+CW,y+2);
+    y+=7;
     const aW=(CW-12)/2;const aH=9;let ax=ML+4;let col=0;
     asyncC.forEach(c=>{
-      if(col===2){col=0;ax=ML+4;y+=aH+1;}
-      doc.setFillColor(245,243,240);doc.roundedRect(ax,y,aW,aH,0.3,0.3,'F');
+      if(col===2){col=0;ax=ML+4;y+=aH+3;}
+      doc.setFillColor(255,255,255);doc.roundedRect(ax,y,aW,aH,1.8,1.8,'F');
       const fullTitle=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
       doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
-      let ct=fullTitle;const maxTW=aW-4;
+      let ct=fullTitle;const maxTW=aW-6;
       while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
       if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
       doc.text(ct,ax+2,y+3.2);
