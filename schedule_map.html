@@ -986,7 +986,7 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
         while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
         if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
         const subH2=chipH-0.4;
-        const titleY=ccy+Math.max(1.6,subH2*0.32);
+        const titleY=ccy+Math.max(1.4,subH2*0.38);
         const metaY=ccy+Math.max(titleY-ccy+2.0,Math.min(subH2-0.5,subH2*0.72));
         doc.text(ct,tx,titleY);
         if(hybridLabel){
@@ -1025,7 +1025,7 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const maxTW=maxW-(tx-x)-hybridW-0.7;
       while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
       if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
-      const titleY=cy+Math.max(1.6,chipH2*0.32);
+      const titleY=cy+Math.max(1.4,chipH2*0.38);
       const metaY=cy+Math.max(titleY-cy+2.0,Math.min(chipH2-0.5,chipH2*0.72));
       doc.text(ct,tx,titleY);
       if(hybridLabel){
@@ -1117,10 +1117,10 @@ function generatePDF(){
 
   const maxOnceDay=onceC.length?Math.max(...onceByDay.map(arr=>arr.length),1):0;
   const onceDayBodyH=maxOnceDay*(8-0.4)+Math.max(0,maxOnceDay-1)*2.0;
-  const ONCE_H=onceC.length?8+8+onceDayBodyH+6:0;
+  const ONCE_H=onceC.length?6+6+onceDayBodyH+4:0;
   const asyncRows=Math.ceil(asyncC.length/3);
   const asyncBodyH=asyncRows*(8-0.4)+Math.max(0,asyncRows-1)*2.0;
-  const ASYNC_H=asyncC.length?8+asyncBodyH+8:0;
+  const ASYNC_H=asyncC.length?6+asyncBodyH+4:0;
   const gridAvail=PH-GY-HDR_ROW-ONCE_H-ASYNC_H-10-4;
   const totalH=rowH.reduce((a,b)=>a+b,0);
   const sf=totalH>gridAvail?gridAvail/totalH:1;
@@ -1187,9 +1187,8 @@ function generatePDF(){
     doc.setFillColor(241,247,242);doc.rect(ML,y,CW,ONCE_H,'F');
     doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.rect(ML,y,CW,ONCE_H,'S');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
-    doc.text('Once / Week',ML+4,y+5.5);
-    // Day header: single inset bar with 3mm margins so it stays inside the outline
-    const colHdrH=7,colHdrY=y+8,colBodyY=colHdrY+colHdrH;
+    doc.text('Once / Week',ML+4,y+4.2);
+    const colHdrH=6,colHdrY=y+6,colBodyY=colHdrY+colHdrH;
     const innerX=ML+3,innerW=CW-6,dayW=innerW/4;
     doc.setFillColor(...PAPER);doc.rect(innerX,colHdrY,innerW,colHdrH,'F');
     doc.setDrawColor(...MIST);doc.setLineWidth(0.25);
@@ -1197,10 +1196,10 @@ function generatePDF(){
     ['Monday','Tuesday','Wednesday','Thursday'].forEach((day,di)=>{
       const dx=innerX+di*dayW;
       if(di>0){doc.setDrawColor(...MIST);doc.setLineWidth(0.15);doc.line(dx,colHdrY,dx,colHdrY+colHdrH);}
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(...INK);
-      doc.text(day,dx+dayW/2,colHdrY+colHdrH/2+1.5,{align:'center'});
+      doc.setFont('helvetica','bold');doc.setFontSize(6.5);doc.setTextColor(...INK);
+      doc.text(day,dx+dayW/2,colHdrY+colHdrH/2+1.2,{align:'center'});
       const dayCourses=onceByDay[di];
-      if(dayCourses.length)drawMapChips(doc,dayCourses,dx+2,colBodyY+2,dayW-4,onceDayBodyH,8.0);
+      if(dayCourses.length)drawMapChips(doc,dayCourses,dx+2,colBodyY+2,dayW-4,onceDayBodyH,chipH);
     });
     y+=ONCE_H;
   }
@@ -1211,15 +1210,15 @@ function generatePDF(){
     doc.setFillColor(248,248,248);doc.rect(ML,y,CW,ASYNC_H,'F');
     doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.rect(ML,y,CW,ASYNC_H,'S');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
-    doc.text('Async / Online',ML+4,y+5.5);
+    doc.text('Async / Online',ML+4,y+4.2);
     const aColW=(CW-20)/3;
-    const aBodyY=y+8;
+    const aBodyY=y+6;
     const asyncCol0=asyncC.filter((_,i)=>i%3===0);
     const asyncCol1=asyncC.filter((_,i)=>i%3===1);
     const asyncCol2=asyncC.filter((_,i)=>i%3===2);
-    drawMapChips(doc,asyncCol0,ML+4,aBodyY,aColW,asyncBodyH+2,8.0);
-    if(asyncCol1.length)drawMapChips(doc,asyncCol1,ML+4+aColW+4,aBodyY,aColW,asyncBodyH+2,8.0);
-    if(asyncCol2.length)drawMapChips(doc,asyncCol2,ML+4+(aColW+4)*2,aBodyY,aColW,asyncBodyH+2,8.0);
+    drawMapChips(doc,asyncCol0,ML+4,aBodyY,aColW,asyncBodyH+2,chipH);
+    if(asyncCol1.length)drawMapChips(doc,asyncCol1,ML+4+aColW+4,aBodyY,aColW,asyncBodyH+2,chipH);
+    if(asyncCol2.length)drawMapChips(doc,asyncCol2,ML+4+(aColW+4)*2,aBodyY,aColW,asyncBodyH+2,chipH);
   }
 
   // ── Footer ───────────────────────────────────────────────────────────────
