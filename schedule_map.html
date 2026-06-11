@@ -105,7 +105,7 @@
   .once-chip:hover .chip-actions{display:flex;}
   .async-section{background:rgba(229,236,255,.95);border:1px solid #1a1410;border-radius:6px;padding:18px 22px;margin-bottom:24px;font-family:'Bahnschrift',sans-serif;}
   .async-section .section-header{margin-bottom:14px;font-family:'Bahnschrift',sans-serif;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ink);}
-  .async-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .async-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
   .placeholder-chip{background:transparent;border-left-color:transparent;box-shadow:none;color:#777;font-style:italic;font-size:.82rem;line-height:1.5;font-family:'Bahnschrift',sans-serif;}
 
   /* Faculty load bar */
@@ -968,11 +968,11 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const fillColor=PATTERN_BG[pat]||[255,255,255];
       const accentColor=PATTERN_BAR[pat]||[26,20,16];
       doc.setFillColor(...fillColor);
-      doc.roundedRect(x,cy,maxW,subH,1.5,1.5,'F');
+      doc.rect(x,cy,maxW,subH,'F');
       doc.setFillColor(...accentColor);
       doc.rect(x,cy,2.0,subH,'F');
       doc.setDrawColor(...INK);doc.setLineWidth(0.4);
-      doc.roundedRect(x,cy,maxW,subH,1.5,1.5,'S');
+      doc.rect(x,cy,maxW,subH,'S');
       courses.forEach((c,idx)=>{
         const ccy=cy+idx*(chipH-0.4);
         const tx=x+3.8;
@@ -986,8 +986,8 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
         while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
         if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
         const subH2=chipH-0.4;
-        const titleY=ccy+Math.max(1.8,subH2*0.37);
-        const metaY=ccy+Math.min(subH2-0.6,subH2*0.72);
+        const titleY=ccy+Math.max(1.6,subH2*0.32);
+        const metaY=ccy+Math.max(titleY-ccy+2.0,Math.min(subH2-0.5,subH2*0.72));
         doc.text(ct,tx,titleY);
         if(hybridLabel){
           const ctW=doc.getTextWidth(ct);
@@ -1010,11 +1010,11 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const fillColor=PATTERN_BG[c.pattern]||[255,255,255];
       const accentColor=PATTERN_BAR[c.pattern]||[26,20,16];
       doc.setFillColor(...fillColor);
-      doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'F');
+      doc.rect(x,cy,maxW,chipH2,'F');
       doc.setFillColor(...accentColor);
       doc.rect(x,cy,1.4,chipH2,'F');
       doc.setDrawColor(...INK);doc.setLineWidth(0.2);
-      doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'S');
+      doc.rect(x,cy,maxW,chipH2,'S');
       const tx=x+3.0;
       const hybridLabel=c.hybrid?formatHybridLabel(c):'';
       const fullTitle=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
@@ -1025,8 +1025,8 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const maxTW=maxW-(tx-x)-hybridW-0.7;
       while(doc.getTextWidth(ct)>maxTW&&ct.length>3)ct=ct.slice(0,-1);
       if(ct.length<fullTitle.length)ct=ct.slice(0,-1)+'…';
-      const titleY=cy+Math.max(1.8,chipH2*0.37);
-      const metaY=cy+Math.min(chipH2-0.6,chipH2*0.72);
+      const titleY=cy+Math.max(1.6,chipH2*0.32);
+      const metaY=cy+Math.max(titleY-cy+2.0,Math.min(chipH2-0.5,chipH2*0.72));
       doc.text(ct,tx,titleY);
       if(hybridLabel){
         const ctW=doc.getTextWidth(ct);
@@ -1118,7 +1118,7 @@ function generatePDF(){
   const maxOnceDay=onceC.length?Math.max(...onceByDay.map(arr=>arr.length),1):0;
   const onceDayBodyH=maxOnceDay*(8-0.4)+Math.max(0,maxOnceDay-1)*2.0;
   const ONCE_H=onceC.length?8+8+onceDayBodyH+6:0;
-  const asyncRows=Math.ceil(asyncC.length/2);
+  const asyncRows=Math.ceil(asyncC.length/3);
   const asyncBodyH=asyncRows*(8-0.4)+Math.max(0,asyncRows-1)*2.0;
   const ASYNC_H=asyncC.length?8+asyncBodyH+8:0;
   const gridAvail=PH-GY-HDR_ROW-ONCE_H-ASYNC_H-10-4;
@@ -1156,10 +1156,11 @@ function generatePDF(){
     doc.text(t1,ML+TIME_W/2,y+rh/2-1.5,{align:'center'});
     doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...INK);
     doc.text('–'+t2,ML+TIME_W/2,y+rh/2+2,{align:'center'});
-    drawMapChips(doc,mwA,x1+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
-    drawMapChips(doc,mwB,x2+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
-    drawMapChips(doc,tthA,x3+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
-    drawMapChips(doc,tthB,x4+1,y+CELL_PAD,colW-2,rh-CELL_PAD*2,chipH);
+    const cp=CELL_PAD*sf;
+    drawMapChips(doc,mwA,x1+1,y+cp,colW-2,rh-cp*2,chipH);
+    drawMapChips(doc,mwB,x2+1,y+cp,colW-2,rh-cp*2,chipH);
+    drawMapChips(doc,tthA,x3+1,y+cp,colW-2,rh-cp*2,chipH);
+    drawMapChips(doc,tthB,x4+1,y+cp,colW-2,rh-cp*2,chipH);
     y+=rh;
   });
   const gridBottom=y;
@@ -1211,12 +1212,14 @@ function generatePDF(){
     doc.setDrawColor(...INK);doc.setLineWidth(0.4);doc.rect(ML,y,CW,ASYNC_H,'S');
     doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...INK);
     doc.text('Async / Online',ML+4,y+5.5);
-    const aColW=(CW-12)/2;
+    const aColW=(CW-20)/3;
     const aBodyY=y+8;
-    const asyncLeft=asyncC.filter((_,i)=>i%2===0);
-    const asyncRight=asyncC.filter((_,i)=>i%2===1);
-    drawMapChips(doc,asyncLeft,ML+4,aBodyY,aColW,asyncBodyH+2,8.0);
-    if(asyncRight.length)drawMapChips(doc,asyncRight,ML+4+aColW+4,aBodyY,aColW,asyncBodyH+2,8.0);
+    const asyncCol0=asyncC.filter((_,i)=>i%3===0);
+    const asyncCol1=asyncC.filter((_,i)=>i%3===1);
+    const asyncCol2=asyncC.filter((_,i)=>i%3===2);
+    drawMapChips(doc,asyncCol0,ML+4,aBodyY,aColW,asyncBodyH+2,8.0);
+    if(asyncCol1.length)drawMapChips(doc,asyncCol1,ML+4+aColW+4,aBodyY,aColW,asyncBodyH+2,8.0);
+    if(asyncCol2.length)drawMapChips(doc,asyncCol2,ML+4+(aColW+4)*2,aBodyY,aColW,asyncBodyH+2,8.0);
   }
 
   // ── Footer ───────────────────────────────────────────────────────────────
