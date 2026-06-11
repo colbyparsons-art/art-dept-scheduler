@@ -53,7 +53,7 @@
   .course-row:last-child{border-bottom:none;}
   .course-row:hover{background:var(--cream);}
   .course-code{font-weight:500;font-size:.75rem;color:#777;min-width:66px;flex-shrink:0;}
-  .course-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .course-title{flex:0 1 auto;min-width:0;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .year-badge{font-size:.67rem;font-weight:500;padding:2px 6px;border-radius:10px;flex-shrink:0;}
   .badge-all{background:#EBF1F5;color:var(--all);}
   .badge-even{background:#F0EBF5;color:var(--even);}
@@ -681,7 +681,7 @@ function renderTable(){
 
 if(new URLSearchParams(window.location.search).has('faculty')){
   const _n=document.getElementById('siteNav');
-  if(_n)_n.innerHTML='<a href="faculty.html">← Faculty Portal</a><span class="sep">/</span><a href="rotation.html?faculty=1" class="current">Course Rotation</a>';
+  if(_n)_n.innerHTML='<a href="index.html">← Home</a><span class="sep">/</span><a href="rotation.html?faculty=1" class="current">Course Rotation</a>';
 }
 renderAll();
 </script>

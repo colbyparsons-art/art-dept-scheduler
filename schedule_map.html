@@ -63,7 +63,7 @@
   .course-chip.tth{background:rgba(122,92,139,.08);border-left-color:var(--tth);}
   .course-chip.once{background:rgba(92,122,95,.08);border-left-color:var(--once);}
   .course-chip.async{background:rgba(98,98,98,.06);border-left-color:var(--async);}
-  .course-chip.hidden{background:#FDF3E0;border-left-color:var(--hidden);opacity:.75;}
+  .course-chip.hidden{background:rgba(247,233,117,0.45);border-left-color:var(--hidden);}
   .course-chip.bracketed{padding-left:10px;padding-right:14px;margin-bottom:0;border:1px solid rgba(60,60,60,.35);border-left-width:6px;border-left-color:transparent;}
   .course-chip.bracketed.mw{border-left-color:var(--mw);}
   .course-chip.bracketed.tth{border-left-color:var(--tth);}
@@ -98,6 +98,7 @@
   .once-day-header{background:var(--paper);padding:10px 8px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink);text-align:center;border-bottom:1px solid #1a1410;}
   .once-day-courses{display:flex;flex-direction:column;gap:0;padding:6px;}
   .once-chip{padding:10px 12px;line-height:1.45;position:relative;border-radius:4px;background:#fcfdf9;border-left:4px solid var(--once);box-shadow:0 1px 3px rgba(92,122,95,.12);font-family:'Bahnschrift',sans-serif;}
+  .once-chip.hidden{background:rgba(247,233,117,0.45);border-left-color:var(--hidden);}
   .once-chip .chip-day{font-size:.7rem;font-weight:700;color:var(--once);letter-spacing:.04em;margin-bottom:2px;}
   .once-chip .chip-code-title{color:var(--ink);font-size:.82rem;font-weight:600;line-height:1.3;}
   .once-chip .chip-meta-dark{color:#5d5d59;font-size:.72rem;margin-top:4px;}
@@ -468,6 +469,49 @@ let db=loadData();
   // ENG 3433: remove verbose scheduling note
   patchNote('Spring 2027','ENG 3433','.01','Taught by English dept — moved to TTh 11:00-12:20 to avoid conflict with ART 3173','Taught by English dept');
   patchNote('Fall 2027','ENG 3433','.01','Taught by English dept — confirm time with them','Taught by English dept');
+  // Hidden sections: second sections of high-demand intro courses are budget placeholders not shown to students
+  const HIDDEN_CODES=['ART 1203','ART 1213','ART 1303','ART 1503','ART 2303','ART 2423','ART 2433','ART 2713','ART 3053'];
+  Object.keys(db).forEach(sem=>{
+    if(!db[sem]||!db[sem].courses)return;
+    // Count sections per code
+    const sectionNums={};
+    db[sem].courses.forEach(c=>{
+      if(!HIDDEN_CODES.includes(c.code))return;
+      if(!sectionNums[c.code])sectionNums[c.code]=[];
+      sectionNums[c.code].push(c);
+    });
+    // Mark second (and later) sections as hidden
+    Object.entries(sectionNums).forEach(([code,secs])=>{
+      if(secs.length<2)return;
+      // Sort by section number so .01 stays visible, .02+ become hidden
+      secs.sort((a,b)=>(a.section||'').localeCompare(b.section||''));
+      secs.slice(1).forEach(c=>{if(!c.hidden){c.hidden=true;changed=true;}});
+    });
+  });
+  // Add hidden budget placeholder sections for foundation courses with only 1 visible section
+  const HIDDEN_TMPL={
+    'ART 1203':'2D FOUNDATIONS','ART 1213':'3D FOUNDATIONS',
+    'ART 1303':'DRAWING FOUNDATIONS','ART 1503':'INTRO TO PAINTING',
+    'ART 2303':'FIGURE DRAWING','ART 2423':'WORLD ART HISTORY I',
+    'ART 2433':'WORLD ART HISTORY II','ART 2713':'UNDERSTANDING ARTS-VISUAL ART',
+    'ART 3053':'GLOBAL PERSPECTIVES IN ART'
+  };
+  Object.keys(db).forEach(sem=>{
+    if(!db[sem]||!db[sem].courses)return;
+    const cs=db[sem].courses;
+    Object.entries(HIDDEN_TMPL).forEach(([code,title])=>{
+      const secs=cs.filter(c=>c.code===code);
+      if(!secs.length)return;
+      if(secs.some(c=>c.hidden))return;
+      if(secs.length>=2)return;
+      const ref=secs[0];
+      cs.push({code,title,section:'.02',faculty:'staff',room:'',
+        pattern:ref.pattern,time:ref.time,
+        hidden:true,bracketed:false,hybrid:false,grad:false,
+        bracketpair:'',notes:'Budget placeholder',oncedday:ref.oncedday||''});
+      changed=true;
+    });
+  });
   if(changed)saveData(db);
 })();
 
@@ -654,7 +698,7 @@ function renderGrid(){
         const meta=[fac,rm,c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
         const eb=FACULTY_MODE?'':
           `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
-        return `<div class="once-chip" data-idx="${idx}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div></div>`;
+        return `<div class="once-chip${c.hidden?' hidden':''}" data-idx="${idx}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div></div>`;
       }).join('');
       return `<div class="once-day-column"><div class="once-day-header">${day}</div><div class="once-day-courses">${coursesHtml||'<div style="padding:8px;font-size:.7rem;color:#999;text-align:center;">—</div>'}</div></div>`;
     }).join('');
@@ -965,8 +1009,9 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const subH=(chipH-0.4)*courses.length;
       if(cy+subH>y+maxH+0.5)return;
       const pat=courses[0].pattern;
-      const fillColor=PATTERN_BG[pat]||[255,255,255];
-      const accentColor=PATTERN_BAR[pat]||[26,20,16];
+      const isHidden=courses[0].hidden||courses.some(c=>c.hidden);
+      const fillColor=isHidden?PATTERN_BG.hidden:PATTERN_BG[pat]||[255,255,255];
+      const accentColor=isHidden?PATTERN_BAR.hidden:PATTERN_BAR[pat]||[26,20,16];
       doc.setFillColor(...fillColor);
       doc.rect(x,cy,maxW,subH,'F');
       doc.setFillColor(...accentColor);
@@ -1007,8 +1052,8 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const c=item.course;
       const chipH2=chipH-0.4;
       if(cy+chipH2>y+maxH+0.5)return;
-      const fillColor=PATTERN_BG[c.pattern]||[255,255,255];
-      const accentColor=PATTERN_BAR[c.pattern]||[26,20,16];
+      const fillColor=c.hidden?PATTERN_BG.hidden:PATTERN_BG[c.pattern]||[255,255,255];
+      const accentColor=c.hidden?PATTERN_BAR.hidden:PATTERN_BAR[c.pattern]||[26,20,16];
       doc.setFillColor(...fillColor);
       doc.rect(x,cy,maxW,chipH2,'F');
       doc.setFillColor(...accentColor);
@@ -1066,6 +1111,15 @@ function generatePDF(){
   doc.text(currentSem+' — Schedule Map',ML,13);
   doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(120,110,100);
   doc.text('Department of Visual Arts · Draft · Subject to change',ML,19);
+  // PDF legend: hidden section key
+  const hasHidden=courses.some(c=>c.hidden);
+  if(hasHidden){
+    const lx=PW-ML-50;
+    doc.setFillColor(247,233,117);doc.rect(lx,10,6,4,'F');
+    doc.setDrawColor(180,170,80);doc.setLineWidth(0.2);doc.rect(lx,10,6,4,'S');
+    doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(80,70,60);
+    doc.text('Hidden section (not visible to students)',lx+8,13.2);
+  }
   // ── Grid (4 sub-columns: MW×2, TTh×2) ────────────────────────────────────
   const GY=HDR_H+5;
   const TIME_W=16,colW=(CW-TIME_W)/4;
