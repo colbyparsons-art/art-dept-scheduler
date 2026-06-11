@@ -55,7 +55,8 @@
   .time-label.time-slot-4{background:#eef7ec;color:var(--ink);}
   .cell{padding:8px;border-bottom:1px solid #1a1410;border-right:1px solid #1a1410;min-height:100px;vertical-align:top;display:flex;flex-direction:column;gap:5px;}
   .cell.last-col{border-right:none;}
-  .cell.drop-target{background:var(--light-clay);}
+  .cell.drop-target{background:var(--light-clay);outline:2px dashed var(--clay);outline-offset:-2px;}
+  .course-chip.dragging{opacity:.4;}
 
   /* Course chips */
   .course-chip{border-radius:6px;padding:8px 10px;font-size:.76rem;line-height:1.4;position:relative;border:1px solid rgba(26,20,16,.14);border-left:4px solid transparent;background:#fff;}
@@ -304,7 +305,7 @@
       <div class="form-row" id="onceDay_row" style="display:none">
         <div class="form-group">
           <label>Day (for once/week)</label>
-          <select id="c_onceday">
+          <select id="c_oncedday">
             <option value="Monday">Monday</option>
             <option value="Tuesday">Tuesday</option>
             <option value="Wednesday">Wednesday</option>
@@ -318,6 +319,21 @@
         <label class="checkbox-label"><input type="checkbox" id="c_bracketed"/> Bracketed / co-listed</label>
         <label class="checkbox-label"><input type="checkbox" id="c_hybrid"/> Hybrid</label>
         <label class="checkbox-label"><input type="checkbox" id="c_grad"/> Grad section</label>
+      </div>
+      <div class="form-row" id="hybridDay_row" style="display:none">
+        <div class="form-group">
+          <label>F2F Day</label>
+          <select id="c_hybridday">
+            <option value="">— not specified —</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="MW">Mon &amp; Wed</option>
+            <option value="TTh">Tue &amp; Thu</option>
+          </select>
+        </div>
+        <div class="form-group"></div>
       </div>
       <div class="form-row" id="bracketPair_row" style="display:none">
         <div class="form-group single">
@@ -594,7 +610,8 @@ function chipHtml(c,idx,extra=''){
   const notesLine=(!FACULTY_MODE&&c.notes&&!c.hybrid)?`<div class="chip-notes-line admin-only">${c.notes}</div>`:'';
   const editBtn=FACULTY_MODE?'':
     `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
-  return `<div class="course-chip ${cls}" data-idx="${idx}">
+  const drag=FACULTY_MODE?'':` draggable="true" ondragstart="dragStart(event,${idx})" ondragend="dragEnd(event)"`;
+  return `<div class="course-chip ${cls}" data-idx="${idx}"${drag}>
     ${editBtn}
     <div class="chip-title">${dispCode} ${c.title||''}${gradTag}</div>
     <div class="chip-meta">${meta}</div>
@@ -620,6 +637,43 @@ function formatHybridLabel(c){
 
 function isBracketPair(a,b){
   return a&&b&&a.bracketed&&b.bracketed&&a.bracketpair===`${b.code}${b.section}`&&b.bracketpair===`${a.code}${a.section}`;
+}
+
+// ── Drag and Drop ──────────────────────────────────────────────────────────
+let dragIdx=null;
+function dragStart(e,idx){
+  dragIdx=idx;
+  e.dataTransfer.effectAllowed='move';
+  setTimeout(()=>e.target.classList.add('dragging'),0);
+}
+function dragEnd(e){
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.cell.drop-target').forEach(el=>el.classList.remove('drop-target'));
+  dragIdx=null;
+}
+function dragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  e.currentTarget.classList.add('drop-target');
+}
+function dragLeave(e){
+  e.currentTarget.classList.remove('drop-target');
+}
+function dropOnCell(e,pattern,block){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drop-target');
+  if(dragIdx===null||!currentSem)return;
+  const c=db[currentSem].courses[dragIdx];
+  if(!c)return;
+  if(c.bracketed){
+    if(!confirm(c.code+c.section+' is part of a bracketed pair. Move it anyway? You may need to update the pair separately.'))return;
+  }
+  c.pattern=pattern;
+  c.time=block;
+  if(pattern!=='once')c.oncedday='';
+  saveData(db);
+  dragIdx=null;
+  renderAll();
 }
 
 function renderGrid(){
@@ -679,10 +733,12 @@ function renderGrid(){
       ].filter(Boolean).join(' '):'';
       return chipHtml(c,courses.indexOf(c),extra);
     }).join('');
-    html+=`<div class="cell">${mwAHtml}${addMw}</div>`;
-    html+=`<div class="cell">${mwBHtml}</div>`;
-    html+=`<div class="cell tth-start">${tthAHtml}${addTth}</div>`;
-    html+=`<div class="cell last-col">${tthBHtml}</div>`;
+    const dropMw=FACULTY_MODE?'':` ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOnCell(event,'mw','${block}')"`;
+    const dropTth=FACULTY_MODE?'':` ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOnCell(event,'tth','${block}')"`;
+    html+=`<div class="cell"${dropMw}>${mwAHtml}${addMw}</div>`;
+    html+=`<div class="cell"${dropMw}>${mwBHtml}</div>`;
+    html+=`<div class="cell tth-start"${dropTth}>${tthAHtml}${addTth}</div>`;
+    html+=`<div class="cell last-col"${dropTth}>${tthBHtml}</div>`;
   });
 
   grid.innerHTML=html;
@@ -857,6 +913,8 @@ function openAddModal(pattern,block){
   document.getElementById('c_hybrid').checked=false;
   document.getElementById('c_grad').checked=false;
   document.getElementById('bracketPair_row').style.display='none';
+  document.getElementById('hybridDay_row').style.display='none';
+  document.getElementById('c_hybridday').value='';
   if(pattern)document.getElementById('c_pattern').value=pattern;
   updateTimeOptions();
   if(block){
@@ -900,12 +958,28 @@ function openEditModal(idx){
   document.getElementById('bracketPair_row').style.display=c.bracketed?'grid':'none';
   document.getElementById('onceDay_row').style.display=c.pattern==='once'?'grid':'none';
   document.getElementById('c_notes').value=c.notes||'';
+  document.getElementById('hybridDay_row').style.display=c.hybrid?'grid':'none';
+  document.getElementById('c_hybridday').value=c.hybrid?extractHybridDay(c.notes||''):'';
   document.getElementById('modalOverlay').classList.add('open');
 }
 
 document.getElementById('c_bracketed').addEventListener('change',function(){
   document.getElementById('bracketPair_row').style.display=this.checked?'grid':'none';
 });
+document.getElementById('c_hybrid').addEventListener('change',function(){
+  document.getElementById('hybridDay_row').style.display=this.checked?'grid':'none';
+});
+
+function extractHybridDay(notes){
+  const n=(notes||'').toLowerCase();
+  if(/\bmonday\b/.test(n))return 'Monday';
+  if(/\btuesday\b/.test(n))return 'Tuesday';
+  if(/\bwednesday\b/.test(n))return 'Wednesday';
+  if(/\bthursday\b/.test(n))return 'Thursday';
+  if(/\bmw\b|mon.*wed/.test(n))return 'MW';
+  if(/\btth\b|tue.*thu/.test(n))return 'TTh';
+  return '';
+}
 
 function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
 
@@ -927,6 +1001,13 @@ function saveCourse(){
     bracketpair:document.getElementById('c_bracketpair').value.trim(),
     notes:document.getElementById('c_notes').value.trim(),
   };
+  // If hybrid and a day is selected, write it into notes (only if notes are blank or already a hybrid note)
+  if(record.hybrid){
+    const day=document.getElementById('c_hybridday').value;
+    if(day&&(!record.notes||/^(hybrid|f2f)/i.test(record.notes))){
+      record.notes='Hybrid — '+day;
+    }
+  }
   if(!record.code){alert('Please enter a course code.');return;}
   if(editingId===null){
     db[currentSem].courses.push(record);
