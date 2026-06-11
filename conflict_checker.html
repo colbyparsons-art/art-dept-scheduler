@@ -30,6 +30,7 @@
   .summary-card{background:white;border:1px solid var(--mist);border-radius:4px;padding:16px 20px;flex:1;min-width:140px;}
   .summary-card .num{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;line-height:1;}
   .summary-card .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;opacity:.5;margin-top:4px;}
+  .summary-card.hard .num{color:#7B0D0D;}
   .summary-card.red .num{color:var(--red);}
   .summary-card.yellow .num{color:var(--yellow);}
   .summary-card.green .num{color:var(--sage);}
@@ -42,6 +43,7 @@
   /* Conflict sections */
   .section-header{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--mist);display:flex;align-items:center;gap:10px;}
   .conflict-card{background:white;border:1px solid var(--mist);border-radius:4px;margin-bottom:10px;overflow:hidden;}
+  .conflict-card.tier0{border-left:4px solid #7B0D0D;background:#FDF5F5;}
   .conflict-card.tier1{border-left:4px solid var(--red);}
   .conflict-card.tier2{border-left:4px solid var(--yellow);}
   .conflict-card.ok{border-left:4px solid var(--sage);}
@@ -68,6 +70,7 @@
   .tier-dot.red{background:var(--red);}
   .tier-dot.yellow{background:var(--yellow);}
   .tier-dot.none{background:var(--mist);}
+  .tier-dot.hard{background:#7B0D0D;}
 
   /* Tier info panels */
   .tier-info{background:white;border:1px solid var(--mist);border-radius:4px;padding:16px;margin-bottom:16px;}
@@ -117,6 +120,7 @@
 
   <!-- Summary -->
   <div class="summary-row" id="summaryRow">
+    <div class="summary-card hard"><div class="num" id="s-hard">—</div><div class="lbl">⛔ Hard Conflicts</div></div>
     <div class="summary-card red"><div class="num" id="s-red">—</div><div class="lbl">🔴 Tier 1 Issues</div></div>
     <div class="summary-card yellow"><div class="num" id="s-yellow">—</div><div class="lbl">🟡 Tier 2 Warnings</div></div>
     <div class="summary-card green"><div class="num" id="s-ok">—</div><div class="lbl">✅ Clean Pairs</div></div>
@@ -141,6 +145,14 @@
 
   <!-- RULES VIEW -->
   <div class="view-panel" id="view-rules">
+    <div class="tier-info" style="border-left:3px solid #7B0D0D;">
+      <h3><span>⛔</span> Hard Conflicts — Scheduling Impossibilities</h3>
+      <p style="font-size:.78rem;opacity:.65;margin-bottom:8px;">These are physical impossibilities that must be fixed before anything else. No override or exception applies.</p>
+      <ul>
+        <li><strong>Faculty double-booking:</strong> Same instructor assigned to two MW or TTh courses in the same time block (unless they are a bracketed pair)</li>
+        <li><strong>Room double-booking:</strong> Same room assigned to two MW or TTh courses in the same time block (unless they are a bracketed pair)</li>
+      </ul>
+    </div>
     <div class="tier-info">
       <h3><span style="color:var(--red);">🔴</span> Tier 1 — Must Never Overlap</h3>
       <p style="font-size:.78rem;opacity:.65;margin-bottom:8px;">These courses are required by all or most students with no substitutions. Scheduling any two in the same time slot prevents students from taking both.</p>
@@ -313,6 +325,68 @@ function areBracketed(codeA,codeB){
   return ap===codeB||bp===codeA||ap===b.code||bp===a.code;
 }
 
+function isBracketedPair(a, b){
+  if(!a.bracketed || !b.bracketed) return false;
+  return (a.bracketpair === b.code+b.section) || (b.bracketpair === a.code+a.section);
+}
+
+function runHardConflicts(){
+  const courses = getCourses();
+  const issues = [];
+
+  // Build slot buckets for mw/tth courses only (async/once are handled differently)
+  const slots = {};
+  courses.filter(c => c.pattern === 'mw' || c.pattern === 'tth').forEach(c => {
+    const key = slotKey(c);
+    if(key === 'async') return;
+    if(!slots[key]) slots[key] = [];
+    slots[key].push(c);
+  });
+
+  Object.entries(slots).forEach(([key, clist]) => {
+    // Faculty double-booking
+    const byFaculty = {};
+    clist.forEach(c => {
+      if(!c.faculty || c.faculty.toLowerCase() === 'staff') return;
+      const fac = c.faculty.toUpperCase();
+      if(!byFaculty[fac]) byFaculty[fac] = [];
+      byFaculty[fac].push(c);
+    });
+    Object.entries(byFaculty).forEach(([fac, list]) => {
+      for(let i = 0; i < list.length; i++){
+        for(let j = i+1; j < list.length; j++){
+          if(!isBracketedPair(list[i], list[j])){
+            issues.push({type:'faculty', key:fac, slot:key, aFull:list[i], bFull:list[j],
+              desc:`${fac} is assigned to teach two courses in the same time slot.`});
+          }
+        }
+      }
+    });
+
+    // Room double-booking
+    const byRoom = {};
+    clist.forEach(c => {
+      if(!c.room || /^\s*$/.test(c.room) || /off.?site/i.test(c.room)) return;
+      c.room.split('/').map(r => r.trim()).filter(Boolean).forEach(room => {
+        if(!byRoom[room]) byRoom[room] = [];
+        byRoom[room].push(c);
+      });
+    });
+    Object.entries(byRoom).forEach(([room, list]) => {
+      for(let i = 0; i < list.length; i++){
+        for(let j = i+1; j < list.length; j++){
+          if(!isBracketedPair(list[i], list[j])){
+            issues.push({type:'room', key:`Room ${room}`, slot:key, aFull:list[i], bFull:list[j],
+              desc:`Room ${room} is double-booked for two courses at the same time.`});
+          }
+        }
+      }
+    });
+  });
+
+  return issues;
+}
+
 function runCheck(){
   const issues=[];
   // Tier 1
@@ -346,6 +420,7 @@ function fmtSlot(key){
 
 function renderAll(){
   if(!scheduleData){
+    document.getElementById('s-hard').textContent='—';
     document.getElementById('s-red').textContent='—';
     document.getElementById('s-yellow').textContent='—';
     document.getElementById('s-ok').textContent='—';
@@ -353,6 +428,7 @@ function renderAll(){
     return;
   }
   currentSem=document.getElementById('semSelect').value;
+  const hard=runHardConflicts();
   const issues=runCheck();
   const tier1=issues.filter(i=>i.tier===1);
   const tier2=issues.filter(i=>i.tier===2);
@@ -368,6 +444,7 @@ function renderAll(){
   }).length;
   const okCount=totalChecked-issues.length;
 
+  document.getElementById('s-hard').textContent=hard.length;
   document.getElementById('s-red').textContent=tier1.length;
   document.getElementById('s-yellow').textContent=tier2.length;
   document.getElementById('s-ok').textContent=Math.max(0,okCount);
@@ -375,14 +452,30 @@ function renderAll(){
 
   // Issues view
   const issueEl=document.getElementById('issueList');
-  if(!issues.length){
+  if(!hard.length && !issues.length){
     issueEl.innerHTML=`<div style="text-align:center;padding:40px;">
       <div style="font-size:2rem;margin-bottom:10px;">✅</div>
       <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:600;margin-bottom:6px;">No conflicts detected</div>
       <div style="font-size:.82rem;opacity:.6;">All checked course pairs are in different time slots.</div>
     </div>`;
   } else {
-    // Group by tier
+    const mkHardCard=(h)=>{
+      const icon=h.type==='faculty'?'👤':'🚪';
+      return `<div class="conflict-card tier0">
+        <div class="conflict-header">
+          <span class="conflict-icon">${icon}</span>
+          <span class="conflict-title">${h.type==='faculty'?h.key+' double-booked':'Room '+h.key.replace('Room ','')+' double-booked'} — ${fmtSlot(h.slot)}</span>
+          <span class="conflict-slot" style="background:#FDECEA;color:#7B0D0D;">${h.type==='faculty'?'Faculty':'Room'}</span>
+        </div>
+        <div class="conflict-body">
+          ${h.desc}
+          <div class="conflict-courses">
+            <span class="course-pill conflicting">${h.aFull.code}${h.aFull.section}: ${h.aFull.title}</span>
+            <span class="course-pill conflicting">${h.bFull.code}${h.bFull.section}: ${h.bFull.title}</span>
+          </div>
+        </div>
+      </div>`;
+    };
     const mkCard=(issue)=>{
       const aTitle=courses.find(c=>c.code===issue.a||c.code.replace(/\.\d+$/,'')===issue.a)?.title||issue.a;
       const bTitle=courses.find(c=>c.code===issue.b||c.code.replace(/\.\d+$/,'')===issue.b)?.title||issue.b;
@@ -402,8 +495,13 @@ function renderAll(){
       </div>`;
     };
     let html='';
+    if(hard.length){
+      html+=`<div class="section-header"><span style="color:#7B0D0D;">⛔ Hard Conflicts — Scheduling Impossibilities</span><span style="font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;">${hard.length} issue${hard.length>1?'s':''}</span></div>`;
+      html+=`<div style="font-size:.78rem;opacity:.6;margin-bottom:10px;">These cannot happen — a teacher cannot be in two places and a room cannot hold two classes at once. Fix before all other issues.</div>`;
+      html+=hard.map(mkHardCard).join('');
+    }
     if(tier1.length){
-      html+=`<div class="section-header"><span>🔴 Tier 1 — Must Fix</span><span style="font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;">${tier1.length} issue${tier1.length>1?'s':''}</span></div>`;
+      html+=`<div class="section-header" style="margin-top:${hard.length?'20px':'0'};"><span>🔴 Tier 1 — Must Fix</span><span style="font-size:.72rem;font-weight:400;opacity:.55;font-family:'DM Sans',sans-serif;">${tier1.length} issue${tier1.length>1?'s':''}</span></div>`;
       html+=tier1.map(mkCard).join('');
     }
     if(tier2.length){
@@ -413,7 +511,8 @@ function renderAll(){
     issueEl.innerHTML=html;
   }
 
-  // Slots view
+  // Slots view — hard conflict courses need a dot too
+  const hardCodes=new Set(hard.flatMap(h=>[h.aFull.code+h.aFull.section, h.bFull.code+h.bFull.section]));
   const slots={};
   courses.filter(c=>c.pattern!=='async').forEach(c=>{
     const key=slotKey(c);
@@ -423,10 +522,12 @@ function renderAll(){
   const slotGrid=document.getElementById('slotGrid');
   slotGrid.innerHTML=Object.entries(slots).sort((a,b)=>a[0].localeCompare(b[0])).map(([key,clist])=>{
     const slotIssues=issues.filter(i=>i.slot===key);
+    const slotHard=hard.filter(h=>h.slot===key);
+    const hasHard=slotHard.length>0;
     const hasRed=slotIssues.some(i=>i.tier===1);
     const hasYellow=slotIssues.some(i=>i.tier===2);
-    const headerClass=hasRed?'has-conflict':hasYellow?'has-warn':'clean';
-    const icon=hasRed?'🔴':hasYellow?'🟡':'✅';
+    const headerClass=hasHard||hasRed?'has-conflict':hasYellow?'has-warn':'clean';
+    const icon=hasHard?'⛔':hasRed?'🔴':hasYellow?'🟡':'✅';
     return `<div class="slot-card">
       <div class="slot-card-header ${headerClass}">
         <strong>${fmtSlot(key)}</strong>
@@ -434,8 +535,9 @@ function renderAll(){
       </div>
       <div class="slot-courses">
         ${clist.map(c=>{
+          const id=c.code+c.section;
           const cIssues=issues.filter(i=>i.slot===key&&(i.a===c.code||i.b===c.code||i.a===c.code.replace(/\.\d+$/,'')||i.b===c.code.replace(/\.\d+$/,'')));
-          const dot=cIssues.some(i=>i.tier===1)?'red':cIssues.some(i=>i.tier===2)?'yellow':'none';
+          const dot=hardCodes.has(id)?'hard':cIssues.some(i=>i.tier===1)?'red':cIssues.some(i=>i.tier===2)?'yellow':'none';
           return `<div class="slot-course-row">
             <div class="tier-dot ${dot}"></div>
             <span style="font-size:.72rem;color:#888;flex-shrink:0;">${c.code}</span>
