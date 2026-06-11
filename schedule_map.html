@@ -490,7 +490,7 @@ let db=loadData();
   // ENG 3433: remove verbose scheduling note
   patchNote('Spring 2027','ENG 3433','.01','Taught by English dept — moved to TTh 11:00-12:20 to avoid conflict with ART 3173','Taught by English dept');
   patchNote('Fall 2027','ENG 3433','.01','Taught by English dept — confirm time with them','Taught by English dept');
-  // Hidden sections: second sections of high-demand intro courses are budget placeholders not shown to students
+  // Hidden sections: second sections of high-demand intro courses, not shown to students
   const HIDDEN_CODES=['ART 1203','ART 1213','ART 1303','ART 1503','ART 2303','ART 2423','ART 2433','ART 2713','ART 3053'];
   Object.keys(db).forEach(sem=>{
     if(!db[sem]||!db[sem].courses)return;
@@ -509,7 +509,7 @@ let db=loadData();
       secs.slice(1).forEach(c=>{if(!c.hidden){c.hidden=true;changed=true;}});
     });
   });
-  // Add hidden budget placeholder sections for foundation courses with only 1 visible section
+  // Add hidden second sections for foundation courses with only 1 visible section
   const HIDDEN_TMPL={
     'ART 1203':'2D FOUNDATIONS','ART 1213':'3D FOUNDATIONS',
     'ART 1303':'DRAWING FOUNDATIONS','ART 1503':'INTRO TO PAINTING',
@@ -529,7 +529,7 @@ let db=loadData();
       cs.push({code,title,section:'.02',faculty:'staff',room:'',
         pattern:ref.pattern,time:ref.time,
         hidden:true,bracketed:false,hybrid:false,grad:false,
-        bracketpair:'',notes:'Budget placeholder',oncedday:ref.oncedday||''});
+        bracketpair:'',notes:'',oncedday:ref.oncedday||''});
       changed=true;
     });
   });
