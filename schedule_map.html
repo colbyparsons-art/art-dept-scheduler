@@ -967,13 +967,12 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const pat=courses[0].pattern;
       const fillColor=PATTERN_BG[pat]||[255,255,255];
       const accentColor=PATTERN_BAR[pat]||[26,20,16];
-      // Single unbroken outline — no dividing line between courses
       doc.setFillColor(...fillColor);
       doc.roundedRect(x,cy,maxW,subH,1.5,1.5,'F');
-      doc.setDrawColor(...INK);doc.setLineWidth(0.4);
-      doc.roundedRect(x,cy,maxW,subH,1.5,1.5,'S');
       doc.setFillColor(...accentColor);
       doc.rect(x,cy,2.0,subH,'F');
+      doc.setDrawColor(...INK);doc.setLineWidth(0.4);
+      doc.roundedRect(x,cy,maxW,subH,1.5,1.5,'S');
       courses.forEach((c,idx)=>{
         const ccy=cy+idx*(chipH-0.4);
         const tx=x+3.8;
@@ -1012,10 +1011,10 @@ function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
       const accentColor=PATTERN_BAR[c.pattern]||[26,20,16];
       doc.setFillColor(...fillColor);
       doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'F');
-      doc.setDrawColor(...INK);doc.setLineWidth(0.2);
-      doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'S');
       doc.setFillColor(...accentColor);
       doc.rect(x,cy,1.4,chipH2,'F');
+      doc.setDrawColor(...INK);doc.setLineWidth(0.2);
+      doc.roundedRect(x,cy,maxW,chipH2,1.5,1.5,'S');
       const tx=x+3.0;
       const hybridLabel=c.hybrid?formatHybridLabel(c):'';
       const fullTitle=pdfCode(c.code)+(c.section||'')+' '+(c.title||'');
