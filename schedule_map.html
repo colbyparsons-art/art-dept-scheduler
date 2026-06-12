@@ -817,6 +817,21 @@ function isBracketPair(a,b){
   return a&&b&&a.bracketed&&b.bracketed&&a.bracketpair===`${b.code}${b.section}`&&b.bracketpair===`${a.code}${a.section}`;
 }
 
+// Split a course list into two sub-columns, keeping bracketed pairs in the same column
+function splitCols(arr){
+  const seen=new Set(),groups=[];
+  arr.forEach(c=>{
+    if(seen.has(c.code+c.section))return;
+    if(c.bracketed&&c.bracketpair){
+      const p=arr.find(x=>!seen.has(x.code+x.section)&&isBracketPair(c,x));
+      if(p){groups.push([c,p]);seen.add(c.code+c.section);seen.add(p.code+p.section);return;}
+    }
+    groups.push([c]);seen.add(c.code+c.section);
+  });
+  const mid=Math.ceil(groups.length/2);
+  return[groups.slice(0,mid).flat(),groups.slice(mid).flat()];
+}
+
 // ── Drag and Drop ──────────────────────────────────────────────────────────
 let dragIdx=null;
 function dragStart(e,idx){
@@ -843,12 +858,14 @@ function dropOnCell(e,pattern,block){
   if(dragIdx===null||!currentSem)return;
   const c=db[currentSem].courses[dragIdx];
   if(!c)return;
-  if(c.bracketed){
-    if(!confirm(c.code+c.section+' is part of a bracketed pair. Move it anyway? You may need to update the pair separately.'))return;
-  }
   c.pattern=pattern;
   c.time=block;
   if(pattern!=='once')c.oncedday='';
+  // Always move the bracketed partner to the same slot so the joined styling stays intact
+  if(c.bracketed&&c.bracketpair){
+    const partner=db[currentSem].courses.find(p=>isBracketPair(c,p));
+    if(partner){partner.pattern=pattern;partner.time=block;if(pattern!=='once')partner.oncedday='';}
+  }
   saveData(db);
   dragIdx=null;
   renderAll();
@@ -872,10 +889,8 @@ function renderGrid(){
     const bs=block.split('–')[0];
     const allMw=courses.filter(c=>c.pattern==='mw'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time)));
     const allTth=courses.filter(c=>c.pattern==='tth'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time)));
-    const mwMid=Math.ceil(allMw.length/2);
-    const mwA=allMw.slice(0,mwMid),mwB=allMw.slice(mwMid);
-    const tthMid=Math.ceil(allTth.length/2);
-    const tthA=allTth.slice(0,tthMid),tthB=allTth.slice(tthMid);
+    const[mwA,mwB]=splitCols(allMw);
+    const[tthA,tthB]=splitCols(allTth);
     const addMw=FACULTY_MODE?'':`<button class="add-chip" onclick="openAddModal('mw','${block}')">+ add</button>`;
     const addTth=FACULTY_MODE?'':`<button class="add-chip" onclick="openAddModal('tth','${block}')">+ add</button>`;
     html+=`<div class="time-label time-slot-${idx+1}">${block}</div>`;
