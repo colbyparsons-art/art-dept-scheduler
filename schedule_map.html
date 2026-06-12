@@ -898,14 +898,14 @@ function renderGrid(){
   const async_=courses.filter(c=>c.pattern==='async'&&c.time);
   const asyncContainer=document.getElementById('asyncPanelContainer');
   let asyncHtml='';
-  if(unscheduled.length){
-    const dragHint=FACULTY_MODE?'':'Drag a course into a time block above to schedule it.';
-    asyncHtml+=`<div class="async-section"><div class="section-header" style="color:var(--clay);">Unscheduled — Needs Placement</div><div style="font-size:.74rem;opacity:.55;margin-bottom:8px;">${dragHint}</div><div class="async-grid">${unscheduled.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
-  }
   if(async_.length){
     asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid">${async_.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
-  } else if(!unscheduled.length){
+  } else {
     asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid"><div class="course-chip placeholder-chip">No async/online courses scheduled.</div></div></div>`;
+  }
+  if(unscheduled.length){
+    const dragHint=FACULTY_MODE?'':'Drag each course into a time block above to schedule it.';
+    asyncHtml+=`<div class="async-section" style="background:#F5EBE4;border-color:var(--mist);"><div class="section-header" style="color:var(--ink);">Unscheduled — Needs Placement</div><div style="font-size:.74rem;opacity:.6;margin-bottom:10px;">${dragHint}</div><div class="async-grid">${unscheduled.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
   }
   asyncContainer.innerHTML=asyncHtml;
 }
