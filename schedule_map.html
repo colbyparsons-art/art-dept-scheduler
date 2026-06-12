@@ -358,6 +358,41 @@
   </div>
 </div>
 
+<!-- NEW SEMESTER MODAL -->
+<div class="modal-overlay" id="newSemOverlay">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h2>New Semester</h2>
+      <button class="modal-close" onclick="closeNewSemModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Season</label>
+          <select id="ns_season">
+            <option value="Spring">Spring</option>
+            <option value="Fall">Fall</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Year</label>
+          <input type="number" id="ns_year" min="2025" max="2040" style="width:100%;padding:6px 8px;border:1px solid var(--mist);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:.83rem;"/>
+        </div>
+      </div>
+      <div class="checkbox-row" style="margin-top:4px;">
+        <label class="checkbox-label"><input type="checkbox" id="ns_auto" checked/> Auto-populate courses &amp; faculty from rotation</label>
+      </div>
+      <p style="font-size:.76rem;opacity:.55;line-height:1.5;margin-top:10px;">Courses will appear in the async/unscheduled area below the grid. Drag each one into a time block to build the schedule. Always-online courses (World Art History, UAVA, thesis) are pre-set as async.</p>
+    </div>
+    <div class="modal-footer">
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeNewSemModal()">Cancel</button>
+        <button class="btn btn-gold btn-sm" onclick="confirmNewSem()">Create</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer>Visual Arts · Schedule Map · Private — do not upload to GitHub</footer>
 
 <script>
@@ -559,15 +594,105 @@ function switchSemester(){
 }
 
 function newSemester(){
-  const sem=prompt('Semester name (e.g. "Fall 2027"):');
-  if(!sem||!sem.trim())return;
-  const key=sem.trim();
+  // Default year = one past the latest semester already in db
+  const years=Object.keys(db).map(k=>parseInt(k.split(' ')[1])).filter(Boolean);
+  const nextYear=years.length?Math.max(...years)+1:new Date().getFullYear()+1;
+  document.getElementById('ns_year').value=nextYear;
+  document.getElementById('newSemOverlay').classList.add('open');
+}
+function closeNewSemModal(){document.getElementById('newSemOverlay').classList.remove('open');}
+document.getElementById('newSemOverlay').addEventListener('click',function(e){if(e.target===this)closeNewSemModal();});
+
+function confirmNewSem(){
+  const season=document.getElementById('ns_season').value;
+  const year=parseInt(document.getElementById('ns_year').value);
+  if(!season||!year)return;
+  const key=season+' '+year;
   if(db[key]){alert('That semester already exists.');return;}
-  db[key]={courses:[]};
+  const auto=document.getElementById('ns_auto').checked;
+  db[key]={courses:auto?autoGenerateSemester(season,year):[],notes:'Draft'};
   saveData(db);
   currentSem=key;
+  closeNewSemModal();
   buildSemSelect();
   renderAll();
+}
+
+function autoGenerateSemester(season,year){
+  // Load faculty preferences from localStorage
+  let prefs=[];
+  try{prefs=JSON.parse(localStorage.getItem('twu_faculty_prefs')||'[]');}catch(e){}
+
+  // Build courseCode → [{faculty, level, maxLoad}] map
+  const coursePrefs={};
+  prefs.forEach(f=>{
+    if(!f.courses)return;
+    Object.entries(f.courses).forEach(([code,level])=>{
+      if(!coursePrefs[code])coursePrefs[code]=[];
+      coursePrefs[code].push({faculty:f.name,level,maxLoad:parseInt(f.load)||3});
+    });
+  });
+  const RANK={'star':0,'can':1,'avoid':2,'conflict':3,'':4};
+  Object.values(coursePrefs).forEach(list=>list.sort((a,b)=>(RANK[a.level]||4)-(RANK[b.level]||4)));
+
+  const loadUsed={};
+  function pickFaculty(code){
+    const candidates=(coursePrefs[code]||[]).filter(c=>c.level==='star'||c.level==='can');
+    for(const c of candidates){
+      if((loadUsed[c.faculty]||0)<c.maxLoad){
+        loadUsed[c.faculty]=(loadUsed[c.faculty]||0)+1;
+        return c.faculty;
+      }
+    }
+    return 'staff';
+  }
+
+  const parity=year%2===0?'EVEN':'ODD';
+  const semKey=season.toUpperCase();
+  // These are always online — don't try to place them
+  const ALWAYS_ASYNC=new Set(['ART 2423','ART 2433','ART 2713']);
+
+  const courses=[];
+  const addedCodes=new Set();
+
+  // Fixed courses not in ROTATION (always present every semester)
+  const FIXED=[
+    {code:'EDUC 4946',title:'CLINICAL STUDENT TEACHING',faculty:'LAURA LEE',pattern:'once',time:'Other',oncedday:'Monday',grad:false,notes:'Off-site K-12 observation'},
+    {code:'ENG 3433',title:'PROFESSIONAL WRITING',faculty:'staff',pattern:'tth',time:'11:00–12:20 (lecture)',oncedday:'',grad:false,notes:'Taught by English dept'},
+    {code:'ART 5003',title:'CRITIQUE SEMINAR',faculty:'staff',pattern:'once',time:'6:00–8:50',oncedday:'Wednesday',grad:true,notes:'Wednesday evening — always'},
+    {code:'ART 5843',title:'ART-BASED RESEARCH WRITING',faculty:'staff',pattern:'async',time:'No set time',oncedday:'',grad:true,notes:''},
+    {code:'ART 5883',title:'MFA THESIS EXHIBITION',faculty:'staff',pattern:'async',time:'No set time',oncedday:'',grad:true,notes:''},
+    {code:'ART 5993',title:'THESIS',faculty:'staff',pattern:'async',time:'No set time',oncedday:'',grad:true,notes:''},
+  ];
+  if(season==='Spring'){
+    FIXED.push({code:'ART 4913',title:'BA SENIOR CAPSTONE IND STUDY',faculty:'staff',pattern:'async',time:'No set time',oncedday:'',grad:false,notes:''});
+  }
+  FIXED.forEach(a=>{
+    courses.push({section:'.01',hidden:false,bracketed:false,hybrid:false,bracketpair:'',...a});
+    addedCodes.add(a.code);
+  });
+
+  // Rotation courses for this semester
+  ROTATION.filter(r=>{
+    if(r.sem==='IRREGULAR')return false;
+    const semMatch=r.sem==='FALL/SPRING'||r.sem===semKey;
+    const yrMatch=r.yr==='ALL'||r.yr===parity;
+    return semMatch&&yrMatch;
+  }).forEach(r=>{
+    if(addedCodes.has(r.code))return;
+    const isAsync=ALWAYS_ASYNC.has(r.code);
+    courses.push({
+      code:r.code, section:'.01', title:r.title,
+      faculty:isAsync?'staff':pickFaculty(r.code),
+      room:'', pattern:'async',
+      time:isAsync?'No set time':'',
+      hidden:false, bracketed:false, hybrid:false, grad:false,
+      bracketpair:'', notes:'', oncedday:''
+    });
+    addedCodes.add(r.code);
+  });
+
+  return courses;
 }
 
 function deleteSemester(){
@@ -768,14 +893,21 @@ function renderGrid(){
     onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div style="padding:20px;text-align:center;color:#999;font-size:.8rem;">No once/week courses scheduled.</div></div>`;
   }
 
-  // Async — same chip format as grid, 2-column layout
-  const async_=courses.filter(c=>c.pattern==='async');
+  // Split async courses: unscheduled (time='') vs genuinely async (time set)
+  const unscheduled=courses.filter(c=>c.pattern==='async'&&!c.time);
+  const async_=courses.filter(c=>c.pattern==='async'&&c.time);
   const asyncContainer=document.getElementById('asyncPanelContainer');
-  if(async_.length){
-    asyncContainer.innerHTML=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid">${async_.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
-  } else {
-    asyncContainer.innerHTML=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid"><div class="course-chip placeholder-chip">No async/online courses scheduled.</div></div></div>`;
+  let asyncHtml='';
+  if(unscheduled.length){
+    const dragHint=FACULTY_MODE?'':'Drag a course into a time block above to schedule it.';
+    asyncHtml+=`<div class="async-section"><div class="section-header" style="color:var(--clay);">Unscheduled — Needs Placement</div><div style="font-size:.74rem;opacity:.55;margin-bottom:8px;">${dragHint}</div><div class="async-grid">${unscheduled.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
   }
+  if(async_.length){
+    asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid">${async_.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
+  } else if(!unscheduled.length){
+    asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid"><div class="course-chip placeholder-chip">No async/online courses scheduled.</div></div></div>`;
+  }
+  asyncContainer.innerHTML=asyncHtml;
 }
 
 function blockContains(block,time){
