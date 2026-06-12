@@ -608,7 +608,7 @@ function confirmNewSem(){
   const year=parseInt(document.getElementById('ns_year').value);
   if(!season||!year)return;
   const key=season+' '+year;
-  if(db[key]){alert('That semester already exists.');return;}
+  if(db[key]&&db[key].courses&&db[key].courses.length){alert('That semester already exists and has courses. Select it from the dropdown to edit it.');return;}
   const auto=document.getElementById('ns_auto').checked;
   db[key]={courses:auto?autoGenerateSemester(season,year):[],notes:'Draft'};
   saveData(db);
