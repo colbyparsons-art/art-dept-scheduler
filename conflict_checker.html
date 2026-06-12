@@ -100,7 +100,6 @@
     <p>Department of Visual Arts — Schedule Analysis Tool</p>
   </div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-    <button class="btn btn-gold" onclick="loadFromBuilder()">Load from Schedule Builder</button>
     <button class="btn btn-gold" onclick="loadFromMap()">Load from Schedule Map</button>
     <button class="btn" onclick="document.getElementById('schedInput').click()" title="Fallback: upload a saved JSON file">↑ Upload JSON</button>
     <input type="file" id="schedInput" accept=".json" style="display:none" onchange="loadSchedule(event)"/>
@@ -110,12 +109,12 @@
 <div class="toolbar">
   <label>Semester:</label>
   <select id="semSelect" onchange="renderAll()"></select>
-  <span style="font-size:.78rem;opacity:.5;margin-left:8px;">Use the buttons above to load directly from the Schedule Builder or Schedule Map — no file needed.</span>
+  <span style="font-size:.78rem;opacity:.5;margin-left:8px;">Use the button above to load directly from the Schedule Map — no file needed.</span>
 </div>
 
 <main>
   <div class="notice">
-    <strong>How this works:</strong> Click <em>Load from Schedule Builder</em> or <em>Load from Schedule Map</em> to pull data directly from this browser — no file needed. The checker compares all scheduled courses against known conflict rules and flags issues. Bracketed course pairs are automatically excluded from conflict warnings. Use <em>↑ Upload JSON</em> only if you need to check a file from another computer.
+    <strong>How this works:</strong> Click <em>Load from Schedule Map</em> to pull data directly from this browser — no file needed. The checker compares all scheduled courses against known conflict rules and flags issues. Co-listed (bracketed) course pairs, e.g. ART 3013 / ART 5013, are not flagged as conflicts <em>against each other</em> — they intentionally run simultaneously. Each is still checked for conflicts against every other course in the same slot. Use <em>↑ Upload JSON</em> only if you need to check a file from another computer.
   </div>
 
   <!-- Summary -->
@@ -188,7 +187,7 @@
     <div class="tier-info" style="background:var(--paper);">
       <h3>📌 Special Rules</h3>
       <ul>
-        <li>Bracketed course pairs are automatically excluded from conflict warnings</li>
+        <li>Co-listed (bracketed) pairs, e.g. ART 3013 / ART 5013, are exempt only from conflict checks <em>against each other</em> — they run simultaneously by design. Each is still checked for conflicts with every other course in the same slot.</li>
         <li>ENG 3433 is taught by English dept — must be worked around, not moved by us</li>
         <li>Art Ed courses: only one offered per semester, but must not share a time slot</li>
         <li>ART 3173 Contemporary Issues offered every semester — protect its slot carefully</li>
@@ -228,17 +227,6 @@ const TIER2 = [
 
 let scheduleData = null;
 let currentSem = null;
-
-function loadFromBuilder(){
-  const raw=localStorage.getItem('twu_builder');
-  if(!raw){alert('No Schedule Builder data found in this browser.\n\nOpen the Schedule Builder tool first, then come back and try again.');return;}
-  try{
-    scheduleData=JSON.parse(raw);
-    currentSem=Object.keys(scheduleData)[0];
-    buildSemSelect();
-    renderAll();
-  }catch(err){alert('Error reading Schedule Builder data: '+err.message);}
-}
 
 function loadFromMap(){
   const raw=localStorage.getItem('twu_schedule');

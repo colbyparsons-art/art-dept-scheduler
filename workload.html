@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Workload Calculator — Visual Arts</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&family=Nunito:wght@500;600&display=swap');
     :root{--ink:#1a1410;--clay:#8B4A2F;--gold:#C4922A;--sage:#5C7A5F;--cream:#FAF7F2;--paper:#F2EDE4;--mist:#E8E2D9;}
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;}
@@ -16,31 +16,40 @@
     header a.back{display:inline-block;margin-bottom:14px;font-size:.78rem;color:rgba(250,247,242,.5);text-decoration:none;border-bottom:1px solid rgba(250,247,242,.18);}
     header a.back:hover{color:var(--cream);}
     main{flex:1;padding:40px;max-width:1100px;margin:0 auto;width:100%;}
+    .intro{font-size:.88rem;line-height:1.7;opacity:.7;margin-bottom:28px;max-width:680px;}
     .controls{display:flex;align-items:center;gap:14px;margin-bottom:28px;flex-wrap:wrap;}
     .controls label{font-size:.85rem;display:flex;align-items:center;gap:8px;}
     select{border:1px solid var(--mist);border-radius:3px;padding:6px 10px;font-family:inherit;font-size:.85rem;background:white;color:var(--ink);}
     .confirm-notice{font-size:.78rem;background:#FFF8E7;border:1px solid #E6CA5A;border-radius:3px;padding:5px 11px;color:#7A5800;}
-    .intro{font-size:.88rem;line-height:1.7;opacity:.7;margin-bottom:28px;max-width:640px;}
     .section-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.12em;opacity:.4;margin-bottom:12px;font-weight:500;}
     .faculty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:36px;}
     .faculty-card{background:white;border:1px solid var(--mist);border-radius:4px;overflow:hidden;}
     .card-header{padding:13px 18px;background:var(--paper);border-bottom:1px solid var(--mist);display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
-    .faculty-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-weight:600;}
+    .faculty-name{
+      font-family:'Avenir Next',Avenir,Nunito,'DM Sans',sans-serif;
+      font-size:1rem;font-weight:600;letter-spacing:.02em;text-transform:uppercase;
+    }
     .wu-summary{text-align:right;flex-shrink:0;}
     .wu-confirmed{font-size:1.1rem;font-weight:500;color:var(--clay);}
     .wu-pending-note{font-size:.68rem;opacity:.5;display:block;margin-top:1px;}
-    .course-list{}
     .course-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 18px;border-bottom:1px solid rgba(232,226,217,.55);}
     .course-row:last-child{border-bottom:none;}
-    .course-left{min-width:0;}
+    .course-left{min-width:0;flex:1;}
     .course-code{font-size:.7rem;font-weight:500;opacity:.6;margin-bottom:1px;}
     .course-title{font-size:.8rem;line-height:1.3;}
     .course-right{text-align:right;flex-shrink:0;}
-    .wu-badge{display:inline-block;font-size:.68rem;padding:2px 7px;border-radius:2px;font-weight:500;}
+    .wu-badge{display:inline-block;font-size:.67rem;padding:2px 7px;border-radius:2px;font-weight:500;}
     .wu-badge.studio{background:rgba(74,107,124,.14);color:#1E4A60;}
     .wu-badge.lecture{background:rgba(122,92,139,.13);color:#4A2A6A;}
+    .wu-badge.per-st{background:rgba(92,122,95,.14);color:#2A5530;}
     .wu-val{display:block;font-size:.74rem;font-weight:500;opacity:.6;margin-top:2px;}
     select.type-select{font-size:.7rem;padding:2px 5px;border:1px solid #E6CA5A;border-radius:2px;background:#FFF8E7;color:#7A5800;font-family:inherit;cursor:pointer;}
+    .ps-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+    .ps-row{display:flex;align-items:center;gap:5px;margin-top:3px;}
+    .ps-input{width:46px;border:1px solid var(--mist);border-radius:3px;padding:3px 5px;font-size:.76rem;text-align:center;font-family:inherit;color:var(--ink);}
+    .ps-input:focus{outline:none;border-color:var(--clay);}
+    .ps-label{font-size:.67rem;opacity:.5;}
+    .ps-wu{font-size:.74rem;font-weight:500;opacity:.65;margin-top:1px;min-height:1rem;}
     .staff-section{}
     .staff-card{background:white;border:1px solid var(--mist);border-radius:4px;padding:18px;}
     .staff-note{font-size:.78rem;opacity:.5;margin-bottom:10px;}
@@ -60,23 +69,31 @@
   </div>
 </header>
 <main>
-  <p class="intro">Faculty teaching load in Work Units (WU) per semester. Studio courses: 4.67 WU. Lecture and seminar courses: 3 WU. Bracketed co-listed pairs count once. Use the dropdowns to confirm the type for Special Topics and any other unclassified courses — confirmations are saved in your browser.</p>
+  <p class="intro">Faculty teaching load in Work Units (WU) per semester. Studio: 4.67 WU · Lecture/seminar: 3 WU · Per-student courses (internships, clinical teaching, independent study): enter headcount to calculate WU. Bracketed co-listed pairs count once. All entries are saved in your browser.</p>
   <div class="controls">
     <label>Semester <select id="semSel" onchange="renderAll()"></select></label>
     <span id="confirmBadge"></span>
   </div>
-  <div class="section-label" id="facultyLabel" style="display:none">Faculty</div>
-  <div class="faculty-grid" id="facultyGrid"></div>
-  <div id="staffSection"></div>
+  <div class="section-label" id="facLabel" style="display:none">Faculty</div>
+  <div class="faculty-grid" id="facGrid"></div>
+  <div id="staffSec"></div>
 </main>
 <footer>Visual Arts Department &middot; For internal department use &middot; Data never leaves your browser</footer>
 <script>
-// ── Constants ─────────────────────────────────────────────────────────────
 const WU_STUDIO=4.67, WU_LECTURE=3;
 const FACULTY_ORDER=['GIOVANNI','SARA','SHELI','MEG','JULIE','TANYA','LAURA LEE','CHRISTINE','COLBY'];
 
-// Course designations from dept CSV + ENG cross-listing
-// null = not in CSV / needs confirmation (e.g. Special Topics, Internship, clinical)
+// Per-student courses: WU = rate × headcount (URP 2.305)
+const PER_STUDENT={
+  'EDUC 4946':{rate:1.0, label:'Clinical Teaching'},  // Code 3: 1.0 WU/student
+  'ART 4953': {rate:0.5, label:'Internship'},          // Code 3: 0.5 WU/student
+  'ART 4913': {rate:0.3, label:'Ind. Study (UG)'},     // Code 5a: 0.3 WU/student
+  'ART 5913': {rate:0.5, label:'Ind. Study (Grad)'},   // Code 5a: 0.5 WU/student
+  'ART 5993': {rate:0.5, label:'Thesis / MFA'},        // Code 8: 0.5 WU/student
+  'ART 5883': {rate:0.5, label:'Thesis / MFA'},        // Code 8: 0.5 WU/student
+};
+
+// Flat-rate designations from dept CSV
 const DESIG={
   'ART 1203':'studio','ART 1213':'studio','ART 1303':'studio','ART 1503':'studio',
   'ART 1603':'studio','ART 2223':'studio','ART 2243':'studio','ART 2293':'studio',
@@ -97,19 +114,29 @@ const DESIG={
   'ART 5123':'studio','ART 5533':'lecture','ART 5543':'lecture','ART 5573':'lecture',
   'ART 5613':'studio','ART 5653':'studio','ART 5663':'studio','ART 5693':'lecture',
   'ART 5703':'studio','ART 5733':'studio','ART 5743':'studio','ART 5753':'studio',
-  'ART 5793':'lecture','ART 5843':'lecture','ART 5943':'lecture',
-  'ENG 3433':'lecture',
-  // ART 4903, ART 5903 (Special Topics) intentionally omitted — depends on subject
-  // ART 4913, ART 4953, EDUC 4946 intentionally omitted — needs confirmation
+  'ART 5793':'lecture','ART 5843':'lecture','ART 5943':'lecture','ENG 3433':'lecture',
+  // ART 4903 / 5903 Special Topics: intentionally omitted — depends on subject
 };
 
 const OV_KEY='twu_workload_overrides';
+const ST_KEY='twu_workload_students';
 function loadOv(){try{return JSON.parse(localStorage.getItem(OV_KEY))||{};}catch(e){return {};}}
+function loadSt(){try{return JSON.parse(localStorage.getItem(ST_KEY))||{};}catch(e){return {};}}
+
 function saveOv(sem,courseKey,desig){
   const ov=loadOv();
   const k=sem+'|'+courseKey;
   if(desig)ov[k]=desig; else delete ov[k];
   localStorage.setItem(OV_KEY,JSON.stringify(ov));
+  renderAll();
+}
+function saveSt(sem,courseKey,val){
+  const st=loadSt();
+  if(!st[sem])st[sem]={};
+  const n=parseInt(val);
+  if(!isNaN(n)&&n>=0)st[sem][courseKey]=n;
+  else delete st[sem][courseKey];
+  localStorage.setItem(ST_KEY,JSON.stringify(st));
   renderAll();
 }
 
@@ -120,7 +147,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   const sel=document.getElementById('semSel');
   const sems=Object.keys(db);
   if(!sems.length){
-    document.getElementById('facultyGrid').innerHTML='<div class="empty-msg">No schedule data found. Open the Schedule Map first to load data, then return here.</div>';
+    document.getElementById('facGrid').innerHTML='<div class="empty-msg">No schedule data found. Open the Schedule Map first to load data, then return here.</div>';
     return;
   }
   sems.forEach(s=>{const o=document.createElement('option');o.value=o.textContent=s;sel.appendChild(o);});
@@ -132,76 +159,90 @@ function curSem(){return document.getElementById('semSel').value;}
 function buildData(sem){
   const semData=db[sem];
   if(!semData||!semData.courses)return{faculty:{},staff:[]};
-  const ov=loadOv();
-  const faculty={},staff=[];
+  const ov=loadOv(), st=loadSt();
+  const faculty={}, staff=[];
 
   semData.courses.forEach(c=>{
     if(c.hidden)return;
     const fac=(c.faculty||'').trim();
-
-    // Staff/adjunct go to staff list only
     if(!fac||fac.toLowerCase()==='staff'){staff.push(c);return;}
-
-    // For bracketed co-listed pairs, count only the lower-sorted id (they share the same room/time)
+    // Bracketed co-listed pairs: count only the lexicographically lower id (they share one room/time)
     if(c.bracketed&&c.bracketpair&&(c.code+c.section)>c.bracketpair)return;
-
     if(!faculty[fac])faculty[fac]=[];
-    const ovKey=sem+'|'+c.code+c.section;
-    const desig=ov[ovKey]||DESIG[c.code]||null;
-    const wu=desig==='studio'?WU_STUDIO:desig==='lecture'?WU_LECTURE:null;
-    faculty[fac].push({c,desig,wu,ovKey});
-  });
 
+    const ps=PER_STUDENT[c.code];
+    if(ps){
+      const count=st[sem]?.[c.code+c.section];  // undefined if not entered
+      const wu=(count!=null)?+(ps.rate*count).toFixed(4):null;
+      faculty[fac].push({c,kind:'ps',rate:ps.rate,label:ps.label,count,wu});
+    } else {
+      const ovKey=sem+'|'+c.code+c.section;
+      const desig=ov[ovKey]||DESIG[c.code]||null;
+      const wu=desig==='studio'?WU_STUDIO:desig==='lecture'?WU_LECTURE:null;
+      faculty[fac].push({c,kind:'flat',desig,wu,ovKey});
+    }
+  });
   return{faculty,staff};
 }
+
+function q(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
 
 function renderAll(){
   const sem=curSem();
   if(!sem)return;
   const ov=loadOv();
   const {faculty,staff}=buildData(sem);
-
   let totalPending=0;
+
   const ordered=[
     ...FACULTY_ORDER.filter(f=>faculty[f]),
     ...Object.keys(faculty).filter(f=>!FACULTY_ORDER.includes(f)).sort()
   ];
 
-  if(!ordered.length){
-    document.getElementById('facultyGrid').innerHTML='<div class="empty-msg">No faculty courses found for this semester.</div>';
-    document.getElementById('facultyLabel').style.display='none';
-  } else {
-    document.getElementById('facultyLabel').style.display='';
-  }
+  document.getElementById('facLabel').style.display=ordered.length?'':'none';
 
-  const cardsHtml=ordered.map(fac=>{
+  const cards=ordered.map(fac=>{
     const entries=faculty[fac];
-    let confWU=0,pending=0;
-    entries.forEach(e=>{if(e.wu!==null)confWU+=e.wu;else pending++;});
+    let confWU=0, pending=0;
+    entries.forEach(e=>{e.wu!=null?confWU+=e.wu:pending++;});
     totalPending+=pending;
 
     const nameDisplay=fac.toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
     const wuDisplay=confWU>0?confWU.toFixed(2):'—';
-    const pendingNote=pending?`<span class="wu-pending-note">+${pending} unconfirmed</span>`:'';
+    const pendingNote=pending?`<span class="wu-pending-note">+${pending} need info</span>`:'';
 
-    const rows=entries.map(({c,desig,wu,ovKey})=>{
+    const rows=entries.map(e=>{
+      const c=e.c;
       const code=(c.code||'').replace(/^ART\s+/,'')+(c.section||'');
-      // escape for inline event handler
-      const eSem=sem.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      const eCourseKey=(c.code+c.section).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       let right='';
-      if(desig==='studio'){
+
+      if(e.kind==='ps'){
+        const v=e.count!=null?e.count:'';
+        const wuLine=e.wu!=null
+          ?`<div class="ps-wu">${e.wu.toFixed(2)} WU</div>`
+          :`<div class="ps-wu" style="opacity:.3">enter count</div>`;
+        right=`<div class="ps-right">
+          <span class="wu-badge per-st">${e.label} &middot; ${e.rate}/student</span>
+          <div class="ps-row">
+            <input type="number" min="0" step="1" value="${v}" placeholder="0"
+              class="ps-input" onchange="saveSt('${q(sem)}','${q(c.code+c.section)}',this.value)">
+            <span class="ps-label">students</span>
+          </div>
+          ${wuLine}
+        </div>`;
+      } else if(e.desig==='studio'){
         right=`<span class="wu-badge studio">Studio</span><span class="wu-val">${WU_STUDIO} WU</span>`;
-      } else if(desig==='lecture'){
+      } else if(e.desig==='lecture'){
         right=`<span class="wu-badge lecture">Lecture</span><span class="wu-val">${WU_LECTURE} WU</span>`;
       } else {
-        const cur=ov[ovKey]||'';
-        right=`<select class="type-select" onchange="saveOv('${eSem}','${eCourseKey}',this.value)">
-          <option value="" ${!cur?'selected':''}>confirm type…</option>
-          <option value="studio" ${cur==='studio'?'selected':''}>Studio — ${WU_STUDIO} WU</option>
-          <option value="lecture" ${cur==='lecture'?'selected':''}>Lecture — ${WU_LECTURE} WU</option>
+        const cur=ov[e.ovKey]||'';
+        right=`<select class="type-select" onchange="saveOv('${q(sem)}','${q(c.code+c.section)}',this.value)">
+          <option value=""${!cur?' selected':''}>confirm type…</option>
+          <option value="studio"${cur==='studio'?' selected':''}>Studio — ${WU_STUDIO} WU</option>
+          <option value="lecture"${cur==='lecture'?' selected':''}>Lecture — ${WU_LECTURE} WU</option>
         </select>`;
       }
+
       return `<div class="course-row">
         <div class="course-left">
           <div class="course-code">${code}</div>
@@ -223,15 +264,12 @@ function renderAll(){
     </div>`;
   }).join('');
 
-  document.getElementById('facultyGrid').innerHTML=cardsHtml;
+  document.getElementById('facGrid').innerHTML=cards||'<div class="empty-msg">No faculty courses found for this semester.</div>';
 
-  // Confirmation notice
   document.getElementById('confirmBadge').innerHTML=totalPending
-    ?`<span class="confirm-notice">⚠ ${totalPending} course${totalPending!==1?'s':''} need type confirmation</span>`
-    :'';
+    ?`<span class="confirm-notice">⚠ ${totalPending} course${totalPending!==1?'s':''} need information</span>`:'';
 
-  // Staff / adjunct section
-  const staffEl=document.getElementById('staffSection');
+  const staffEl=document.getElementById('staffSec');
   if(staff.length){
     const chips=staff.map(c=>{
       const code=(c.code||'').replace(/^ART\s+/,'')+(c.section||'');
