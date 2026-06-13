@@ -188,6 +188,7 @@
       <h3>📌 Special Rules</h3>
       <ul>
         <li>Co-listed (bracketed) pairs, e.g. ART 3013 / ART 5013, are exempt only from conflict checks <em>against each other</em> — they run simultaneously by design. Each is still checked for conflicts with every other course in the same slot.</li>
+        <li>Two hybrid courses in the same time block are not flagged as a conflict if their F2F days are on opposite days of the pattern — e.g., one meets F2F on Monday and the other on Wednesday in the same MW slot. Since neither uses the other's F2F day synchronously, students can attend both.</li>
         <li>ENG 3433 is taught by English dept — must be worked around, not moved by us</li>
         <li>Art Ed courses: only one offered per semester, but must not share a time slot</li>
         <li>ART 3173 Contemporary Issues offered every semester — protect its slot carefully</li>
@@ -318,6 +319,29 @@ function isBracketedPair(a, b){
   return (a.bracketpair === b.code+b.section) || (b.bracketpair === a.code+a.section);
 }
 
+function extractHybridDay(notes){
+  const n=(notes||'').toLowerCase();
+  if(/\bmonday\b/.test(n)) return 'Monday';
+  if(/\btuesday\b/.test(n)) return 'Tuesday';
+  if(/\bwednesday\b/.test(n)) return 'Wednesday';
+  if(/\bthursday\b/.test(n)) return 'Thursday';
+  return '';
+}
+
+// True if both are hybrid courses whose F2F days are on opposite days of the same pair
+// (Mon-only vs Wed-only in an MW block, or Tue-only vs Thu-only in a TTh block).
+// These never share a synchronous meeting and are not a real conflict.
+function hybridSplitDays(a, b){
+  if(!a||!b||!a.hybrid||!b.hybrid) return false;
+  const dayA=extractHybridDay(a.notes), dayB=extractHybridDay(b.notes);
+  if(!dayA||!dayB||dayA===dayB) return false;
+  if(a.pattern==='mw'&&b.pattern==='mw')
+    return (dayA==='Monday'&&dayB==='Wednesday')||(dayA==='Wednesday'&&dayB==='Monday');
+  if(a.pattern==='tth'&&b.pattern==='tth')
+    return (dayA==='Tuesday'&&dayB==='Thursday')||(dayA==='Thursday'&&dayB==='Tuesday');
+  return false;
+}
+
 function runHardConflicts(){
   const courses = getCourses();
   const issues = [];
@@ -343,7 +367,7 @@ function runHardConflicts(){
     Object.entries(byFaculty).forEach(([fac, list]) => {
       for(let i = 0; i < list.length; i++){
         for(let j = i+1; j < list.length; j++){
-          if(!isBracketedPair(list[i], list[j])){
+          if(!isBracketedPair(list[i], list[j]) && !hybridSplitDays(list[i], list[j])){
             issues.push({type:'faculty', key:fac, slot:key, aFull:list[i], bFull:list[j],
               desc:`${fac} is assigned to teach two courses in the same time slot.`});
           }
@@ -363,7 +387,7 @@ function runHardConflicts(){
     Object.entries(byRoom).forEach(([room, list]) => {
       for(let i = 0; i < list.length; i++){
         for(let j = i+1; j < list.length; j++){
-          if(!isBracketedPair(list[i], list[j])){
+          if(!isBracketedPair(list[i], list[j]) && !hybridSplitDays(list[i], list[j])){
             issues.push({type:'room', key:`Room ${room}`, slot:key, aFull:list[i], bFull:list[j],
               desc:`Room ${room} is double-booked for two courses at the same time.`});
           }
@@ -377,13 +401,15 @@ function runHardConflicts(){
 
 function runCheck(){
   const issues=[];
+  const allCourses=getCourses();
+  function courseObj(code){return allCourses.find(c=>c.code===code||c.code.replace(/\.\d+$/,'')===code);}
   // Tier 1
   TIER1.forEach(group=>{
     const scheduled=group.courses.filter(c=>getSlotForCode(c)&&getSlotForCode(c)!=='async');
     for(let i=0;i<scheduled.length;i++){
       for(let j=i+1;j<scheduled.length;j++){
         const a=scheduled[i],b=scheduled[j];
-        if(getSlotForCode(a)===getSlotForCode(b)&&!areBracketed(a,b)){
+        if(getSlotForCode(a)===getSlotForCode(b)&&!areBracketed(a,b)&&!hybridSplitDays(courseObj(a),courseObj(b))){
           issues.push({tier:1,a,b,slot:getSlotForCode(a),group:group.name,desc:group.desc});
         }
       }
@@ -393,7 +419,7 @@ function runCheck(){
   TIER2.forEach(rule=>{
     const [a,b]=rule.pair;
     const slotA=getSlotForCode(a),slotB=getSlotForCode(b);
-    if(slotA&&slotB&&slotA!=='async'&&slotB!=='async'&&slotA===slotB&&!areBracketed(a,b)){
+    if(slotA&&slotB&&slotA!=='async'&&slotB!=='async'&&slotA===slotB&&!areBracketed(a,b)&&!hybridSplitDays(courseObj(a),courseObj(b))){
       issues.push({tier:2,a,b,slot:slotA,group:rule.track,desc:rule.desc});
     }
   });
