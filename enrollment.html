@@ -248,7 +248,8 @@ function calc(r){
   const ug=(r.ba||0)+bfa;
   const hasMinors=MINOR_FIELDS.some(f=>r[f]!==null&&r[f]!==undefined);
   const min=hasMinors?MINOR_FIELDS.reduce((s,f)=>s+(r[f]||0),0):null;
-  return{...r,bfa_total:bfa,postbacc_total:pb,grad_total:grad,undergrad_total:ug,minors_total:min,hasMinors,dept_total:grad+ug+pb+(min||0)};
+  const majors_total=grad+ug+pb;
+  return{...r,bfa_total:bfa,postbacc_total:pb,grad_total:grad,undergrad_total:ug,minors_total:min,hasMinors,majors_total,dept_total:majors_total+(min||0)};
 }
 function lbl(r){return r.semester+' '+r.year;}
 function dH(d){
@@ -294,16 +295,20 @@ function renderCards(){
   const priorIdx=sorted.findIndex(r=>semKey(r)===curKey)-1;
   const pri=priorIdx>=0?calc(sorted[priorIdx]):null;
   const cards=[
-    {label:'Total Dept.',val:cur.dept_total,type:'total',f:'dept_total'},
+    {label:'Total Majors',val:cur.majors_total,type:'total',f:'majors_total'},
     {label:'Undergraduate',val:cur.undergrad_total,type:'undergrad',f:'undergrad_total'},
     {label:'Graduate',val:cur.grad_total,type:'grad',f:'grad_total'},
     {label:'MFA in Art',val:cur.mfa,type:'grad',f:'mfa'},
     {label:'MA in Art',val:cur.ma,type:'grad',f:'ma'},
+    {label:'Minors',val:cur.minors_total,type:'minor',f:'minors_total'},
   ];
   document.getElementById('summaryCards').innerHTML=cards.map(c=>{
-    const d=pri?cur[c.f]-pri[c.f]:null;
+    const curVal=cur[c.f],priVal=pri?pri[c.f]:null;
+    const rawDiff=pri?curVal-priVal:null;
+    const d=(rawDiff!==null&&!isNaN(rawDiff)&&curVal!==null&&priVal!==null)?rawDiff:null;
     const t=d===null?'':d>0?'<div class="trend up">▲ '+d+' from prior</div>':d<0?'<div class="trend down">▼ '+Math.abs(d)+' from prior</div>':'<div class="trend flat">No change</div>';
-    return '<div class="summary-card '+c.type+'"><div class="label">'+c.label+'</div><div class="number">'+c.val+'</div>'+t+'</div>';
+    const displayVal=curVal===null||curVal===undefined?'—':curVal;
+    return '<div class="summary-card '+c.type+'"><div class="label">'+c.label+'</div><div class="number">'+displayVal+'</div>'+t+'</div>';
   }).join('');
 }
 function renderTables(){
