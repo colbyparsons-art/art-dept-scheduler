@@ -224,7 +224,23 @@ const DEFAULT_DATA=[
    minor_3d:1,minor_arthistory:2,minor_ceramics:2,minor_graphicdesign:4,
    minor_illustration:2,minor_paintingdrawing:9,minor_photography:4,
    minor_sciillus:16,minor_sculpture:0,
-   notes:'Manually entered. Focus area estimates included.',dataSource:'manual'}
+   notes:'Manually entered. Focus area estimates included.',dataSource:'manual'},
+  {semester:'Fall',year:2026,
+   mfa:14,ma:1,ba:8,
+   bfa_art_education:28,bfa_studioart:46,bfa_graphicdesign:68,
+   bfa_undeclared:9,postbacc_studioart:1,
+   classDist:{
+     ba:{FR:0,SO:4,JR:3,SR:1},
+     bfa_undeclared:{FR:4,SO:3,JR:2,SR:0},
+     bfa_art_education:{FR:6,SO:9,JR:3,SR:10},
+     bfa_studioart:{FR:19,SO:7,JR:7,SR:13},
+     bfa_graphicdesign:{FR:15,SO:20,JR:15,SR:18},
+     postbacc:{PB:1}
+   },
+   minor_3d:null,minor_arthistory:null,minor_ceramics:null,minor_graphicdesign:null,
+   minor_illustration:null,minor_paintingdrawing:null,minor_photography:null,
+   minor_sciillus:null,minor_sculpture:null,
+   notes:'Derived from Visual Arts Scheduling Data report.',dataSource:'sql_majors',majorsSrc:'Visual Arts Scheduling Data(fl26).csv'}
 ];
 
 // ── State ──────────────────────────────────────────────────────────────────
@@ -423,18 +439,29 @@ function renderCharts(){
 function parseSQLCSV(text){
   const lines=text.split('\n').map(l=>l.trim());
   let headers=null;
+  let newFmt=false;
   const students=[];
   for(const line of lines){
     if(!line)continue;
     const cols=line.split(',').map(c=>c.trim());
-    if(cols[0].startsWith('Registered Majors'))continue;
-    if(cols[0]==='PROGRAMS'&&!headers){headers=cols;continue;}
-    if(!headers)continue;
-    if(cols[0]&&!cols[1])continue; // program group header row
-    if(!cols[0]&&cols[1]){
-      const row={};
-      headers.forEach((h,i)=>{row[h]=(cols[i]||'').trim();});
-      if(row['PROGRAM'])students.push(row);
+    // Detect header row
+    if(!headers){
+      if(cols[0]==='ACAD_PROGRAMS_ID'){headers=cols;newFmt=true;continue;}
+      if(cols[0]==='PROGRAMS'){headers=cols;newFmt=false;continue;}
+      continue; // skip title/report-date rows
+    }
+    if(newFmt){
+      // New scheduling format: program ID in first column
+      if(!cols[0]||!cols[0].startsWith('ART.'))continue;
+      students.push({PROGRAM:cols[0],TERM:cols[1],CLASS:cols[6]});
+    } else {
+      // Legacy format: first cell empty, program ID in second cell
+      if(cols[0]&&!cols[1])continue;
+      if(!cols[0]&&cols[1]){
+        const row={};
+        headers.forEach((h,i)=>{row[h]=(cols[i]||'').trim();});
+        if(row['PROGRAM'])students.push(row);
+      }
     }
   }
   return students;
@@ -457,7 +484,7 @@ function sqlToRecord(students,filename){
   // Class distribution
   const classDist={};
   const progMap={
-    ba:['ART.BA.HISTVISCULT'],
+    ba:['ART.BA.HISTVISCULT','ART.BA'],
     bfa_undeclared:['ART.BFA'],
     bfa_art_education:['ART.BFA.EDUC'],
     bfa_studioart:['ART.BFA.STUDIOART'],
@@ -485,7 +512,7 @@ function sqlToRecord(students,filename){
   return{
     semester,year:yearNum,
     mfa:cnt('ART.MFA'),ma:cnt('ART.MA.HIST.THS'),
-    ba:cnt('ART.BA.HISTVISCULT'),
+    ba:cnt('ART.BA.HISTVISCULT')+cnt('ART.BA'),
     bfa_art_education:cnt('ART.BFA.EDUC'),
     bfa_studioart:cnt('ART.BFA.STUDIOART'),
     bfa_graphicdesign:cnt('ART.BFA.GRAPHDESGN'),
@@ -553,8 +580,18 @@ if(new URLSearchParams(window.location.search).has('faculty')){
 // ── Init ───────────────────────────────────────────────────────────────────
 (function init(){
   const stored=loadStorage();
-  allData=stored||JSON.parse(JSON.stringify(DEFAULT_DATA));
-  allData.sort((a,b)=>semKey(a)-semKey(b));
+  if(stored){
+    allData=stored;
+    // Merge any DEFAULT_DATA semesters not yet in localStorage
+    DEFAULT_DATA.forEach(def=>{
+      if(!allData.some(r=>r.semester===def.semester&&r.year===def.year))
+        allData.push(JSON.parse(JSON.stringify(def)));
+    });
+    allData.sort((a,b)=>semKey(a)-semKey(b));
+    saveStorage();
+  } else {
+    allData=JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
   curIdx=allData.length-1;
   standingIdx=allData.length-1;
   renderAll();
