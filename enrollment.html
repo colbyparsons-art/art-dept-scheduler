@@ -116,9 +116,6 @@
 </nav>
 <main>
   <div class="tab-panel active" id="tab-overview">
-    <div class="notice info" id="mainNotice">
-      <strong>About this data:</strong> Counts are based on registered students from the university SQL report. For current or upcoming semesters, this means counts reflect enrollment at the time of the report — students accepted but not yet registered will not appear until they register. For completed semesters, registration is closed and counts are final. Focus area breakdowns (Studio Art tracks, Graphic Design tracks) are not available from the SQL report; only program totals are shown. Minors require a separate upload.
-    </div>
     <div class="summary-grid" id="summaryCards"></div>
     <div class="semester-pills" id="semesterPills"></div>
     <div id="comparisonBanner" style="display:none;font-size:.8rem;color:#666;background:var(--paper);border:1px solid var(--mist);border-radius:3px;padding:7px 12px;margin-bottom:18px;"></div>
@@ -137,6 +134,7 @@
       <thead><tr><th>Minor</th><th>Enrolled</th><th id="minCompHead">vs. Prior Semester</th></tr></thead>
       <tbody></tbody>
     </table>
+    <p style="font-size:.74rem;color:#aaa;margin-top:24px;padding-top:14px;border-top:1px solid var(--mist);line-height:1.7;">* For current or upcoming semesters, counts reflect registered students only — students accepted but not yet registered will not appear until they register. All counts are derived from the university SQL report. Focus area breakdowns within Studio Art and Graphic Design tracks are not available from this report; only program totals are shown. Minors require a separate upload.</p>
   </div>
   <div class="tab-panel" id="tab-graduate">
     <div class="chart-container"><h3>Graduate Enrollment Over Time</h3><div class="chart-wrapper"><canvas id="gradChart"></canvas></div></div>
