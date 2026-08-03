@@ -818,6 +818,7 @@ function showView(name,btn){
   document.querySelectorAll('.view-tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   btn.classList.add('active');
+  document.querySelector('.faculty-bar').style.display=name==='grid'?'':'none';
   renderAll();
 }
 
