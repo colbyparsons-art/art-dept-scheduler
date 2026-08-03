@@ -248,7 +248,7 @@
 
   <!-- LOAD VIEW -->
   <div class="view-panel" id="view-load">
-    <div class="notice"><strong>Load rules:</strong> Standard load is 3 courses. One faculty member teaches 4 (lecture/seminar). Bracketed co-listed pairs count as 1 course. Student teaching observation (4+ students) counts as 1 course. Department head has 2-course work release.</div>
+    <div class="notice"><strong>Load rules:</strong> Standard load is 3 courses. One faculty member teaches 4 (lecture/seminar). Bracketed co-listed pairs count as 1 course. Student teaching observation (4+ students) counts as 1 course. Independent study / internship sections do not count toward load. Department head has 2-course work release.</div>
     <div class="load-grid" id="loadGrid"></div>
   </div>
 
@@ -1071,10 +1071,11 @@ function renderLoad(){
 
   grid.innerHTML=[...faculty].sort().map(f=>{
     const mine=courses.filter(c=>c.faculty===f);
-    // Bracketed pairs count as 1
+    // Bracketed pairs count as 1; ind study / internship excluded
     const bracketGroups=new Set();
     let load=0;
     mine.forEach(c=>{
+      if(/IND\s+STUDY|INTERNSHIP/i.test(c.title||'')) return;
       if(c.bracketed&&c.bracketpair){
         const key=[c.code+c.section,c.bracketpair].sort().join('|');
         if(!bracketGroups.has(key)){bracketGroups.add(key);load++;}
@@ -1085,7 +1086,10 @@ function renderLoad(){
     const target=FACULTY_LOADS[f]||3;
     const pct=Math.min(100,Math.round(load/target*100));
     const barClass=load===target?'ok':load>target?'over':'under';
-    const courseList=mine.map(c=>`${c.code||''} ${c.title||''}${c.bracketed?' ⟦⟧':''}`).join(', ');
+    const courseList=mine.map(c=>{
+      const exempt=/IND\s+STUDY|INTERNSHIP/i.test(c.title||'');
+      return `${c.code||''} ${c.title||''}${c.bracketed?' ⟦⟧':''}${exempt?' (not counted)':''}`;
+    }).join(', ');
     return `<div class="load-card">
       <div class="load-name">${f}</div>
       <div class="load-bar-wrap"><div class="load-bar ${barClass}" style="width:${pct}%"></div></div>
