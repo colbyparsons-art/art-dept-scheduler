@@ -505,6 +505,20 @@ const ROTATION=[
   {code:'ART 4993',title:'BFA EXHIBITION',sem:'FALL/SPRING',yr:'ALL'},
 ];
 
+// Rotation overrides — lets admins change sem/yr in-browser, persisted to localStorage
+function loadRotationOverrides(){try{const s=localStorage.getItem('twu_rotation_ov');if(s)return JSON.parse(s);}catch(e){}return{};}
+function saveRotationOverrides(o){localStorage.setItem('twu_rotation_ov',JSON.stringify(o));}
+let rotationOverrides=loadRotationOverrides();
+let rotation=ROTATION.map(r=>{const o=rotationOverrides[r.code];return o?{...r,...o}:r;});
+function updateRotationEntry(code,field,value){
+  if(!rotationOverrides[code])rotationOverrides[code]={};
+  rotationOverrides[code][field]=value;
+  saveRotationOverrides(rotationOverrides);
+  const idx=rotation.findIndex(r=>r.code===code);
+  if(idx>=0)rotation[idx][field]=value;
+  renderRotation();
+}
+
 const FACULTY_LOADS={
   'GIOVANNI':3,'SARA':4,'SHELI':3,'MEG':3,'JULIE':3,
   'TANYA':3,'LAURA LEE':3,'CHRISTINE':3,'COLBY':1,'staff':99
@@ -778,7 +792,7 @@ function autoGenerateSemester(season,year){
   });
 
   // Rotation courses for this semester
-  ROTATION.filter(r=>{
+  rotation.filter(r=>{
     if(r.sem==='IRREGULAR')return false;
     const semMatch=r.sem==='FALL/SPRING'||r.sem===semKey;
     const yrMatch=r.yr==='ALL'||r.yr===parity;
@@ -1105,36 +1119,50 @@ function renderRotation(){
   const container=document.getElementById('rotationContent');
   if(!currentSem){container.innerHTML='';return;}
 
-  // Parse semester
   const parts=currentSem.split(' ');
-  const semName=(parts[0]||'').toUpperCase(); // FALL or SPRING
+  const semName=(parts[0]||'').toUpperCase();
   const year=parseInt(parts[1]||new Date().getFullYear());
-  const isEven=year%2===0;
-  const yearType=isEven?'EVEN':'ODD';
-
-  // Get committed courses for this semester
-  const committed=ROTATION.filter(r=>{
-    if(r.sem==='IRREGULAR')return false;
-    const sems=r.sem.split('/');
-    if(!sems.includes(semName))return false;
-    if(r.yr==='ALL')return true;
-    return r.yr===yearType;
-  });
+  const yearType=year%2===0?'EVEN':'ODD';
 
   const courses=getSemCourses();
   const scheduledCodes=new Set(courses.map(c=>(c.code||'').replace(/\s+/g,'').toUpperCase()));
 
+  // Courses committed for this semester (used for stats + status badges)
+  const committed=rotation.filter(r=>{
+    if(r.sem==='IRREGULAR')return false;
+    const sems=r.sem.split('/');
+    if(!sems.includes(semName))return false;
+    return r.yr==='ALL'||r.yr===yearType;
+  });
+  const committedSet=new Set(committed.map(r=>r.code.replace(/\s+/g,'').toUpperCase()));
   let missing=0,scheduled=0;
-  const rows=committed.map(r=>{
+  committed.forEach(r=>{
+    if(scheduledCodes.has(r.code.replace(/\s+/g,'').toUpperCase()))scheduled++;else missing++;
+  });
+
+  // Admin: full list with editable dropdowns; faculty: committed only, read-only
+  const displayEntries=FACULTY_MODE?committed:rotation;
+  const SEM_OPTS=['FALL','SPRING','FALL/SPRING','IRREGULAR'];
+  const YR_OPTS=['ALL','ODD','EVEN',''];
+  const ss="font-size:.78rem;border:1px solid var(--mist);border-radius:2px;padding:1px 3px;background:white;font-family:'DM Sans',sans-serif;";
+
+  const rows=displayEntries.map(r=>{
     const clean=r.code.replace(/\s+/g,'').toUpperCase();
     const isScheduled=scheduledCodes.has(clean);
-    if(isScheduled)scheduled++;else missing++;
+    const isCommitted=committedSet.has(clean);
+    const semCell=FACULTY_MODE?r.sem:
+      `<select onchange="updateRotationEntry('${r.code}','sem',this.value)" style="${ss}">${SEM_OPTS.map(s=>`<option value="${s}"${r.sem===s?' selected':''}>${s}</option>`).join('')}</select>`;
+    const yrCell=FACULTY_MODE?r.yr:
+      `<select onchange="updateRotationEntry('${r.code}','yr',this.value)" style="${ss}">${YR_OPTS.map(y=>`<option value="${y}"${r.yr===y?' selected':''}>${y||'—'}</option>`).join('')}</select>`;
+    const statusCell=isCommitted
+      ?`<span class="status-badge ${isScheduled?'status-scheduled':'status-missing'}">${isScheduled?'✓ Scheduled':'⚠ Missing'}</span>`
+      :`<span style="font-size:.74rem;opacity:.35;">—</span>`;
     return `<tr>
       <td>${r.code}</td>
       <td>${r.title}</td>
-      <td>${r.sem}</td>
-      <td>${r.yr}</td>
-      <td><span class="status-badge ${isScheduled?'status-scheduled':'status-missing'}">${isScheduled?'✓ Scheduled':'⚠ Missing'}</span></td>
+      <td>${semCell}</td>
+      <td>${yrCell}</td>
+      <td>${statusCell}</td>
     </tr>`;
   }).join('');
 
@@ -1189,14 +1217,14 @@ function openAddModal(pattern,block){
   }
   // Populate rotation datalist
   const dl=document.getElementById('rotationList');
-  dl.innerHTML=ROTATION.map(r=>`<option value="${r.code}">${r.code} — ${r.title}</option>`).join('');
+  dl.innerHTML=rotation.map(r=>`<option value="${r.code}">${r.code} — ${r.title}</option>`).join('');
   document.getElementById('c_code').addEventListener('change',autofillTitle);
   document.getElementById('modalOverlay').classList.add('open');
 }
 
 function autofillTitle(){
   const code=document.getElementById('c_code').value.trim().toUpperCase();
-  const match=ROTATION.find(r=>r.code.replace(/\s+/g,'')===code.replace(/\s+/g,''));
+  const match=rotation.find(r=>r.code.replace(/\s+/g,'')===code.replace(/\s+/g,''));
   if(match&&!document.getElementById('c_title').value)
     document.getElementById('c_title').value=match.title;
 }
