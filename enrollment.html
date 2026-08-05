@@ -163,7 +163,7 @@
     </div>
     <div class="chart-container"><h3>Minor Enrollment Over Time</h3><div class="chart-wrapper"><canvas id="minorsChart"></canvas></div></div>
     <table class="program-table" id="minorsDetailTable">
-      <thead><tr><th>Semester</th><th>3D Intermed.</th><th>Art History</th><th>Ceramics</th><th>Graph. Design</th><th>Illustration</th><th>Painting &amp; Dwg</th><th>Photography</th><th>Sci. Illus.</th><th>Sculpture</th><th>Total</th></tr></thead>
+      <thead><tr><th>Semester</th><th>3D Intermed.</th><th>Art</th><th>Art History</th><th>Ceramics</th><th>Graph. Design</th><th>Illustration</th><th>Painting &amp; Dwg</th><th>Photography</th><th>Sci. Illus.</th><th>Sculpture</th><th>Total</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
@@ -176,8 +176,8 @@
 <footer>Visual Arts Department &middot; Enrollment Tracker &middot; Data is stored locally in your browser and never transmitted externally.</footer>
 <script>
 // ── Constants ──────────────────────────────────────────────────────────────
-const MINOR_FIELDS=['minor_3d','minor_arthistory','minor_ceramics','minor_graphicdesign','minor_illustration','minor_paintingdrawing','minor_photography','minor_sciillus','minor_sculpture'];
-const MINOR_LABELS=['3D Intermedia','Art History','Ceramics','Graphic Design','Illustration','Painting & Drawing','Photography','Scientific Illus.','Sculpture'];
+const MINOR_FIELDS=['minor_3d','minor_art','minor_arthistory','minor_ceramics','minor_graphicdesign','minor_illustration','minor_paintingdrawing','minor_photography','minor_sciillus','minor_sculpture'];
+const MINOR_LABELS=['3D Intermedia','Art','Art History','Ceramics','Graphic Design','Illustration','Painting & Drawing','Photography','Scientific Illus.','Sculpture'];
 const PAL=['#8B4A2F','#4A6B7C','#7A5C8B','#5C7A5F','#C4922A','#6B7A4A','#7C4A6B','#4A7C6B','#8B6A2F'];
 
 // ── Pre-loaded data (derived from SQL reports) ─────────────────────────────
@@ -193,10 +193,10 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:2,SO:3,JR:3,SR:40},
      postbacc:{PB:2}
    },
-   minor_3d:null,minor_arthistory:null,minor_ceramics:null,minor_graphicdesign:null,
-   minor_illustration:null,minor_paintingdrawing:null,minor_photography:null,
-   minor_sciillus:null,minor_sculpture:null,
-   notes:'Imported from SQL report.',dataSource:'sql_majors',majorsSrc:'fl21.csv'},
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:0,minor_graphicdesign:1,
+   minor_illustration:0,minor_paintingdrawing:0,minor_photography:1,
+   minor_sciillus:0,minor_sculpture:0,
+   notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'fl21.csv'},
   {semester:'Spring',year:2022,
    mfa:17,ma:1,ba:0,
    bfa_art_education:31,bfa_studioart:42,bfa_graphicdesign:54,
@@ -208,10 +208,10 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:3,SO:1,JR:3,SR:47},
      postbacc:{PB:2}
    },
-   minor_3d:null,minor_arthistory:null,minor_ceramics:null,minor_graphicdesign:null,
-   minor_illustration:null,minor_paintingdrawing:null,minor_photography:null,
-   minor_sciillus:null,minor_sculpture:null,
-   notes:'Imported from SQL report.',dataSource:'sql_majors',majorsSrc:'sp22.csv'},
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:0,minor_graphicdesign:1,
+   minor_illustration:0,minor_paintingdrawing:0,minor_photography:1,
+   minor_sciillus:2,minor_sculpture:0,
+   notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'sp22.csv'},
   {semester:'Fall',year:2022,
    mfa:9,ma:2,ba:0,
    bfa_art_education:42,bfa_studioart:51,bfa_graphicdesign:62,
@@ -223,10 +223,10 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:1,SO:2,JR:2,SR:57},
      postbacc:{PB:2}
    },
-   minor_3d:null,minor_arthistory:null,minor_ceramics:null,minor_graphicdesign:null,
-   minor_illustration:null,minor_paintingdrawing:null,minor_photography:null,
-   minor_sciillus:null,minor_sculpture:null,
-   notes:'Manually counted from SQL report.',dataSource:'sql_majors',majorsSrc:'fl22.csv'},
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:0,minor_graphicdesign:2,
+   minor_illustration:0,minor_paintingdrawing:0,minor_photography:1,
+   minor_sciillus:3,minor_sculpture:0,
+   notes:'Manually counted from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'fl22.csv'},
   {semester:'Spring',year:2023,
    mfa:9,ma:2,ba:0,
    bfa_art_education:39,bfa_studioart:49,bfa_graphicdesign:59,
@@ -238,10 +238,10 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:1,SO:2,JR:2,SR:54},
      postbacc:{PB:2}
    },
-   minor_3d:null,minor_arthistory:null,minor_ceramics:null,minor_graphicdesign:null,
-   minor_illustration:null,minor_paintingdrawing:null,minor_photography:null,
-   minor_sciillus:null,minor_sculpture:null,
-   notes:'Manually counted from SQL report.',dataSource:'sql_majors',majorsSrc:'sp23.csv'},
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:0,minor_graphicdesign:2,
+   minor_illustration:0,minor_paintingdrawing:0,minor_photography:1,
+   minor_sciillus:3,minor_sculpture:0,
+   notes:'Manually counted from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'sp23.csv'},
   {semester:'Fall',year:2023,
    mfa:13,ma:0,ba:0,
    bfa_art_education:41,bfa_studioart:58,bfa_graphicdesign:84,
@@ -253,10 +253,10 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:2,SO:8,JR:8,SR:66},
      postbacc:{PB:3}
    },
-   minor_3d:null,minor_arthistory:null,minor_ceramics:null,minor_graphicdesign:null,
-   minor_illustration:null,minor_paintingdrawing:null,minor_photography:null,
-   minor_sciillus:null,minor_sculpture:null,
-   notes:'Imported from SQL report.',dataSource:'sql_majors',majorsSrc:'fa23.csv'},
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:0,minor_graphicdesign:2,
+   minor_illustration:0,minor_paintingdrawing:1,minor_photography:2,
+   minor_sciillus:5,minor_sculpture:0,
+   notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'fa23.csv'},
   {semester:'Spring',year:2024,
    mfa:12,ma:0,ba:2,
    bfa_art_education:38,bfa_studioart:56,bfa_graphicdesign:79,
@@ -269,7 +269,7 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:1,SO:7,JR:9,SR:62},
      postbacc:{PB:2}
    },
-   minor_3d:0,minor_arthistory:0,minor_ceramics:0,minor_graphicdesign:1,
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:0,minor_graphicdesign:1,
    minor_illustration:0,minor_paintingdrawing:1,minor_photography:3,
    minor_sciillus:6,minor_sculpture:0,
    notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'sp24.csv'},
@@ -285,7 +285,7 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:2,SO:14,JR:10,SR:64},
      postbacc:{PB:3}
    },
-   minor_3d:0,minor_arthistory:0,minor_ceramics:1,minor_graphicdesign:2,
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:1,minor_graphicdesign:2,
    minor_illustration:1,minor_paintingdrawing:4,minor_photography:3,
    minor_sciillus:6,minor_sculpture:0,
    notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'fl24.csv'},
@@ -301,7 +301,7 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:2,SO:13,JR:10,SR:52},
      postbacc:{PB:4}
    },
-   minor_3d:0,minor_arthistory:0,minor_ceramics:1,minor_graphicdesign:3,
+   minor_3d:0,minor_art:1,minor_arthistory:0,minor_ceramics:1,minor_graphicdesign:3,
    minor_illustration:1,minor_paintingdrawing:5,minor_photography:4,
    minor_sciillus:10,minor_sculpture:0,
    notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'Registered Majors(sp25).csv'},
@@ -317,7 +317,7 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:12,SO:17,JR:14,SR:38},
      postbacc:{PB:3}
    },
-   minor_3d:1,minor_arthistory:1,minor_ceramics:2,minor_graphicdesign:5,
+   minor_3d:1,minor_art:3,minor_arthistory:1,minor_ceramics:2,minor_graphicdesign:5,
    minor_illustration:2,minor_paintingdrawing:8,minor_photography:4,
    minor_sciillus:14,minor_sculpture:0,
    notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'Registered Majors(fa25).csv'},
@@ -333,7 +333,7 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:11,SO:17,JR:12,SR:30},
      postbacc:{PB:3}
    },
-   minor_3d:1,minor_arthistory:1,minor_ceramics:2,minor_graphicdesign:5,
+   minor_3d:1,minor_art:3,minor_arthistory:1,minor_ceramics:2,minor_graphicdesign:5,
    minor_illustration:3,minor_paintingdrawing:9,minor_photography:4,
    minor_sciillus:14,minor_sculpture:0,
    notes:'Imported from SQL report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'sp26.csv'},
@@ -349,7 +349,7 @@ const DEFAULT_DATA=[
      bfa_graphicdesign:{FR:15,SO:20,JR:15,SR:18},
      postbacc:{PB:1}
    },
-   minor_3d:1,minor_arthistory:2,minor_ceramics:1,minor_graphicdesign:4,
+   minor_3d:1,minor_art:6,minor_arthistory:2,minor_ceramics:1,minor_graphicdesign:4,
    minor_illustration:3,minor_paintingdrawing:9,minor_photography:5,
    minor_sciillus:15,minor_sculpture:0,
    notes:'Derived from Visual Arts Scheduling Data report. Minor counts from minors SQL report.',dataSource:'sql_majors',majorsSrc:'Visual Arts Scheduling Data(fl26).csv'}
@@ -492,7 +492,7 @@ function renderTables(){
   document.querySelector('#gradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.mfa+'</td><td>'+r.ma+'</td><td><strong>'+r.grad_total+'</strong></td></tr>').join('');
   document.querySelector('#undergradDetailTable tbody').innerHTML=rows.map(r=>'<tr><td>'+lbl(r)+'</td><td>'+r.ba+'</td><td>'+r.bfa_art_education+'</td><td>'+r.bfa_studioart+'</td><td>'+r.bfa_graphicdesign+'</td><td>'+r.bfa_undeclared+'</td><td>'+r.postbacc_total+'</td><td><strong>'+r.undergrad_total+'</strong></td></tr>').join('');
   const minorsRows=rows.filter(r=>r.hasMinors);
-  document.querySelector('#minorsDetailTable tbody').innerHTML=minorsRows.length?minorsRows.map(r=>'<tr><td>'+lbl(r)+'</td>'+MINOR_FIELDS.map(f=>'<td>'+numOrDash(r[f])+'</td>').join('')+'<td><strong>'+numOrDash(r.minors_total)+'</strong></td></tr>').join(''):'<tr><td colspan="11" style="color:#aaa;font-style:italic;padding:14px;">No minors data loaded yet.</td></tr>';
+  document.querySelector('#minorsDetailTable tbody').innerHTML=minorsRows.length?minorsRows.map(r=>'<tr><td>'+lbl(r)+'</td>'+MINOR_FIELDS.map(f=>'<td>'+numOrDash(r[f])+'</td>').join('')+'<td><strong>'+numOrDash(r.minors_total)+'</strong></td></tr>').join(''):'<tr><td colspan="12" style="color:#aaa;font-style:italic;padding:14px;">No minors data loaded yet.</td></tr>';
 }
 function renderClassStanding(){
   const r=allData[standingIdx];
