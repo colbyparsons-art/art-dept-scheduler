@@ -127,7 +127,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;ba
 <div class="tiles" id="tiles"></div>
 
 <h2>1. What the headcount number hides</h2>
-<p class="lede">Undergraduate majors peaked at 206 in Fall 2024 and sit at 166 today. Read alone, that is a 19% decline. Read by class standing, it is something else entirely.</p>
+<p class="lede">Undergraduate majors peaked at 206 in Fall 2024 and sit at 167 today. Read alone, that is a 19% decline. Read by class standing, it is something else entirely.</p>
 
 <figure>
   <figcaption>Class standing composition, all BFA tracks</figcaption>
@@ -138,7 +138,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;ba
 
 <figure>
   <figcaption>Seniors versus lower division &#8212; the crossover</figcaption>
-  <p class="fignote">The two flows that produce the headline number, separated. Seniors (90+ hrs) fell from 109 to 42; freshmen and sophomores rose from 16 to 89. They crossed in Fall 2025.</p>
+  <p class="fignote">The two flows that produce the headline number, separated. Seniors (90+ hrs) fell from 109 to 42; freshmen and sophomores rose from 16 to 90. They crossed in Fall 2025.</p>
   <div id="c-cross"></div>
   <div class="legend" id="l-cross"></div>
 </figure>
@@ -153,8 +153,8 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;ba
 
 <ul class="tight">
   <li><b>A student who declares at 90 hours is 2&#8211;3 semesters from a diploma.</b> Retention risk is minimal, advising load is light, and the department books a major that was recruited, in effect, by someone else.</li>
-  <li><b>A freshman is 8 semesters from a diploma.</b> Every one of those semesters is an opportunity to lose them, and the losses compound. Holding 51 freshmen to graduation requires sustained retention performance the department has no track record in, because it has never had to do it at this scale.</li>
-  <li><b>The work shifts from the top of the major to the bottom.</b> In Fall 2021 you served 16 lower-division majors and 109 seniors. Today it is 89 and 42. That is a 5.5&#215; increase in demand for foundations and intro sequences against a 60% collapse in demand for capstone and advanced studio.</li>
+  <li><b>A freshman is 8 semesters from a diploma.</b> Every one of those semesters is an opportunity to lose them, and the losses compound. Holding 52 freshmen to graduation requires sustained retention performance the department has no track record in, because it has never had to do it at this scale.</li>
+  <li><b>The work shifts from the top of the major to the bottom.</b> In Fall 2021 you served 16 lower-division majors and 109 seniors. Today it is 90 and 42. That is a 5.6&#215; increase in demand for foundations and intro sequences against a 60% collapse in demand for capstone and advanced studio.</li>
 </ul>
 
 <div class="callout crit">
@@ -175,20 +175,72 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;ba
 
 <figure>
   <figcaption>Lower-division share by track &#8212; who is rebuilding</figcaption>
-  <p class="fignote">Freshmen and sophomores as a percentage of each track. A high value means the track is being fed from the bottom; a low value means it is still living on its senior backlog.</p>
+  <p class="fignote">Freshmen and sophomores as a percentage of each track. A high value means the track is being fed from the bottom; a low value means it is still living on its senior backlog. <b>Read this chart with the next one</b> &#8212; share is a ratio, and it rises when seniors leave even if no new student arrives.</p>
   <div id="c-lower"></div>
   <div class="legend" id="l-lower"></div>
 </figure>
+
+<div class="callout warn">
+  <span class="ct">Why the share chart is misleading on its own</span>
+  <p>All three tracks moved almost identically: Art Education +35 points, Graphic Design +34, Studio Art +33. Art Education only looks like the standout because it dipped in Spring 2026 and then jumped, making its final segment the steepest line on the chart.</p>
+  <p>And the rise is only half about recruiting. Holding each side fixed to isolate the effect, Art Education&#8217;s share gained <b>+13 points from lower-division growth</b> and <b>+17 points from seniors leaving</b>. A shrinking denominator does most of the work. Absolute intake is the honest signal.</p>
+</div>
+
+<figure>
+  <figcaption>Freshman headcount by track &#8212; the actual recruiting signal</figcaption>
+  <p class="fignote">Freshmen (0&#8211;29 hrs) per track, unnormalized. All three tracks turned upward in Fall 2025, but at very different magnitudes.</p>
+  <div id="c-fr"></div>
+  <div class="legend" id="l-fr"></div>
+</figure>
+
+<figure style="padding-bottom:18px">
+  <figcaption>What each intake sustains</figcaption>
+  <p class="fignote">Freshman stock &#215; 4 years, at perfect retention &#8212; ceilings, not forecasts. Shown on both available definitions of &#8220;freshman,&#8221; because <b>they disagree, and the disagreement changes which track looks worst</b> (see the data-quality note below).</p>
+  <div class="tblwrap"><table id="tbl-ss"></table></div>
+</figure>
+
+<div class="callout crit">
+  <span class="ct">Read this before using the table above</span>
+  <p>In the Fall 2026 student-level report, <b>33 of 159 BFA records (21%) carry a class standing that disagrees with the student&#8217;s own completed credit hours</b> &#8212; and every single one errs the same way, reporting a level <i>below</i> what the hours indicate. Nine students listed as juniors have 90+ hours; thirteen listed as freshmen have 30+.</p>
+  <p>That one-directional pattern is the signature of a field stamped at an earlier census point and never refreshed, so it misses hours earned in the intervening spring and summer. It is not random error, and it is almost certainly present in every prior term of this dataset too.</p>
+  <p><b>What survives it:</b> the inversion, because a consistent lag shifts every term equally and leaves the trend intact. <b>What does not:</b> any single-term point estimate. On reported standing Graphic Design&#8217;s intake looks like it holds its size; on credit hours it falls 31 short &#8212; a bigger absolute gap than Art Education&#8217;s. I would not act on the steady-state numbers until the registrar confirms how <code>ACAD_CLASS</code> is derived.</p>
+</div>
+
+<h2 id="friction">The completion problem this report exposes</h2>
+<p class="lede">The student-level file carries completed credit hours, which the semester summaries do not. It shows something the aggregates cannot.</p>
+
+<div class="tiles">
+  <div class="tile"><div class="lab">BFA seniors at 120+ hrs</div><div class="val">20 <small>of 42</small></div>
+    <div class="note">Already past a full BFA&#8217;s worth of credit, still enrolled</div></div>
+  <div class="tile"><div class="lab">At 135+ hrs</div><div class="val">9</div>
+    <div class="note">A full degree plus a year or more</div></div>
+  <div class="tile"><div class="lab">Highest single record</div><div class="val">204 <small>hrs</small></div>
+    <div class="note">Graphic Design &middot; roughly 1.7 degrees&#8217; worth</div></div>
+  <div class="tile"><div class="lab">Excess hours carried</div><div class="val">383</div>
+    <div class="note">&#8776; 26 student-semesters beyond a degree</div></div>
+</div>
+
+<p>Median hours for a BFA senior is <b>117</b>. Just under half the senior population has already earned enough credit for the degree and has not graduated. By track: Art Education 6 of 11 seniors past 120 hours, Graphic Design 9 of 18, Studio Art 5 of 13.</p>
+
+<p>Students at 130, 148, 174, 204 hours are not short on credits &#8212; they are short on <i>specific</i> credits. That is the signature of course access, not student effort: a required course offered once every two years, a prerequisite chain that only unlocks in one direction, a capstone with a hard seat cap. Each such student pays for extra semesters and each one sits in your headcount looking like an enrolled major rather than a stalled one.</p>
+
+<div class="callout">
+  <span class="ct">Why this matters more than it looks</span>
+  <p>This is the one finding in the analysis that <b>the scheduler can act on directly</b>. Cross the 20 over-credit students against the rotation: if several are waiting on the same course, that is a fixable scheduling decision worth roughly a semester of tuition each and a measurable bump in your completion rate.</p>
+  <p>It also partly answers the graduation-versus-attrition question. A department with visible completion friction at the top is a department where some portion of that 90-senior decline was students timing out rather than walking. Degrees-conferred still settles it.</p>
+</div>
 
 <h3>Graphic Design &#8212; the engine, and the exposure</h3>
 <p>At 67 majors it is still 40% of the undergraduate department, and its 35 freshmen and sophomores are the largest lower-division block anywhere in the unit. It also fell hardest in raw terms (90&#8211;67) because it had the most seniors to lose (64&#8211;18). The read: healthy intake, backlog exhausted. Its Fall 2026 shape is the closest thing the department has to a normal, self-sustaining program pyramid.</p>
 
 <h3>Studio Art &#8212; sharpest turn toward freshmen</h3>
-<p>48 majors, but <b>21 of them are freshmen</b> &#8212; 44% of the track, the highest freshman concentration in the department. Studio Art has swung hardest into the FTIC model. That is genuinely promising and genuinely fragile: a track that is nearly half first-years is one bad sophomore year from a visible collapse, and it will not show up in headcount for two more years.</p>
+<p>48 majors, but <b>21 of them are freshmen</b> &#8212; 44% of the track, the largest freshman share in the department, and an intake that would sustain a program of 84 if it all held. Studio Art has swung hardest into the FTIC model.</p>
+<p>That is genuinely promising and genuinely fragile. Its shape is the lumpiest in the department &#8212; 21 freshmen behind just 7 sophomores and 7 juniors &#8212; so almost all of its future rides on one cohort. A track that is nearly half first-years is one bad sophomore year from a visible collapse, and it will not show up in headcount for two more years. Where Art Education&#8217;s risk is structural (too small), <b>Studio Art&#8217;s whole future rides on a single cohort</b>: the upside is the largest in the department and so is the variance.</p>
 
-<h3>Art Education &#8212; the one to worry about</h3>
-<p>Down from 46 to 30, with only 11 seniors left and 15 students in the lower division. Art Ed was the most senior-dependent track in the department (90% seniors in 2021) &#8212; meaning it was almost entirely fed by late declarers, and that feed has stopped. Unlike Studio and Graphic Design, its rebuild is not keeping pace with its burn-down.</p>
-<p>Art Ed also usually carries certification pathway obligations and external program-viability thresholds that studio tracks do not, so a small absolute number does more damage here than the same number elsewhere. Of everything in this dataset, this is the item with a clock on it.</p>
+<h3>Art Education &#8212; smallest, and rebuilding toward a smaller floor</h3>
+<p>Down from 46 to 30, with 11 seniors left and 15 students in the lower division. Art Ed was the most senior-dependent track in the department (90% seniors in 2021), so it lost the most when the late-declarer feed stopped.</p>
+<p><b>It is not, however, failing to rebuild.</b> Its 6 freshmen are a track record &#8212; the previous high across all eleven terms was 4 &#8212; and its lower-division share rose as much as any other track. Its Fall 2026 shape (6 / 9 / 4 / 11) is reasonably even for a 30-student program.</p>
+<p>The concern is narrower and more specific than &#8220;it isn&#8217;t recovering.&#8221; <b>Art Ed is rebuilding toward an equilibrium below where it currently sits.</b> Six freshmen a year sustains roughly 24 majors; the track has 30 today. Graphic Design&#8217;s 16 freshmen sustain about 64 against a current 67, and Studio&#8217;s 21 sustain about 84 against a current 48. Art Education is the only track whose intake does not support its present size &#8212; and it is the smallest track, in the category most likely to carry external certification and viability thresholds. That combination, not a failure to recruit, is what puts a clock on it.</p>
 
 <h3>Undeclared BFA &#8212; new, and worth watching</h3>
 <p>Sat at 1&#8211;5 students for five years, then jumped to 14 in Fall 2026 with 9 freshmen. Students are entering the BFA without choosing a track. Nationally, undeclared students are the highest-attrition population in any major, so this is simultaneously the department&#8217;s best conversion opportunity and its most likely leak.</p>
@@ -207,7 +259,7 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;ba
   <li><b>Scientific Illustration went 0&#8211;15</b> and is now the department&#8217;s single largest minor. A curve that clean usually means a specific feeder relationship &#8212; a biology, pre-health, or health-sciences requirement or advising channel. Whatever that channel is, it is worth naming, formalizing, and replicating.</li>
   <li><b>Painting &amp; Drawing (0&#8211;9) and Art (1&#8211;6)</b> show real non-major demand for core studio coursework.</li>
   <li><b>Sculpture has had zero minors in all eleven terms. 3D Intermedia has had one. Ceramics has never exceeded two.</b> The 3D areas are not reaching non-majors at all, while 2D and digital areas are. This is a curricular access question &#8212; usually intro-level 3D courses that are prerequisite-locked, badly timed, materials-fee heavy, or simply not visible in the catalog to a non-major.</li>
-  <li>46 minors are, in section-demand terms, a meaningful fraction of a 166-student major population, and they are invisible in every headline number the university looks at.</li>
+  <li>46 minors are, in section-demand terms, a meaningful fraction of a 167-student major population, and they are invisible in every headline number the university looks at.</li>
 </ul>
 
 <h2>5. Graduate and other programs</h2>
@@ -232,17 +284,17 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;ba
 <div class="pri">
   <div class="item"><div class="n">1</div><div><div class="h">Confirm the seniors graduated</div><div class="b">Degrees-conferred by term, laid against the senior line. This single report determines whether the last two years were a healthy turnover or a retention failure &#8212; and therefore whether the rest of this list is a growth plan or a rescue plan. Do this first.</div></div></div>
 
-  <div class="item"><div class="n">2</div><div><div class="h">Reframe the narrative before someone else frames it for you</div><div class="b">&#8220;206 &#8594; 166&#8221; reads as a failing department to anyone who sees only that. &#8220;We replaced a transfer-fed senior population with the largest freshman class in department history&#8221; is the same data and an entirely different conversation. Lead with the class-standing chart. The window to control this framing closes the moment it lands in a provost&#8217;s dashboard.</div></div></div>
+  <div class="item"><div class="n">2</div><div><div class="h">Reframe the narrative before someone else frames it for you</div><div class="b">&#8220;206 &#8594; 167&#8221; reads as a failing department to anyone who sees only that. &#8220;We replaced a transfer-fed senior population with the largest freshman class in department history&#8221; is the same data and an entirely different conversation. Lead with the class-standing chart. The window to control this framing closes the moment it lands in a provost&#8217;s dashboard.</div></div></div>
 
-  <div class="item"><div class="n">3</div><div><div class="h">Build a sophomore-year retention intervention</div><div class="b">Sophomore-to-junior is the only cohort flow in the series running below 100%, and in a studio department it is the classic break point &#8212; after foundations, before the major sequence commits. With 38 sophomores and 51 freshmen behind them, this transition now governs the department&#8217;s headcount two years out. It is also the cheapest place to gain students, because they are already enrolled.</div></div></div>
+  <div class="item"><div class="n">3</div><div><div class="h">Build a sophomore-year retention intervention</div><div class="b">Sophomore-to-junior is the only cohort flow in the series running below 100%, and in a studio department it is the classic break point &#8212; after foundations, before the major sequence commits. With 38 sophomores and 52 freshmen behind them, this transition now governs the department&#8217;s headcount two years out. It is also the cheapest place to gain students, because they are already enrolled.</div></div></div>
 
-  <div class="item"><div class="n">4</div><div><div class="h">Re-weight the schedule toward the bottom of the major</div><div class="b">Lower-division demand is up 5.5&#215;; senior demand is down 60%. If the SP27&#8211;FA28 rotation still assumes the old shape, you are running under-enrolled advanced sections while capping the intro courses that now decide retention. This is the most direct link between this analysis and the scheduler &#8212; and the misallocation compounds every term it goes uncorrected.</div></div></div>
+  <div class="item"><div class="n">4</div><div><div class="h">Re-weight the schedule toward the bottom of the major</div><div class="b">Lower-division demand is up 5.6&#215;; senior demand is down 60%. If the SP27&#8211;FA28 rotation still assumes the old shape, you are running under-enrolled advanced sections while capping the intro courses that now decide retention. This is the most direct link between this analysis and the scheduler &#8212; and the misallocation compounds every term it goes uncorrected.</div></div></div>
 
-  <div class="item"><div class="n">5</div><div><div class="h">Give Art Education a dedicated plan</div><div class="b">30 students, 11 seniors, and its historical feeder gone. It cannot rebuild on the same passive channel that used to supply it. Given typical certification-program thresholds, it has the shortest runway of anything here.</div></div></div>
+  <div class="item"><div class="n">5</div><div><div class="h">Give Art Education a dedicated plan</div><div class="b">Its intake is rising &#8212; 6 freshmen is a track record &#8212; but it is the one track whose intake does not support its current size on either measure, and it is the smallest, in the category most likely to face an external viability threshold. The risk is its floor, not its trajectory. Note that on the credit-hours basis Graphic Design&#8217;s gap is larger in absolute terms; Art Ed&#8217;s danger is that it is small enough for the gap to matter.</div></div></div>
 
   <div class="item"><div class="n">6</div><div><div class="h">Work the minors deliberately</div><div class="b">Find out what is driving Scientific Illustration and whether it can be replicated. Build a minor-to-major conversion touchpoint. Separately, ask why the 3D areas draw zero non-majors &#8212; that is a fixable access problem, not a demand problem, and it is the clearest untapped capacity in the department.</div></div></div>
 
-  <div class="item"><div class="n">7</div><div><div class="h">Catch the undeclared BFA cohort early</div><div class="b">Thirteen students, eight of them freshmen, no declared track. Highest attrition risk in the building and the easiest group to help. A structured track-selection touchpoint in the first year converts a leak into six years of enrollment.</div></div></div>
+  <div class="item"><div class="n">7</div><div><div class="h">Catch the undeclared BFA cohort early</div><div class="b">Fourteen students, nine of them freshmen, no declared track. Highest attrition risk in the building and the easiest group to help. A structured track-selection touchpoint in the first year converts a leak into six years of enrollment.</div></div></div>
 </div>
 
 <h2>7. What this data cannot tell you</h2>
@@ -456,6 +508,60 @@ function chartLower(){
   legend('#l-lower',series.map(s=>({l:s.l,c:s.c})));
 }
 
+/* ---------- 4b. freshman intake by track ---------- */
+function chartFR(){
+  const mount=$('#c-fr');mount.innerHTML='';
+  const W=920,H=280,M={t:22,r:96,b:34,l:34};
+  const svg=frame(mount,W,H,M);
+  const series=[{l:'Studio Art',c:V('--s2'),k:'bfa_studioart'},
+                {l:'Graphic Design',c:V('--s1'),k:'bfa_graphicdesign'},
+                {l:'Art Education',c:V('--s3'),k:'bfa_art_education'}];
+  const max=25;
+  const iw=W-M.l-M.r,step=iw/(DATA.length-1);
+  const x=i=>M.l+step*i,y=v=>M.t+(H-M.t-M.b)*(1-v/max);
+  yaxis(svg,y,max,M,W,[0,5,10,15,20,25]);
+  const labs=[];
+  series.forEach(s=>{
+    const pts=DATA.map((d,i)=>[x(i),y(d.cls[s.k].FR)]);
+    svg.appendChild(el('path',{d:'M'+pts.map(p=>p.join(' ')).join('L'),fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    pts.forEach(p=>svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:3.6,fill:s.c,stroke:V('--surface-1'),'stroke-width':2})));
+    const lp=pts[pts.length-1];
+    labs.push({x:lp[0]+11,y:lp[1]+4,c:s.c,txt:String(last.cls[s.k].FR)});
+  });
+  labs.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labs.length;i++){if(labs[i].y-labs[i-1].y<14)labs[i].y=labs[i-1].y+14;}
+  labs.forEach(L=>{const t=el('text',{x:L.x,y:L.y,class:'dl',fill:L.c});t.textContent=L.txt;svg.appendChild(t);});
+  DATA.forEach((d,i)=>{
+    const hit=el('rect',{x:x(i)-step/2,y:M.t,width:step,height:H-M.t-M.b,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,`<div class="th">${d.sem} ${d.year}</div>`+
+      series.map(s=>`<div class="tr"><span class="tk"><i class="sw" style="background:${s.c}"></i>${s.l}</span><b>${d.cls[s.k].FR}</b></div>`).join('')));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  xlabels(svg,x,H,M,0);
+  legend('#l-fr',series.map(s=>({l:s.l,c:s.c})));
+}
+
+/* ---------- 4c. steady-state table, both bases ---------- */
+/* HRSFR = freshmen recomputed from TOTAL_HOURS_COMPLETED in the Fa2026 student-level report */
+const HRSFR={bfa_studioart:17,bfa_graphicdesign:9,bfa_art_education:4};
+(function(){
+  const rows=[['Studio Art','bfa_studioart','studio'],['Graphic Design','bfa_graphicdesign','grdes'],['Art Education','bfa_art_education','arted']];
+  const cell=(imp,cur)=>{
+    const d=imp-cur;
+    const col = imp>cur*1.15?'var(--good)':imp<cur*0.9?'var(--crit)':'var(--text-secondary)';
+    return `<td>${imp}</td><td style="color:${col};font-weight:640">${d>0?'+':''}${d}</td>`;
+  };
+  const body=rows.map(([n,k,s])=>{
+    const cur=last[s], a=last.cls[k].FR, b=HRSFR[k];
+    return `<tr><td>${n}</td><td>${cur}</td><td>${a}</td>${cell(a*4,cur)}<td>${b}</td>${cell(b*4,cur)}</tr>`;
+  }).join('');
+  $('#tbl-ss').innerHTML=
+   '<thead><tr><th rowspan="2">Track</th><th rowspan="2">Current size</th>'+
+   '<th colspan="3" style="text-align:center;border-bottom:none">Using reported class standing</th>'+
+   '<th colspan="3" style="text-align:center;border-bottom:none">Using credit hours</th></tr>'+
+   '<tr><th>FR</th><th>Sustains</th><th>Gap</th><th>FR</th><th>Sustains</th><th>Gap</th></tr></thead><tbody>'+body+'</tbody>';
+})();
+
 /* ---------- 5. minors stacked ---------- */
 function chartMinor(){
   const mount=$('#c-minor');mount.innerHTML='';
@@ -532,7 +638,7 @@ function chartGrad(){
     DATA.map(d=>'<tr>'+cols.map(c=>`<td>${c[1](d)}</td>`).join('')+'</tr>').join('')+'</tbody>';
 })();
 
-function drawAll(){chartStand();chartCross();chartTrack();chartLower();chartMinor();chartGrad();}
+function drawAll(){chartStand();chartCross();chartTrack();chartLower();chartFR();chartMinor();chartGrad();}
 drawAll();
 $('#tbtn').addEventListener('click',()=>{
   const cur=document.documentElement.getAttribute('data-theme');
