@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Visual Arts Enrollment &#8212; Trend Analysis</title>
+<style>
+:root{
+  --surface-0:#f7f7f5; --surface-1:#fcfcfb; --border:#e2e1dc;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#83827c;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --o1:#86b6ef; --o2:#5598e7; --o3:#2a78d6; --o4:#184f95;
+  --good:#008300; --warn:#eda100; --crit:#e34948;
+  --grid:#eceae5;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface-0:#121211; --surface-1:#1a1a19; --border:#33332f;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8f8e85;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --o1:#9ec5f4; --o2:#6da7ec; --o3:#3987e5; --o4:#1c5cab;
+    --good:#3fa93f; --warn:#c98500; --crit:#e66767;
+    --grid:#2b2b28;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --surface-0:#121211; --surface-1:#1a1a19; --border:#33332f;
+  --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#8f8e85;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --o1:#9ec5f4; --o2:#6da7ec; --o3:#3987e5; --o4:#1c5cab;
+  --good:#3fa93f; --warn:#c98500; --crit:#e66767;
+  --grid:#2b2b28;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--surface-0);color:var(--text-primary);
+  font:15px/1.62 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 24px 80px}
+header.top{border-bottom:1px solid var(--border);padding-bottom:22px;margin-bottom:30px;display:flex;gap:20px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:27px;line-height:1.24;margin:0 0 6px;letter-spacing:-.018em;font-weight:640}
+.sub{color:var(--text-secondary);font-size:13.5px;margin:0}
+h2{font-size:19px;margin:44px 0 4px;letter-spacing:-.012em;font-weight:640}
+h2:first-of-type{margin-top:34px}
+h3{font-size:15px;margin:26px 0 6px;font-weight:640}
+.lede{color:var(--text-secondary);font-size:14px;margin:0 0 18px;max-width:74ch}
+p{max-width:76ch}
+.themebtn{background:var(--surface-1);border:1px solid var(--border);color:var(--text-secondary);
+  border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.themebtn:hover{color:var(--text-primary)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:22px 0 8px}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:11px;padding:15px 16px 14px}
+.tile .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.055em;color:var(--text-muted);margin-bottom:7px;font-weight:600}
+.tile .val{font-size:31px;line-height:1;font-weight:660;letter-spacing:-.026em;font-variant-numeric:tabular-nums}
+.tile .val small{font-size:15px;font-weight:500;color:var(--text-secondary);letter-spacing:0}
+.tile .note{font-size:12.5px;color:var(--text-secondary);margin-top:8px;line-height:1.45}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px;border:1px solid var(--border)}
+.chip.up{color:var(--good)} .chip.dn{color:var(--crit)} .chip.fl{color:var(--text-secondary)}
+
+figure{margin:0 0 10px;background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:18px 18px 12px}
+figcaption{font-size:14.5px;font-weight:640;margin-bottom:2px}
+.fignote{font-size:12.5px;color:var(--text-secondary);margin:0 0 14px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:12px 0 2px;font-size:12.5px;color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{fill:var(--text-muted);font-size:11px;font-variant-numeric:tabular-nums}
+.dl{font-size:11.5px;font-weight:640;font-variant-numeric:tabular-nums;fill:var(--text-secondary)}
+.tip{position:fixed;pointer-events:none;z-index:60;background:var(--surface-1);border:1px solid var(--border);
+  border-radius:9px;padding:9px 11px;font-size:12.5px;box-shadow:0 6px 22px rgba(0,0,0,.16);opacity:0;transition:opacity .09s;min-width:132px}
+.tip .th{font-weight:660;margin-bottom:6px;font-size:12.5px}
+.tip .tr{display:flex;justify-content:space-between;gap:16px;line-height:1.6}
+.tip .tr b{font-variant-numeric:tabular-nums;font-weight:620}
+.tip .tk{display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary)}
+
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums;margin-top:8px}
+th,td{border-bottom:1px solid var(--border);padding:6px 7px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--text-muted);font-weight:640;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+tbody tr:hover{background:var(--surface-0)}
+details{margin:10px 0 0;background:var(--surface-1);border:1px solid var(--border);border-radius:11px;padding:12px 16px}
+details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--text-secondary)}
+details[open] summary{margin-bottom:8px}
+.tblwrap{overflow-x:auto}
+
+.callout{border:1px solid var(--border);border-left:3px solid var(--s1);background:var(--surface-1);
+  border-radius:9px;padding:14px 17px;margin:20px 0;font-size:14px}
+.callout.warn{border-left-color:var(--warn)}
+.callout.crit{border-left-color:var(--crit)}
+.callout .ct{font-weight:660;margin-bottom:5px;display:block;font-size:13.5px}
+.callout p{margin:0;max-width:none;color:var(--text-secondary)}
+.callout p+p{margin-top:8px}
+ul.tight{padding-left:20px;max-width:76ch} ul.tight li{margin:7px 0;color:var(--text-secondary)}
+ul.tight li b,ul.tight li strong{color:var(--text-primary)}
+.pri{display:grid;gap:11px;margin:18px 0}
+.pri .item{background:var(--surface-1);border:1px solid var(--border);border-radius:11px;padding:14px 17px;display:grid;grid-template-columns:30px 1fr;gap:14px;align-items:start}
+.pri .n{font-size:14px;font-weight:680;color:var(--text-muted);font-variant-numeric:tabular-nums;padding-top:1px}
+.pri .h{font-weight:640;margin-bottom:4px;font-size:14.5px}
+.pri .b{color:var(--text-secondary);font-size:13.5px;line-height:1.58}
+footer{margin-top:52px;padding-top:18px;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--surface-0);padding:1px 5px;border-radius:4px;border:1px solid var(--border)}
+@media (max-width:640px){.wrap{padding:26px 15px 60px}h1{font-size:22px}.tile .val{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>Visual Arts Enrollment &#8212; Trend Analysis</h1>
+    <p class="sub">Texas Woman&#8217;s University &middot; Fall 2021 &#8212; Fall 2026 &middot; 11 terms &middot; source: department SQL enrollment reports</p>
+  </div>
+  <button class="themebtn" id="tbtn">Toggle theme</button>
+</header>
+
+<div class="callout">
+  <span class="ct">The one-sentence version</span>
+  <p>Total undergraduate headcount is down 19% from its Fall 2024 peak, but that number is misleading: the department lost 90 seniors and gained 49 freshmen and sophomores over the same span. This is not a recruiting failure &#8212; it is a <b>pipeline inversion</b>, and it moves the department&#8217;s central risk from recruitment to retention.</p>
+</div>
+
+<div class="tiles" id="tiles"></div>
+
+<h2>1. What the headcount number hides</h2>
+<p class="lede">Undergraduate majors peaked at 206 in Fall 2024 and sit at 166 today. Read alone, that is a 19% decline. Read by class standing, it is something else entirely.</p>
+
+<figure>
+  <figcaption>Class standing composition, all BFA tracks</figcaption>
+  <p class="fignote">Each bar is one term&#8217;s BFA majors split by credit-hour standing (FR 0&#8211;29 &middot; SO 30&#8211;59 &middot; JR 60&#8211;89 &middot; SR 90+). The department has gone from 83% seniors to 27% seniors in five years.</p>
+  <div id="c-stand"></div>
+  <div class="legend" id="l-stand"></div>
+</figure>
+
+<figure>
+  <figcaption>Seniors versus lower division &#8212; the crossover</figcaption>
+  <p class="fignote">The two flows that produce the headline number, separated. Seniors (90+ hrs) fell from 109 to 42; freshmen and sophomores rose from 16 to 89. They crossed in Fall 2025.</p>
+  <div id="c-cross"></div>
+  <div class="legend" id="l-cross"></div>
+</figure>
+
+<div class="callout warn">
+  <span class="ct">What this almost certainly means</span>
+  <p>A department cannot hold 109 seniors against 10 freshmen through internal progression &#8212; there is no cohort flow that produces that shape. The historical majors were overwhelmingly <b>late declarers and high-hour transfers</b>: students who arrived at the major already at or near 90 credit hours. That model supplied a large, cheap, fast-graduating major population.</p>
+  <p>That pipeline has largely stopped, and first-time-in-college recruitment has partly replaced it. The two models have completely different economics &#8212; which is the whole point of what follows.</p>
+</div>
+
+<h2>2. Why this changes what you have to be good at</h2>
+
+<ul class="tight">
+  <li><b>A student who declares at 90 hours is 2&#8211;3 semesters from a diploma.</b> Retention risk is minimal, advising load is light, and the department books a major that was recruited, in effect, by someone else.</li>
+  <li><b>A freshman is 8 semesters from a diploma.</b> Every one of those semesters is an opportunity to lose them, and the losses compound. Holding 51 freshmen to graduation requires sustained retention performance the department has no track record in, because it has never had to do it at this scale.</li>
+  <li><b>The work shifts from the top of the major to the bottom.</b> In Fall 2021 you served 16 lower-division majors and 109 seniors. Today it is 89 and 42. That is a 5.5&#215; increase in demand for foundations and intro sequences against a 60% collapse in demand for capstone and advanced studio.</li>
+</ul>
+
+<div class="callout crit">
+  <span class="ct">The number that decides whether this story is good or bad</span>
+  <p>Ninety seniors left the rolls. If they <b>graduated</b>, this is a healthy generational turnover and the department is mid-transition. If they <b>attrited</b>, it is a slow-motion emergency. <b>The enrollment data cannot tell these apart</b> &#8212; it counts who is enrolled, never why someone stopped being enrolled.</p>
+  <p>Pull degrees-conferred by term for the same period and lay it against the senior line. Nothing else in this analysis matters as much, and it is a single report request.</p>
+</div>
+
+<h2>3. Where the tracks actually stand</h2>
+<p class="lede">The aggregate hides real divergence between programs. Two are rebuilding from the bottom; one is running out of runway.</p>
+
+<figure>
+  <figcaption>BFA majors by track</figcaption>
+  <p class="fignote">Headcount per track, all class standings. Graphic Design remains the largest program by a wide margin even after shedding a third of its peak.</p>
+  <div id="c-track"></div>
+  <div class="legend" id="l-track"></div>
+</figure>
+
+<figure>
+  <figcaption>Lower-division share by track &#8212; who is rebuilding</figcaption>
+  <p class="fignote">Freshmen and sophomores as a percentage of each track. A high value means the track is being fed from the bottom; a low value means it is still living on its senior backlog.</p>
+  <div id="c-lower"></div>
+  <div class="legend" id="l-lower"></div>
+</figure>
+
+<h3>Graphic Design &#8212; the engine, and the exposure</h3>
+<p>At 67 majors it is still 40% of the undergraduate department, and its 35 freshmen and sophomores are the largest lower-division block anywhere in the unit. It also fell hardest in raw terms (90&#8211;67) because it had the most seniors to lose (64&#8211;18). The read: healthy intake, backlog exhausted. Its Fall 2026 shape is the closest thing the department has to a normal, self-sustaining program pyramid.</p>
+
+<h3>Studio Art &#8212; sharpest turn toward freshmen</h3>
+<p>48 majors, but <b>21 of them are freshmen</b> &#8212; 44% of the track, the highest freshman concentration in the department. Studio Art has swung hardest into the FTIC model. That is genuinely promising and genuinely fragile: a track that is nearly half first-years is one bad sophomore year from a visible collapse, and it will not show up in headcount for two more years.</p>
+
+<h3>Art Education &#8212; the one to worry about</h3>
+<p>Down from 46 to 30, with only 11 seniors left and 15 students in the lower division. Art Ed was the most senior-dependent track in the department (90% seniors in 2021) &#8212; meaning it was almost entirely fed by late declarers, and that feed has stopped. Unlike Studio and Graphic Design, its rebuild is not keeping pace with its burn-down.</p>
+<p>Art Ed also usually carries certification pathway obligations and external program-viability thresholds that studio tracks do not, so a small absolute number does more damage here than the same number elsewhere. Of everything in this dataset, this is the item with a clock on it.</p>
+
+<h3>Undeclared BFA &#8212; new, and worth watching</h3>
+<p>Sat at 1&#8211;5 students for five years, then jumped to 13 in Fall 2026 with 8 freshmen. Students are entering the BFA without choosing a track. Nationally, undeclared students are the highest-attrition population in any major, so this is simultaneously the department&#8217;s best conversion opportunity and its most likely leak.</p>
+
+<h2>4. The minors are the quietest good news here</h2>
+<p class="lede">Minor enrollment grew from 3 students to 46 across the same five years &#8212; a 15&#215; increase, rising in every single term, with no reversal anywhere in the series.</p>
+
+<figure>
+  <figcaption>Minor enrollment by area</figcaption>
+  <p class="fignote">Stacked headcount across all ten minors. Scientific Illustration alone accounts for a third of the total.</p>
+  <div id="c-minor"></div>
+  <div class="legend" id="l-minor"></div>
+</figure>
+
+<ul class="tight">
+  <li><b>Scientific Illustration went 0&#8211;15</b> and is now the department&#8217;s single largest minor. A curve that clean usually means a specific feeder relationship &#8212; a biology, pre-health, or health-sciences requirement or advising channel. Whatever that channel is, it is worth naming, formalizing, and replicating.</li>
+  <li><b>Painting &amp; Drawing (0&#8211;9) and Art (1&#8211;6)</b> show real non-major demand for core studio coursework.</li>
+  <li><b>Sculpture has had zero minors in all eleven terms. 3D Intermedia has had one. Ceramics has never exceeded two.</b> The 3D areas are not reaching non-majors at all, while 2D and digital areas are. This is a curricular access question &#8212; usually intro-level 3D courses that are prerequisite-locked, badly timed, materials-fee heavy, or simply not visible in the catalog to a non-major.</li>
+  <li>46 minors are, in section-demand terms, a meaningful fraction of a 166-student major population, and they are invisible in every headline number the university looks at.</li>
+</ul>
+
+<h2>5. Graduate and other programs</h2>
+
+<figure>
+  <figcaption>Graduate, BA, and post-baccalaureate enrollment</figcaption>
+  <p class="fignote">MFA has been stable across the full period. The MA has not exceeded two students since 2022.</p>
+  <div id="c-grad"></div>
+  <div class="legend" id="l-grad"></div>
+</figure>
+
+<ul class="tight">
+  <li><b>MFA is stable</b> &#8212; 14 now, 14 at the start, range 9&#8211;17, no trend. In a period when the undergraduate population turned over completely, that steadiness is a real asset and the strongest thing in the dataset to defend.</li>
+  <li><b>The MA is effectively dormant</b> &#8212; 0&#8211;2 students for five consecutive years, currently 1. It is a program that exists on paper. Either it gets a deliberate relaunch with a defined audience, or it gets consolidated before someone upstream notices it and makes the decision for you.</li>
+  <li><b>The BA grew 0&#8211;12 and has fallen back to 7.</b> Two years is not enough to call a trend, but it is enough to justify asking what drove the run-up and whether it was repeatable.</li>
+  <li><b>Post-baccalaureate is down to 1</b> from a steady 2&#8211;4.</li>
+</ul>
+
+<h2>6. What I would focus on</h2>
+<p class="lede">Ordered by how much the decision depends on getting it right, not by effort.</p>
+
+<div class="pri">
+  <div class="item"><div class="n">1</div><div><div class="h">Confirm the seniors graduated</div><div class="b">Degrees-conferred by term, laid against the senior line. This single report determines whether the last two years were a healthy turnover or a retention failure &#8212; and therefore whether the rest of this list is a growth plan or a rescue plan. Do this first.</div></div></div>
+
+  <div class="item"><div class="n">2</div><div><div class="h">Reframe the narrative before someone else frames it for you</div><div class="b">&#8220;206 &#8594; 166&#8221; reads as a failing department to anyone who sees only that. &#8220;We replaced a transfer-fed senior population with the largest freshman class in department history&#8221; is the same data and an entirely different conversation. Lead with the class-standing chart. The window to control this framing closes the moment it lands in a provost&#8217;s dashboard.</div></div></div>
+
+  <div class="item"><div class="n">3</div><div><div class="h">Build a sophomore-year retention intervention</div><div class="b">Sophomore-to-junior is the only cohort flow in the series running below 100%, and in a studio department it is the classic break point &#8212; after foundations, before the major sequence commits. With 38 sophomores and 51 freshmen behind them, this transition now governs the department&#8217;s headcount two years out. It is also the cheapest place to gain students, because they are already enrolled.</div></div></div>
+
+  <div class="item"><div class="n">4</div><div><div class="h">Re-weight the schedule toward the bottom of the major</div><div class="b">Lower-division demand is up 5.5&#215;; senior demand is down 60%. If the SP27&#8211;FA28 rotation still assumes the old shape, you are running under-enrolled advanced sections while capping the intro courses that now decide retention. This is the most direct link between this analysis and the scheduler &#8212; and the misallocation compounds every term it goes uncorrected.</div></div></div>
+
+  <div class="item"><div class="n">5</div><div><div class="h">Give Art Education a dedicated plan</div><div class="b">30 students, 11 seniors, and its historical feeder gone. It cannot rebuild on the same passive channel that used to supply it. Given typical certification-program thresholds, it has the shortest runway of anything here.</div></div></div>
+
+  <div class="item"><div class="n">6</div><div><div class="h">Work the minors deliberately</div><div class="b">Find out what is driving Scientific Illustration and whether it can be replicated. Build a minor-to-major conversion touchpoint. Separately, ask why the 3D areas draw zero non-majors &#8212; that is a fixable access problem, not a demand problem, and it is the clearest untapped capacity in the department.</div></div></div>
+
+  <div class="item"><div class="n">7</div><div><div class="h">Catch the undeclared BFA cohort early</div><div class="b">Thirteen students, eight of them freshmen, no declared track. Highest attrition risk in the building and the easiest group to help. A structured track-selection touchpoint in the first year converts a leak into six years of enrollment.</div></div></div>
+</div>
+
+<h2>7. What this data cannot tell you</h2>
+<div class="callout">
+  <span class="ct">Read these before acting on anything above</span>
+  <p><b>Fall 2026 is a pre-semester snapshot.</b> The source note says the report was re-run 8/5/2026 and the term has not started. Late registration &#8212; which skews toward first-years &#8212; is not in it. Fall 2026 is a floor, not a final count, and should not be compared like-for-like against completed terms.</p>
+  <p><b>Fall 2026 also changed source reports.</b> Every prior term reads &#8220;Imported from SQL report&#8221;; Fall 2026 reads &#8220;Derived from Visual Arts Scheduling Data report.&#8221; If class standing is computed differently in the new report, some of the Fall 2026 shift is method, not students. The trend clearly predates the source change &#8212; it starts in Fall 2024 &#8212; but I would not trust the magnitude of the final jump until the definition is confirmed identical.</p>
+  <p><b>These are counts, not students.</b> Cohort flows above 100% mean new students entered at that level; they mask whatever losses happened underneath. Real retention rates require student-level term-to-term persistence data, which this dataset does not contain. Every retention statement above is therefore directional, not measured.</p>
+  <p><b>No transfer-versus-FTIC flag.</b> The late-declarer explanation for the historical senior bulge is the only shape that fits the numbers, but it is an inference. One report field would confirm it.</p>
+</div>
+
+<h2>Full data</h2>
+<details>
+  <summary>Show all 11 terms</summary>
+  <div class="tblwrap"><table id="tbl"></table></div>
+</details>
+
+<footer>
+  Built from <code>DEFAULT_DATA</code> in <code>enrollment.html</code>, colbyparsons-art/art-dept-scheduler &middot; 11 terms, Fall 2021 &#8212; Fall 2026 &middot; Undergraduate total includes BFA tracks, BA, and post-baccalaureate.
+</footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA = [{"term":"Fa 21","sem":"Fall","year":2021,"fall":true,"arted":29,"studio":46,"grdes":48,"undec":9,"mfa":14,"ma":1,"ba":0,"pbac":2,"FR":10,"SO":6,"JR":7,"SR":109,"cls":{"bfa_art_education":{"FR":1,"SO":0,"JR":2,"SR":26},"bfa_studioart":{"FR":5,"SO":2,"JR":2,"SR":37},"bfa_graphicdesign":{"FR":2,"SO":3,"JR":3,"SR":40},"bfa_undeclared":{"FR":2,"SO":1,"JR":0,"SR":6}},"ug":134,"gr":15,"minors":3,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":0,"minor_graphicdesign":1,"minor_illustration":0,"minor_paintingdrawing":0,"minor_photography":1,"minor_sciillus":0,"minor_sculpture":0},"src":"fl21.csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Sp 22","sem":"Spring","year":2022,"fall":false,"arted":31,"studio":42,"grdes":54,"undec":3,"mfa":17,"ma":1,"ba":0,"pbac":2,"FR":6,"SO":3,"JR":10,"SR":111,"cls":{"bfa_art_education":{"FR":2,"SO":0,"JR":4,"SR":25},"bfa_studioart":{"FR":1,"SO":2,"JR":2,"SR":37},"bfa_graphicdesign":{"FR":3,"SO":1,"JR":3,"SR":47},"bfa_undeclared":{"FR":0,"SO":0,"JR":1,"SR":2}},"ug":132,"gr":18,"minors":5,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":0,"minor_graphicdesign":1,"minor_illustration":0,"minor_paintingdrawing":0,"minor_photography":1,"minor_sciillus":2,"minor_sculpture":0},"src":"sp22.csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Fa 22","sem":"Fall","year":2022,"fall":true,"arted":42,"studio":51,"grdes":62,"undec":2,"mfa":9,"ma":2,"ba":0,"pbac":2,"FR":7,"SO":7,"JR":12,"SR":131,"cls":{"bfa_art_education":{"FR":2,"SO":2,"JR":6,"SR":32},"bfa_studioart":{"FR":4,"SO":3,"JR":4,"SR":40},"bfa_graphicdesign":{"FR":1,"SO":2,"JR":2,"SR":57},"bfa_undeclared":{"FR":0,"SO":0,"JR":0,"SR":2}},"ug":159,"gr":11,"minors":7,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":0,"minor_graphicdesign":2,"minor_illustration":0,"minor_paintingdrawing":0,"minor_photography":1,"minor_sciillus":3,"minor_sculpture":0},"src":"fl22.csv","note":"Manually counted from SQL report. Minor counts from minors SQL report."},{"term":"Sp 23","sem":"Spring","year":2023,"fall":false,"arted":39,"studio":49,"grdes":59,"undec":5,"mfa":9,"ma":2,"ba":0,"pbac":2,"FR":5,"SO":6,"JR":11,"SR":130,"cls":{"bfa_art_education":{"FR":1,"SO":2,"JR":5,"SR":31},"bfa_studioart":{"FR":3,"SO":2,"JR":3,"SR":41},"bfa_graphicdesign":{"FR":1,"SO":2,"JR":2,"SR":54},"bfa_undeclared":{"FR":0,"SO":0,"JR":1,"SR":4}},"ug":154,"gr":11,"minors":7,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":0,"minor_graphicdesign":2,"minor_illustration":0,"minor_paintingdrawing":0,"minor_photography":1,"minor_sciillus":3,"minor_sculpture":0},"src":"sp23.csv","note":"Manually counted from SQL report. Minor counts from minors SQL report."},{"term":"Fa 23","sem":"Fall","year":2023,"fall":true,"arted":41,"studio":58,"grdes":84,"undec":3,"mfa":13,"ma":0,"ba":0,"pbac":3,"FR":7,"SO":12,"JR":25,"SR":142,"cls":{"bfa_art_education":{"FR":2,"SO":0,"JR":8,"SR":31},"bfa_studioart":{"FR":2,"SO":4,"JR":8,"SR":44},"bfa_graphicdesign":{"FR":2,"SO":8,"JR":8,"SR":66},"bfa_undeclared":{"FR":1,"SO":0,"JR":1,"SR":1}},"ug":189,"gr":13,"minors":11,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":0,"minor_graphicdesign":2,"minor_illustration":0,"minor_paintingdrawing":1,"minor_photography":2,"minor_sciillus":5,"minor_sculpture":0},"src":"fa23.csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Sp 24","sem":"Spring","year":2024,"fall":false,"arted":38,"studio":56,"grdes":79,"undec":1,"mfa":12,"ma":0,"ba":2,"pbac":2,"FR":3,"SO":14,"JR":21,"SR":136,"cls":{"bfa_art_education":{"FR":1,"SO":3,"JR":5,"SR":29},"bfa_studioart":{"FR":1,"SO":4,"JR":7,"SR":44},"bfa_graphicdesign":{"FR":1,"SO":7,"JR":9,"SR":62},"bfa_undeclared":{"FR":0,"SO":0,"JR":0,"SR":1}},"ug":178,"gr":12,"minors":12,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":0,"minor_graphicdesign":1,"minor_illustration":0,"minor_paintingdrawing":1,"minor_photography":3,"minor_sciillus":6,"minor_sculpture":0},"src":"sp24.csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Fa 24","sem":"Fall","year":2024,"fall":true,"arted":46,"studio":59,"grdes":90,"undec":2,"mfa":12,"ma":2,"ba":6,"pbac":3,"FR":10,"SO":30,"JR":25,"SR":132,"cls":{"bfa_art_education":{"FR":4,"SO":3,"JR":7,"SR":32},"bfa_studioart":{"FR":4,"SO":11,"JR":8,"SR":36},"bfa_graphicdesign":{"FR":2,"SO":14,"JR":10,"SR":64},"bfa_undeclared":{"FR":0,"SO":2,"JR":0,"SR":0}},"ug":206,"gr":14,"minors":18,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":1,"minor_graphicdesign":2,"minor_illustration":1,"minor_paintingdrawing":4,"minor_photography":3,"minor_sciillus":6,"minor_sculpture":0},"src":"fl24.csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Sp 25","sem":"Spring","year":2025,"fall":false,"arted":39,"studio":49,"grdes":77,"undec":2,"mfa":10,"ma":1,"ba":7,"pbac":4,"FR":10,"SO":27,"JR":24,"SR":105,"cls":{"bfa_art_education":{"FR":3,"SO":3,"JR":7,"SR":26},"bfa_studioart":{"FR":5,"SO":10,"JR":6,"SR":27,"other":1},"bfa_graphicdesign":{"FR":2,"SO":13,"JR":10,"SR":52},"bfa_undeclared":{"FR":0,"SO":1,"JR":1,"SR":0}},"ug":178,"gr":11,"minors":25,"m":{"minor_3d":0,"minor_art":1,"minor_arthistory":0,"minor_ceramics":1,"minor_graphicdesign":3,"minor_illustration":1,"minor_paintingdrawing":5,"minor_photography":4,"minor_sciillus":10,"minor_sculpture":0},"src":"Registered Majors(sp25).csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Fa 25","sem":"Fall","year":2025,"fall":true,"arted":37,"studio":45,"grdes":81,"undec":4,"mfa":15,"ma":1,"ba":12,"pbac":3,"FR":29,"SO":31,"JR":25,"SR":82,"cls":{"bfa_art_education":{"FR":3,"SO":6,"JR":4,"SR":24},"bfa_studioart":{"FR":12,"SO":8,"JR":5,"SR":20},"bfa_graphicdesign":{"FR":12,"SO":17,"JR":14,"SR":38},"bfa_undeclared":{"FR":2,"SO":0,"JR":2,"SR":0}},"ug":182,"gr":16,"minors":40,"m":{"minor_3d":1,"minor_art":3,"minor_arthistory":1,"minor_ceramics":2,"minor_graphicdesign":5,"minor_illustration":2,"minor_paintingdrawing":8,"minor_photography":4,"minor_sciillus":14,"minor_sculpture":0},"src":"Registered Majors(fa25).csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Sp 26","sem":"Spring","year":2026,"fall":false,"arted":31,"studio":43,"grdes":70,"undec":2,"mfa":14,"ma":1,"ba":12,"pbac":3,"FR":25,"SO":29,"JR":25,"SR":67,"cls":{"bfa_art_education":{"FR":1,"SO":5,"JR":5,"SR":20},"bfa_studioart":{"FR":13,"SO":7,"JR":6,"SR":17},"bfa_graphicdesign":{"FR":11,"SO":17,"JR":12,"SR":30},"bfa_undeclared":{"FR":0,"SO":0,"JR":2,"SR":0}},"ug":161,"gr":15,"minors":42,"m":{"minor_3d":1,"minor_art":3,"minor_arthistory":1,"minor_ceramics":2,"minor_graphicdesign":5,"minor_illustration":3,"minor_paintingdrawing":9,"minor_photography":4,"minor_sciillus":14,"minor_sculpture":0},"src":"sp26.csv","note":"Imported from SQL report. Minor counts from minors SQL report."},{"term":"Fa 26","sem":"Fall","year":2026,"fall":true,"arted":30,"studio":48,"grdes":67,"undec":13,"mfa":14,"ma":1,"ba":7,"pbac":1,"FR":51,"SO":38,"JR":27,"SR":42,"cls":{"bfa_art_education":{"FR":6,"SO":9,"JR":4,"SR":11},"bfa_studioart":{"FR":21,"SO":7,"JR":7,"SR":13},"bfa_graphicdesign":{"FR":16,"SO":19,"JR":14,"SR":18},"bfa_undeclared":{"FR":8,"SO":3,"JR":2,"SR":0}},"ug":166,"gr":15,"minors":46,"m":{"minor_3d":1,"minor_art":6,"minor_arthistory":2,"minor_ceramics":1,"minor_graphicdesign":4,"minor_illustration":3,"minor_paintingdrawing":9,"minor_photography":5,"minor_sciillus":15,"minor_sculpture":0},"src":"Visual Arts Scheduling Data(fl26)redo.csv","note":"Derived from Visual Arts Scheduling Data report (re-run 8/5/2026). Minor counts from minors SQL report."}];
+const $=s=>document.querySelector(s);
+const tip=$('#tip');
+const cs=()=>getComputedStyle(document.documentElement);
+const V=n=>cs().getPropertyValue(n).trim();
+const NS='http://www.w3.org/2000/svg';
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function showTip(ev,html){tip.innerHTML=html;tip.style.opacity=1;
+  const r=tip.getBoundingClientRect();let x=ev.clientX+14,y=ev.clientY-10;
+  if(x+r.width>innerWidth-8)x=ev.clientX-r.width-14;
+  if(y+r.height>innerHeight-8)y=innerHeight-r.height-8;
+  if(y<8)y=8;
+  tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.style.opacity=0;}
+const terms=DATA.map(d=>d.term);
+const last=DATA[DATA.length-1], peak=DATA.find(d=>d.year===2024&&d.fall), first=DATA[0];
+
+/* ---------- stat tiles ---------- */
+(function(){
+  const pct=(a,b)=>((b-a)/a*100);
+  const t=[
+    {lab:'Undergraduate majors',val:last.ug,note:`Peak was ${peak.ug} in Fall 2024`,
+     chip:{t:pct(peak.ug,last.ug).toFixed(0)+'% vs peak',c:'dn'}},
+    {lab:'Freshmen + sophomores',val:last.FR+last.SO,note:`Was ${first.FR+first.SO} in Fall 2021`,
+     chip:{t:'+'+((last.FR+last.SO)-(first.FR+first.SO))+' students',c:'up'}},
+    {lab:'Seniors (90+ hrs)',val:last.SR,note:`Was ${first.SR} in Fall 2021`,
+     chip:{t:pct(first.SR,last.SR).toFixed(0)+'% vs 2021',c:'dn'}},
+    {lab:'Minors',val:last.minors,note:'Risen in every term since 2021',
+     chip:{t:(last.minors/first.minors).toFixed(0)+'× since 2021',c:'up'}},
+  ];
+  $('#tiles').innerHTML=t.map(x=>`<div class="tile"><div class="lab">${x.lab}</div>
+    <div class="val">${x.val}</div>
+    <div class="note"><span class="chip ${x.chip.c}">${x.chip.t}</span><br>${x.note}</div></div>`).join('');
+})();
+
+/* ---------- generic axes ---------- */
+function frame(mount,W,H,M){
+  const svg=el('svg',{viewBox:`0 0 ${W} ${H}`,role:'img'});
+  mount.appendChild(svg);return svg;
+}
+function yaxis(svg,y,max,M,W,ticks){
+  ticks.forEach(v=>{
+    svg.appendChild(el('line',{x1:M.l,x2:W-M.r,y1:y(v),y2:y(v),class:'gl'}));
+    const t=el('text',{x:M.l-9,y:y(v)+4,class:'ax','text-anchor':'end'});t.textContent=v;svg.appendChild(t);
+  });
+}
+function xlabels(svg,x,H,M,bw){
+  terms.forEach((tm,i)=>{
+    const t=el('text',{x:x(i)+(bw||0)/2,y:H-M.b+17,class:'ax','text-anchor':'middle'});
+    t.textContent=tm;svg.appendChild(t);
+  });
+}
+function legend(id,items){
+  $(id).innerHTML=items.map(i=>`<span><i class="sw" style="background:${i.c}"></i>${i.l}</span>`).join('');
+}
+
+/* ---------- 1. class standing stacked ---------- */
+function chartStand(){
+  const mount=$('#c-stand');mount.innerHTML='';
+  const W=920,H=340,M={t:14,r:16,b:34,l:38};
+  const svg=frame(mount,W,H,M);
+  const keys=[{k:'SR',l:'Senior (90+)',c:V('--o4')},{k:'JR',l:'Junior (60–89)',c:V('--o3')},
+              {k:'SO',l:'Sophomore (30–59)',c:V('--o2')},{k:'FR',l:'Freshman (0–29)',c:V('--o1')}];
+  const max=200;
+  const iw=W-M.l-M.r, bw=iw/DATA.length*0.66, step=iw/DATA.length;
+  const x=i=>M.l+step*i+(step-bw)/2;
+  const y=v=>M.t+(H-M.t-M.b)*(1-v/max);
+  yaxis(svg,y,max,M,W,[0,50,100,150,200]);
+  DATA.forEach((d,i)=>{
+    let acc=0;
+    const tot=d.FR+d.SO+d.JR+d.SR;
+    keys.forEach(kk=>{
+      const v=d[kk.k];if(!v)return;
+      const h=(H-M.t-M.b)*v/max;
+      const yy=y(acc+v);
+      svg.appendChild(el('rect',{x:x(i),y:yy,width:bw,height:Math.max(h-2,1),fill:kk.c,rx:2}));
+      acc+=v;
+    });
+    const lb=el('text',{x:x(i)+bw/2,y:y(tot)-7,class:'dl','text-anchor':'middle'});
+    lb.textContent=tot;svg.appendChild(lb);
+    const hit=el('rect',{x:M.l+step*i,y:M.t,width:step,height:H-M.t-M.b,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,`<div class="th">${d.sem} ${d.year}</div>`+
+      keys.map(kk=>`<div class="tr"><span class="tk"><i class="sw" style="background:${kk.c}"></i>${kk.l.split(' ')[0]}</span><b>${d[kk.k]}</b></div>`).join('')+
+      `<div class="tr" style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px"><span class="tk">Total BFA</span><b>${tot}</b></div>`));
+    hit.addEventListener('mouseleave',hideTip);
+    svg.appendChild(hit);
+  });
+  xlabels(svg,x,H,M,bw);
+  legend('#l-stand',keys.slice().reverse().map(k=>({l:k.l,c:k.c})));
+}
+
+/* ---------- 2. crossover lines ---------- */
+function chartCross(){
+  const mount=$('#c-cross');mount.innerHTML='';
+  const W=920,H=310,M={t:22,r:74,b:34,l:38};
+  const svg=frame(mount,W,H,M);
+  const series=[{l:'Seniors (90+ hrs)',c:V('--s2'),f:d=>d.SR},
+                {l:'Freshmen + sophomores',c:V('--s1'),f:d=>d.FR+d.SO}];
+  const max=150;
+  const iw=W-M.l-M.r,step=iw/(DATA.length-1);
+  const x=i=>M.l+step*i, y=v=>M.t+(H-M.t-M.b)*(1-v/max);
+  yaxis(svg,y,max,M,W,[0,30,60,90,120,150]);
+  series.forEach(s=>{
+    const pts=DATA.map((d,i)=>[x(i),y(s.f(d))]);
+    svg.appendChild(el('path',{d:'M'+pts.map(p=>p.join(' ')).join('L'),fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    pts.forEach(p=>{
+      svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:4.2,fill:s.c,stroke:V('--surface-1'),'stroke-width':2}));
+    });
+    const lp=pts[pts.length-1];
+    const t=el('text',{x:lp[0]+11,y:lp[1]+4,class:'dl',fill:s.c});
+    t.textContent=s.f(last);svg.appendChild(t);
+  });
+  DATA.forEach((d,i)=>{
+    const hit=el('rect',{x:x(i)-step/2,y:M.t,width:step,height:H-M.t-M.b,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,`<div class="th">${d.sem} ${d.year}</div>`+
+      series.map(s=>`<div class="tr"><span class="tk"><i class="sw" style="background:${s.c}"></i>${s.l.split(' ')[0]}</span><b>${s.f(d)}</b></div>`).join('')));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  xlabels(svg,x,H,M,0);
+  legend('#l-cross',series.map(s=>({l:s.l,c:s.c})));
+}
+
+/* ---------- 3. track lines ---------- */
+function chartTrack(){
+  const mount=$('#c-track');mount.innerHTML='';
+  const W=920,H=320,M={t:22,r:96,b:34,l:38};
+  const svg=frame(mount,W,H,M);
+  const series=[{l:'Graphic Design',c:V('--s1'),k:'grdes'},{l:'Studio Art',c:V('--s2'),k:'studio'},
+                {l:'Art Education',c:V('--s3'),k:'arted'},{l:'Undeclared BFA',c:V('--s4'),k:'undec'}];
+  const max=100;
+  const iw=W-M.l-M.r,step=iw/(DATA.length-1);
+  const x=i=>M.l+step*i,y=v=>M.t+(H-M.t-M.b)*(1-v/max);
+  yaxis(svg,y,max,M,W,[0,25,50,75,100]);
+  series.forEach(s=>{
+    const pts=DATA.map((d,i)=>[x(i),y(d[s.k])]);
+    svg.appendChild(el('path',{d:'M'+pts.map(p=>p.join(' ')).join('L'),fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    pts.forEach(p=>svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:3.6,fill:s.c,stroke:V('--surface-1'),'stroke-width':2})));
+    const lp=pts[pts.length-1];
+    const t=el('text',{x:lp[0]+11,y:lp[1]+4,class:'dl',fill:s.c});
+    t.textContent=last[s.k];svg.appendChild(t);
+  });
+  DATA.forEach((d,i)=>{
+    const hit=el('rect',{x:x(i)-step/2,y:M.t,width:step,height:H-M.t-M.b,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,`<div class="th">${d.sem} ${d.year}</div>`+
+      series.map(s=>`<div class="tr"><span class="tk"><i class="sw" style="background:${s.c}"></i>${s.l}</span><b>${d[s.k]}</b></div>`).join('')));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  xlabels(svg,x,H,M,0);
+  legend('#l-track',series.map(s=>({l:s.l,c:s.c})));
+}
+
+/* ---------- 4. lower-division share ---------- */
+function chartLower(){
+  const mount=$('#c-lower');mount.innerHTML='';
+  const W=920,H=300,M={t:22,r:96,b:34,l:42};
+  const svg=frame(mount,W,H,M);
+  const series=[{l:'Graphic Design',c:V('--s1'),k:'bfa_graphicdesign'},{l:'Studio Art',c:V('--s2'),k:'bfa_studioart'},
+                {l:'Art Education',c:V('--s3'),k:'bfa_art_education'}];
+  const max=100;
+  const iw=W-M.l-M.r,step=iw/(DATA.length-1);
+  const x=i=>M.l+step*i,y=v=>M.t+(H-M.t-M.b)*(1-v/max);
+  [0,25,50,75,100].forEach(v=>{
+    svg.appendChild(el('line',{x1:M.l,x2:W-M.r,y1:y(v),y2:y(v),class:'gl'}));
+    const t=el('text',{x:M.l-9,y:y(v)+4,class:'ax','text-anchor':'end'});t.textContent=v+'%';svg.appendChild(t);
+  });
+  const share=(d,k)=>{const c=d.cls[k];if(!c)return null;const tot=c.FR+c.SO+c.JR+c.SR;return tot?100*(c.FR+c.SO)/tot:null;};
+  const labs=[];
+  series.forEach(s=>{
+    const pts=DATA.map((d,i)=>[x(i),y(share(d,s.k))]);
+    svg.appendChild(el('path',{d:'M'+pts.map(p=>p.join(' ')).join('L'),fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    pts.forEach(p=>svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:3.6,fill:s.c,stroke:V('--surface-1'),'stroke-width':2})));
+    const lp=pts[pts.length-1];
+    labs.push({x:lp[0]+11,y:lp[1]+4,c:s.c,txt:share(last,s.k).toFixed(0)+'%'});
+  });
+  /* spread colliding endpoint labels */
+  labs.sort((a,b)=>a.y-b.y);
+  for(let i=1;i<labs.length;i++){const gap=labs[i].y-labs[i-1].y;if(gap<14)labs[i].y=labs[i-1].y+14;}
+  labs.forEach(L=>{const t=el('text',{x:L.x,y:L.y,class:'dl',fill:L.c});t.textContent=L.txt;svg.appendChild(t);});
+  DATA.forEach((d,i)=>{
+    const hit=el('rect',{x:x(i)-step/2,y:M.t,width:step,height:H-M.t-M.b,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,`<div class="th">${d.sem} ${d.year}</div>`+
+      series.map(s=>`<div class="tr"><span class="tk"><i class="sw" style="background:${s.c}"></i>${s.l}</span><b>${share(d,s.k).toFixed(0)}%</b></div>`).join('')));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  xlabels(svg,x,H,M,0);
+  legend('#l-lower',series.map(s=>({l:s.l,c:s.c})));
+}
+
+/* ---------- 5. minors stacked ---------- */
+function chartMinor(){
+  const mount=$('#c-minor');mount.innerHTML='';
+  const W=920,H=300,M={t:20,r:16,b:34,l:34};
+  const svg=frame(mount,W,H,M);
+  const keys=[{k:'minor_sciillus',l:'Scientific Illustration',c:V('--s1')},
+              {k:'minor_paintingdrawing',l:'Painting & Drawing',c:V('--s2')},
+              {k:'minor_art',l:'Art',c:V('--s3')},
+              {k:'minor_photography',l:'Photography',c:V('--s4')}];
+  const others=['minor_3d','minor_arthistory','minor_ceramics','minor_graphicdesign','minor_illustration','minor_sculpture'];
+  const OC=V('--text-muted');
+  const max=50;
+  const iw=W-M.l-M.r,bw=iw/DATA.length*0.66,step=iw/DATA.length;
+  const x=i=>M.l+step*i+(step-bw)/2, y=v=>M.t+(H-M.t-M.b)*(1-v/max);
+  yaxis(svg,y,max,M,W,[0,10,20,30,40,50]);
+  DATA.forEach((d,i)=>{
+    let acc=0;
+    const oth=others.reduce((a,k)=>a+d.m[k],0);
+    const segs=keys.map(kk=>({v:d.m[kk.k],c:kk.c,l:kk.l})).concat([{v:oth,c:OC,l:'Other minors'}]);
+    segs.forEach(s=>{
+      if(!s.v)return;
+      const h=(H-M.t-M.b)*s.v/max;
+      svg.appendChild(el('rect',{x:x(i),y:y(acc+s.v),width:bw,height:Math.max(h-2,1),fill:s.c,rx:2}));
+      acc+=s.v;
+    });
+    const lb=el('text',{x:x(i)+bw/2,y:y(d.minors)-7,class:'dl','text-anchor':'middle'});
+    lb.textContent=d.minors;svg.appendChild(lb);
+    const hit=el('rect',{x:M.l+step*i,y:M.t,width:step,height:H-M.t-M.b,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,`<div class="th">${d.sem} ${d.year}</div>`+
+      segs.filter(s=>s.v).map(s=>`<div class="tr"><span class="tk"><i class="sw" style="background:${s.c}"></i>${s.l}</span><b>${s.v}</b></div>`).join('')+
+      `<div class="tr" style="border-top:1px solid var(--border);margin-top:5px;padding-top:5px"><span class="tk">Total</span><b>${d.minors}</b></div>`));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  xlabels(svg,x,H,M,bw);
+  legend('#l-minor',keys.map(k=>({l:k.l,c:k.c})).concat([{l:'Other minors',c:OC}]));
+}
+
+/* ---------- 6. grad ---------- */
+function chartGrad(){
+  const mount=$('#c-grad');mount.innerHTML='';
+  const W=920,H=280,M={t:22,r:80,b:34,l:34};
+  const svg=frame(mount,W,H,M);
+  const series=[{l:'MFA',c:V('--s1'),k:'mfa'},{l:'BA in Art',c:V('--s2'),k:'ba'},
+                {l:'MA',c:V('--s3'),k:'ma'},{l:'Post-bacc',c:V('--s4'),k:'pbac'}];
+  const max=20;
+  const iw=W-M.l-M.r,step=iw/(DATA.length-1);
+  const x=i=>M.l+step*i,y=v=>M.t+(H-M.t-M.b)*(1-v/max);
+  yaxis(svg,y,max,M,W,[0,5,10,15,20]);
+  series.forEach(s=>{
+    const pts=DATA.map((d,i)=>[x(i),y(d[s.k])]);
+    svg.appendChild(el('path',{d:'M'+pts.map(p=>p.join(' ')).join('L'),fill:'none',stroke:s.c,'stroke-width':2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    pts.forEach(p=>svg.appendChild(el('circle',{cx:p[0],cy:p[1],r:3.6,fill:s.c,stroke:V('--surface-1'),'stroke-width':2})));
+    const lp=pts[pts.length-1];
+    const t=el('text',{x:lp[0]+11,y:lp[1]+4,class:'dl',fill:s.c});
+    t.textContent=last[s.k];svg.appendChild(t);
+  });
+  DATA.forEach((d,i)=>{
+    const hit=el('rect',{x:x(i)-step/2,y:M.t,width:step,height:H-M.t-M.b,fill:'transparent'});
+    hit.addEventListener('mousemove',e=>showTip(e,`<div class="th">${d.sem} ${d.year}</div>`+
+      series.map(s=>`<div class="tr"><span class="tk"><i class="sw" style="background:${s.c}"></i>${s.l}</span><b>${d[s.k]}</b></div>`).join('')));
+    hit.addEventListener('mouseleave',hideTip);svg.appendChild(hit);
+  });
+  xlabels(svg,x,H,M,0);
+  legend('#l-grad',series.map(s=>({l:s.l,c:s.c})));
+}
+
+/* ---------- table ---------- */
+(function(){
+  const cols=[['Term',d=>d.sem+' '+d.year],['GrDes',d=>d.grdes],['Studio',d=>d.studio],['ArtEd',d=>d.arted],
+    ['Undec',d=>d.undec],['BA',d=>d.ba],['PBac',d=>d.pbac],['UG total',d=>d.ug],
+    ['FR',d=>d.FR],['SO',d=>d.SO],['JR',d=>d.JR],['SR',d=>d.SR],
+    ['MFA',d=>d.mfa],['MA',d=>d.ma],['Minors',d=>d.minors]];
+  $('#tbl').innerHTML='<thead><tr>'+cols.map(c=>`<th>${c[0]}</th>`).join('')+'</tr></thead><tbody>'+
+    DATA.map(d=>'<tr>'+cols.map(c=>`<td>${c[1](d)}</td>`).join('')+'</tr>').join('')+'</tbody>';
+})();
+
+function drawAll(){chartStand();chartCross();chartTrack();chartLower();chartMinor();chartGrad();}
+drawAll();
+$('#tbtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const sysDark=matchMedia('(prefers-color-scheme:dark)').matches;
+  const next=cur?(cur==='dark'?'light':'dark'):(sysDark?'light':'dark');
+  document.documentElement.setAttribute('data-theme',next);
+  drawAll();
+});
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{if(!document.documentElement.getAttribute('data-theme'))drawAll();});
+addEventListener('scroll',hideTip,{passive:true});
+</script>
+</body>
+</html>
