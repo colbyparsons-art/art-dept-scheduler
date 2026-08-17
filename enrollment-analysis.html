@@ -103,6 +103,10 @@ ul.tight li b,ul.tight li strong{color:var(--text-primary)}
 .pri .n{font-size:14px;font-weight:680;color:var(--text-muted);font-variant-numeric:tabular-nums;padding-top:1px}
 .pri .h{font-weight:640;margin-bottom:4px;font-size:14.5px}
 .pri .b{color:var(--text-secondary);font-size:13.5px;line-height:1.58}
+nav.topnav{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+nav.topnav a{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text-secondary);text-decoration:none;background:var(--surface-1);border:1px solid var(--border);border-radius:7px;padding:5px 12px;transition:color .1s}
+nav.topnav a:hover{color:var(--text-primary)}
+nav.topnav a::before{content:'←';font-size:11px}
 footer{margin-top:52px;padding-top:18px;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;background:var(--surface-0);padding:1px 5px;border-radius:4px;border:1px solid var(--border)}
 @media (max-width:640px){.wrap{padding:26px 15px 60px}h1{font-size:22px}.tile .val{font-size:26px}}
@@ -110,6 +114,11 @@ code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;ba
 </head>
 <body>
 <div class="wrap">
+
+<nav class="topnav">
+  <a href="index.html">Faculty View</a>
+  <a href="dept-portal.html">Admin Portal</a>
+</nav>
 
 <header class="top">
   <div>
