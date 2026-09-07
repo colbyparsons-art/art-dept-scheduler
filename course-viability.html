@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Course Viability Overview &#8212; Visual Arts</title>
+<style>
+:root{
+  --surface-0:#f7f7f5;--surface-1:#fcfcfb;--border:#e2e1dc;
+  --text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#83827c;
+  --ug:#2a78d6;--ae:#c4612a;--gr:#1baf7a;
+  --warn:#eda100;--crit:#e34948;--good:#1baf7a;
+  --grid:#eceae5;
+  color-scheme:light;
+}
+@media(prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface-0:#121211;--surface-1:#1a1a19;--border:#33332f;
+    --text-primary:#ffffff;--text-secondary:#c3c2b7;--text-muted:#8f8e85;
+    --ug:#3987e5;--ae:#d95926;--gr:#199e70;
+    --warn:#c98500;--crit:#e66767;--good:#199e70;
+    --grid:#2b2b28;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --surface-0:#121211;--surface-1:#1a1a19;--border:#33332f;
+  --text-primary:#ffffff;--text-secondary:#c3c2b7;--text-muted:#8f8e85;
+  --ug:#3987e5;--ae:#d95926;--gr:#199e70;
+  --warn:#c98500;--crit:#e66767;--good:#199e70;
+  --grid:#2b2b28;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);
+  font:15px/1.62 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+.wrap{max-width:1000px;margin:0 auto;padding:40px 24px 80px}
+header.top{border-bottom:1px solid var(--border);padding-bottom:22px;margin-bottom:30px;
+  display:flex;gap:20px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:27px;line-height:1.24;margin:0 0 6px;letter-spacing:-.018em;font-weight:640}
+.sub{color:var(--text-secondary);font-size:13.5px;margin:0}
+h2{font-size:19px;margin:44px 0 4px;letter-spacing:-.012em;font-weight:640}
+h2:first-of-type{margin-top:34px}
+.lede{color:var(--text-secondary);font-size:14px;margin:0 0 18px;max-width:74ch}
+p{max-width:76ch}
+.themebtn{background:var(--surface-1);border:1px solid var(--border);color:var(--text-secondary);
+  border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.themebtn:hover{color:var(--text-primary)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:22px 0 8px}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:11px;padding:15px 16px 14px}
+.tile .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.055em;color:var(--text-muted);margin-bottom:7px;font-weight:600}
+.tile .val{font-size:31px;line-height:1;font-weight:660;letter-spacing:-.026em;font-variant-numeric:tabular-nums}
+.tile .val small{font-size:15px;font-weight:500;color:var(--text-secondary);letter-spacing:0}
+.tile .note{font-size:12.5px;color:var(--text-secondary);margin-top:8px;line-height:1.45}
+.tile.hi{border-color:var(--good);background:color-mix(in srgb,var(--good) 6%,var(--surface-1))}
+.tile.hi .val{color:var(--good)}
+figure{margin:0 0 10px;background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:18px 18px 12px}
+figcaption{font-size:14.5px;font-weight:640;margin-bottom:2px}
+.fignote{font-size:12.5px;color:var(--text-secondary);margin:0 0 14px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:12px 0 2px;font-size:12.5px;color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{fill:var(--text-muted);font-size:11px;font-variant-numeric:tabular-nums}
+.dl{font-size:11.5px;font-weight:640;font-variant-numeric:tabular-nums;fill:var(--text-secondary)}
+.callout{border:1px solid var(--border);border-left:3px solid var(--good);background:var(--surface-1);
+  border-radius:9px;padding:14px 17px;margin:20px 0;font-size:14px}
+.callout.note{border-left-color:var(--ug)}
+.callout .ct{font-weight:660;margin-bottom:5px;display:block;font-size:13.5px}
+.callout p{margin:0;max-width:none;color:var(--text-secondary)}
+.callout p+p{margin-top:8px}
+ul.tight{padding-left:20px;max-width:76ch}ul.tight li{margin:8px 0;color:var(--text-secondary)}
+ul.tight li b,ul.tight li strong{color:var(--text-primary)}
+nav.topnav{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+nav.topnav a{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text-secondary);
+  text-decoration:none;background:var(--surface-1);border:1px solid var(--border);border-radius:7px;
+  padding:5px 12px;transition:color .1s}
+nav.topnav a:hover{color:var(--text-primary)}
+nav.topnav a::before{content:'&#8592;';font-size:11px}
+footer{margin-top:52px;padding-top:18px;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px}
+@media(max-width:640px){.wrap{padding:26px 15px 60px}h1{font-size:22px}.tile .val{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="topnav">
+  <a href="index.html">Faculty View</a>
+</nav>
+
+<header class="top">
+  <div>
+    <h1>Course Viability Overview</h1>
+    <p class="sub">Visual Arts Department &middot; Texas Woman&#8217;s University &middot; Fall 2021 &#8212; Fall 2026 &middot; 11 terms</p>
+  </div>
+  <button class="themebtn" id="tbtn">Toggle theme</button>
+</header>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="callout">
+  <span class="ct">The large majority of sections are healthy</span>
+  <p>Out of 499 active instructional sections analyzed across 11 terms, 457 met or exceeded the applicable enrollment minimum &#8212; a 91.6% overall viability rate. This report documents the 42 sections that fell short, where they fell, and how close they were to the threshold.</p>
+</div>
+
+<h2>Shortfalls per Term</h2>
+<p class="lede">Number of sections below minimum enrollment per term. Spring 2023 had none.</p>
+<figure>
+  <figcaption>Sections below minimum, by term</figcaption>
+  <div class="fignote">Undergrad minimum: 12 students &nbsp;&middot;&nbsp; Graduate minimum: 8 students &nbsp;&middot;&nbsp; Bracketed, structural, and exempt sections handled separately</div>
+  <div id="chart1"></div>
+</figure>
+
+<h2>How Far Below Threshold?</h2>
+<p class="lede">The majority of shortfalls were close &#8212; within one or two students of the minimum. Two-thirds of all cases were within 2 students, making them the most actionable through targeted advising or light scheduling adjustments.</p>
+<figure>
+  <figcaption>Shortfall size distribution (all 42 cases)</figcaption>
+  <div class="fignote">How many students below the applicable minimum each section was</div>
+  <div id="chart2"></div>
+  <div class="legend" style="margin-top:14px">
+    <span><span class="sw" style="background:var(--ug)"></span>1&#8211;2 students below (28 cases, 67%)</span>
+    <span><span class="sw" style="background:var(--ae)"></span>3&#8211;6 students below (14 cases, 33%)</span>
+  </div>
+</figure>
+
+<h2>Bracketed Pairs</h2>
+<p class="lede">When sections are bracketed, enrollment from both sections combines toward a shared minimum of 12. The department used bracketing in 9 of 11 terms, creating 19 UG/Grad pairs. Fourteen of those pairs &#8212; 74% &#8212; met or exceeded the combined threshold.</p>
+<figure>
+  <figcaption>Combined enrollment, all 19 bracketed pairs</figcaption>
+  <div class="fignote">Green bars met the combined minimum of 12; orange bars fell short. Sorted by combined enrollment.</div>
+  <div id="chart3"></div>
+</figure>
+
+<h2>Areas for Continued Attention</h2>
+<p class="lede">Three patterns emerged consistently across the data. None represent crises, but all are worth monitoring in scheduling and advising.</p>
+<ul class="tight">
+  <li><strong>Art Education track.</strong> Art Education courses (Elementary, Secondary, Principles, Approaches) appeared below the 12-student minimum 6 times across 5 terms. This reflects the broader BFA Art Education enrollment trend documented in the enrollment analysis and is something advising and recruitment efforts can address directly.</li>
+  <li><strong>ART 3393 &#8212; Prof Practices Visual Arts.</strong> This required upper-division course fell below 12 in three separate terms (Sp 22, Fa 22, Fa 26). Because it serves multiple tracks, enrollment depends on how many students are at the right stage across programs simultaneously. It is worth flagging during pre-registration advising each term.</li>
+  <li><strong>Fall semesters carry more risk than spring.</strong> Seven of the eleven terms had shortfalls only in fall. Fall 2021, 2022, and 2025 each had seven sections below minimum. Fall planning &#8212; particularly for upper-division electives with smaller pools &#8212; should account for this pattern.</li>
+</ul>
+
+<div class="callout note" style="margin-top:28px">
+  <span class="ct">Full detail available in the administrative report</span>
+  <p>The <a href="small-class-report.html" style="color:var(--ug)">Small Class Report</a> includes a complete term-by-term course list, bracketed pair breakdown, and methodology. The figures on this page are drawn from the same source data.</p>
+</div>
+
+<footer>Visual Arts Department &middot; Data never leaves your browser &middot; Source: Course Schedule 2021&#8211;2026, generated 9/4/2026</footer>
+</div>
+
+<script>
+const TERMS=['Fa 21','Sp 22','Fa 22','Sp 23','Fa 23','Sp 24','Fa 24','Sp 25','Fa 25','Sp 26','Fa 26'];
+const TERM_COUNTS=[7,2,7,0,3,2,2,4,7,3,5];
+// gap=students below minimum, count=number of sections with that gap
+const GAPS=[{g:1,n:17},{g:2,n:11},{g:3,n:5},{g:4,n:4},{g:5,n:3},{g:6,n:2}];
+// All 19 bracketed pairs, sorted desc by combined
+const PAIRS=[
+  {t:'Sp 22',label:'Sculpture Themes',combined:19,met:true},
+  {t:'Sp 23',label:'Intermediate + Advanced Painting',combined:19,met:true},
+  {t:'Sp 25',label:'Printmaking',combined:19,met:true},
+  {t:'Sp 26',label:'The Forgotten Nine',combined:18,met:true},
+  {t:'Sp 22',label:'Motion Graphics',combined:16,met:true},
+  {t:'Fa 23',label:'Sculpture Installation',combined:16,met:true},
+  {t:'Fa 23',label:'Book Arts',combined:16,met:true},
+  {t:'Sp 23',label:'Digital Illustration',combined:16,met:true},
+  {t:'Fa 26',label:'Sculpture & Environment',combined:16,met:true},
+  {t:'Sp 26',label:'Creative Photography',combined:16,met:true},
+  {t:'Sp 23',label:'Fiber Possibilities',combined:15,met:true},
+  {t:'Fa 24',label:'Projected Light',combined:15,met:true},
+  {t:'Fa 24',label:'Interdisciplinary Ceramics',combined:15,met:true},
+  {t:'Fa 26',label:'Painting',combined:15,met:true},
+  {t:'Sp 24',label:'Photography',combined:11,met:false},
+  {t:'Sp 22',label:'Intermediate + Advanced Painting',combined:11,met:false},
+  {t:'Sp 25',label:'Sculpture',combined:11,met:false},
+  {t:'Sp 26',label:'Interdisciplinary Ceramics',combined:8,met:false},
+  {t:'Fa 25',label:'Painting: Public Discourse',combined:9,met:false},
+].sort((a,b)=>b.combined-a.combined);
+
+// Theme
+let th=null;try{th=localStorage.getItem('cv-theme')}catch(e){}
+if(th)document.documentElement.setAttribute('data-theme',th);
+document.getElementById('tbtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem('cv-theme',next)}catch(e){}
+});
+
+// Tiles
+document.getElementById('tiles').innerHTML=`
+  <div class="tile hi">
+    <div class="lab">Overall viability rate</div>
+    <div class="val">91.6<small>%</small></div>
+    <div class="note">457 of 499 sections met minimum enrollment across 11 terms</div>
+  </div>
+  <div class="tile">
+    <div class="lab">Shortfalls within 2 students</div>
+    <div class="val">28 <small>of 42</small></div>
+    <div class="note">Two-thirds of cases were just 1&#8211;2 students below threshold</div>
+  </div>
+  <div class="tile">
+    <div class="lab">Bracketing success rate</div>
+    <div class="val">74<small>%</small></div>
+    <div class="note">14 of 19 bracketed pairs met the combined minimum of 12</div>
+  </div>
+  <div class="tile hi">
+    <div class="lab">Clean terms</div>
+    <div class="val">1</div>
+    <div class="note">Spring 2023 had zero sections below enrollment minimum</div>
+  </div>
+`;
+
+// Chart 1 — per-term bar chart
+function buildChart1(){
+  const W=700,H=200,PL=28,PR=10,PT=12,PB=34;
+  const cW=W-PL-PR,cH=H-PT-PB;
+  const n=TERMS.length;
+  const gap=cW/n;
+  const bw=Math.floor(gap)-8;
+  const maxV=8;
+  const gridLines=[0,2,4,6,8];
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  gridLines.forEach(v=>{
+    const y=PT+cH-v*(cH/maxV);
+    svg+=`<line class="gl" x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}"/>`;
+    if(v>0)svg+=`<text class="ax" x="${PL-4}" y="${y+4}" text-anchor="end">${v}</text>`;
+  });
+  TERM_COUNTS.forEach((count,i)=>{
+    const x=PL+i*gap+(gap-bw)/2;
+    const isZero=count===0;
+    const color=isZero?'var(--good)':'var(--ae)';
+    const bh=isZero?0:count*(cH/maxV);
+    const barY=PT+cH-bh;
+    if(!isZero)svg+=`<rect x="${x}" y="${barY}" width="${bw}" height="${bh}" fill="${color}" rx="2"/>`;
+    const labelY=isZero?PT+cH-6:barY-4;
+    const labelColor=isZero?'var(--good)':'var(--text-secondary)';
+    svg+=`<text style="font-size:11.5px;font-weight:640;fill:${labelColor};font-variant-numeric:tabular-nums" x="${x+bw/2}" y="${labelY}" text-anchor="middle">${isZero?'✓':count}</text>`;
+    svg+=`<text class="ax" x="${x+bw/2}" y="${H-PB+15}" text-anchor="middle">${TERMS[i]}</text>`;
+  });
+  svg+=`</svg>`;
+  document.getElementById('chart1').innerHTML=svg;
+}
+
+// Chart 2 — gap distribution horizontal bars
+function buildChart2(){
+  const W=600,ROW=36,PL=130,PR=80,PT=10,PB=10;
+  const H=PT+GAPS.length*ROW+PB;
+  const maxN=17;
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  const barW=W-PL-PR;
+  GAPS.forEach(({g,n},i)=>{
+    const y=PT+i*ROW;
+    const close=g<=2;
+    const color=close?'var(--ug)':'var(--ae)';
+    const bw=Math.round(n/maxN*(barW));
+    svg+=`<text class="ax" x="${PL-8}" y="${y+ROW/2+4}" text-anchor="end" style="font-size:12px;font-weight:500;fill:var(--text-secondary)">${g} student${g>1?'s':''} short</text>`;
+    svg+=`<rect x="${PL}" y="${y+6}" width="${bw}" height="${ROW-14}" fill="${color}" rx="3"/>`;
+    svg+=`<text style="font-size:12.5px;font-weight:640;fill:var(--text-primary);font-variant-numeric:tabular-nums" x="${PL+bw+8}" y="${y+ROW/2+4}">${n} section${n>1?'s':''}</text>`;
+  });
+  svg+=`</svg>`;
+  document.getElementById('chart2').innerHTML=svg;
+}
+
+// Chart 3 — bracketed pairs horizontal bars
+function buildChart3(){
+  const W=700,ROW=28,PL=200,PR=50,PT=10,PB=10;
+  const H=PT+PAIRS.length*ROW+PB;
+  const maxC=22;
+  const threshold=12;
+  const thX=PL+Math.round(threshold/maxC*(W-PL-PR));
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  // threshold line
+  svg+=`<line x1="${thX}" x2="${thX}" y1="${PT}" y2="${H-PB}" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+  svg+=`<text style="font-size:10.5px;fill:var(--warn);font-weight:600" x="${thX+4}" y="${PT+10}">min 12</text>`;
+  PAIRS.forEach(({t,label,combined,met},i)=>{
+    const y=PT+i*ROW;
+    const bw=Math.round(combined/maxC*(W-PL-PR));
+    const color=met?'var(--good)':'var(--ae)';
+    svg+=`<text class="ax" x="${PL-8}" y="${y+ROW/2+4}" text-anchor="end" style="font-size:11px;fill:var(--text-secondary)">${t} &mdash; ${label}</text>`;
+    svg+=`<rect x="${PL}" y="${y+5}" width="${bw}" height="${ROW-11}" fill="${color}" rx="2" opacity="${met?0.75:0.9}"/>`;
+    svg+=`<text style="font-size:11.5px;font-weight:640;fill:var(--text-primary);font-variant-numeric:tabular-nums" x="${PL+bw+6}" y="${y+ROW/2+4}">${combined}</text>`;
+  });
+  svg+=`</svg>`;
+  document.getElementById('chart3').innerHTML=svg;
+}
+
+buildChart1();buildChart2();buildChart3();
+</script>
+</body>
+</html>
