@@ -138,7 +138,7 @@ tr[hidden]{display:none}
 
 <div class="callout warn">
   <span class="ct">Fall 2021, Fall 2022, and Fall 2025 each had seven courses below minimum</span>
-  <p>Four of the seven in Fall 2022 were graduate-level courses that the existing SMALL_CLASS system flag did not identify, because the flag applies a single 12-student threshold regardless of level. The corrected standard uses 8 students for graduate courses (levels 500&#8211;600).</p>
+  <p>Four of the seven in Fall 2022 were graduate-level courses that the existing SMALL_CLASS system flag did not identify, because the flag applies a single 12-student threshold regardless of level. The corrected standard uses 8 students for 5000-level graduate courses.</p>
 </div>
 
 <h2>Bracketed Course Pairs Below Combined Threshold</h2>
@@ -254,7 +254,7 @@ tr[hidden]{display:none}
     <li><strong>De-duplication</strong>: Each section appears multiple times in the source data (once per meeting component). Enrollment was counted once per unique term&#160;+&#160;section combination.</li>
     <li><strong>Active sections only</strong>: Cancelled and pending sections (SEC_STATUS &#8800; A) were excluded.</li>
     <li><strong>Exempt categories</strong>: Independent Study courses and cross-listed courses (cross-listed with another department) were excluded from the analysis. No cross-department enrollment data is available in this report, so cross-listed courses cannot be evaluated fairly on enrollment alone.</li>
-    <li><strong>Thresholds</strong>: Undergraduate courses (course levels 100&#8211;400): minimum 12 enrolled. Graduate courses (levels 500&#8211;600): minimum 8 enrolled.</li>
+    <li><strong>Thresholds</strong>: Undergraduate courses (1000&#8211;4000 level): minimum 12 enrolled. Graduate courses (5000 level): minimum 8 enrolled.</li>
     <li><strong>Bracketed courses</strong>: When two sections are bracketed, their individual enrollments are combined. A mixed UG/Grad pair is evaluated against the higher threshold (12). A UG+UG pair is evaluated against 12. A Grad+Grad pair would use 8, though none appeared in this dataset.</li>
     <li><strong>499 unique active non-exempt sections</strong> were analyzed in total.</li>
   </ul>
@@ -321,6 +321,8 @@ const BKTS=[
 
 const CAT_LABEL={ug:'Undergrad',ae:'Art Education',gr:'Graduate'};
 const CAT_COLOR={ug:'var(--ug)',ae:'var(--ae)',gr:'var(--gr)'};
+// CRSLEVEL codes are 100/200/.../600; display as 1000/2000/.../5000 (no 6000-level courses exist)
+function dispLvl(lvl){return Math.min(lvl,500)*10;}
 
 // Tiles
 function buildTiles(){
@@ -393,10 +395,10 @@ function buildBktTable(){
     return`<tr>
       <td>${r.t}</td>
       <td style="text-align:left">${r.a}</td>
-      <td>${r.aLvl}</td>
+      <td>${dispLvl(r.aLvl)}</td>
       <td>${r.aEnr}</td>
       <td style="text-align:left">${r.b}</td>
-      <td>${r.bLvl}</td>
+      <td>${dispLvl(r.bLvl)}</td>
       <td>${r.bEnr}</td>
       <td><strong>${r.combined}</strong></td>
       <td>${r.min}</td>
@@ -427,7 +429,7 @@ function buildSCTable(filter){
         <td>${r.t}${r.t==='Fa 26'?'<span style="color:var(--text-muted);font-size:10px;margin-left:4px">*</span>':''}</td>
         <td style="text-align:left;font-family:ui-monospace,monospace">${r.crs}</td>
         <td style="text-align:left">${r.title}</td>
-        <td>${r.lvl}</td>
+        <td>${dispLvl(r.lvl)}</td>
         <td>${r.enr}</td>
         <td>${r.min}</td>
         <td style="color:var(--crit)">${gap}</td>
