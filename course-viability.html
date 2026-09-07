@@ -133,6 +133,27 @@ footer{margin-top:52px;padding-top:18px;border-top:1px solid var(--border);color
   <div id="chart3"></div>
 </figure>
 
+<h2>Enrollment Context</h2>
+<p class="lede">Small-section counts do not closely track overall major enrollment. Undergrad shortfalls peaked in Fall 2025 (7 sections) when total majors were 182 — not the program&#8217;s lowest point. Spring 2023, the cleanest term, had only 154 majors. Graduate shortfalls were concentrated in Fall 2021 and Fall 2022 when enrollment was moderate, and they largely disappeared even as grad enrollment remained similar in later terms.</p>
+<figure>
+  <figcaption>Undergrad: small sections vs. total UG majors per term</figcaption>
+  <div class="fignote">Bars (left axis) = UG sections below 12-student minimum &nbsp;&middot;&nbsp; Line (right axis) = total undergraduate majors that term</div>
+  <div id="chart4"></div>
+  <div class="legend" style="margin-top:12px">
+    <span><span class="sw" style="background:var(--ug)"></span>Small UG sections (left axis)</span>
+    <span><span class="sw" style="background:var(--warn);border-radius:50%"></span>Total UG majors (right axis)</span>
+  </div>
+</figure>
+<figure style="margin-top:16px">
+  <figcaption>Graduate: small sections vs. total grad majors per term</figcaption>
+  <div class="fignote">Bars (left axis) = grad sections below 8-student minimum &nbsp;&middot;&nbsp; Line (right axis) = total graduate majors that term</div>
+  <div id="chart5"></div>
+  <div class="legend" style="margin-top:12px">
+    <span><span class="sw" style="background:var(--gr)"></span>Small grad sections (left axis)</span>
+    <span><span class="sw" style="background:var(--ae);border-radius:50%"></span>Total grad majors (right axis)</span>
+  </div>
+</figure>
+
 <h2>Areas for Continued Attention</h2>
 <p class="lede">Three patterns emerged consistently across the data. None represent crises, but all are worth monitoring in scheduling and advising.</p>
 <ul class="tight">
@@ -176,6 +197,11 @@ const PAIRS=[
   {t:'Sp 26',label:'Interdisciplinary Ceramics',combined:8,met:false},
   {t:'Fa 25',label:'Painting: Public Discourse',combined:9,met:false},
 ].sort((a,b)=>b.combined-a.combined);
+
+const UG_ENR=[134,132,159,154,189,178,206,178,182,161,171];
+const SMALL_UG=[6,2,3,0,3,2,2,4,7,3,4];
+const GR_ENR=[15,18,11,11,13,12,14,11,16,15,14];
+const SMALL_GR=[2,0,4,0,0,0,0,0,0,0,1];
 
 // Theme
 let th=null;try{th=localStorage.getItem('cv-theme')}catch(e){}
@@ -285,7 +311,71 @@ function buildChart3(){
   document.getElementById('chart3').innerHTML=svg;
 }
 
-buildChart1();buildChart2();buildChart3();
+// Chart 4 — UG combo: bars=small sections, line=UG enrollment
+function buildChart4(){
+  const W=700,H=220,PL=32,PR=52,PT=16,PB=36;
+  const cW=W-PL-PR,cH=H-PT-PB;
+  const gap=cW/TERMS.length;
+  const bw=Math.floor(gap)-8;
+  const maxSec=8,yrMin=120,yrMax=215;
+  const scaleL=v=>cH-v*(cH/maxSec);
+  const scaleR=v=>cH-(v-yrMin)/(yrMax-yrMin)*cH;
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  [0,2,4,6,8].forEach(v=>{
+    const y=PT+scaleL(v);
+    svg+=`<line class="gl" x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}"/>`;
+    svg+=`<text class="ax" x="${PL-4}" y="${y+4}" text-anchor="end">${v}</text>`;
+  });
+  [130,150,170,190,210].forEach(v=>{
+    const y=PT+scaleR(v);
+    svg+=`<text class="ax" x="${W-PR+6}" y="${y+4}" style="font-size:10px;opacity:.7">${v}</text>`;
+  });
+  SMALL_UG.forEach((count,i)=>{
+    const x=PL+i*gap+(gap-bw)/2;
+    const bh=count*cH/maxSec;
+    if(count>0)svg+=`<rect x="${x}" y="${PT+cH-bh}" width="${bw}" height="${bh}" fill="var(--ug)" rx="2" opacity=".55"/>`;
+    svg+=`<text class="ax" x="${x+bw/2}" y="${H-PB+16}" text-anchor="middle">${TERMS[i]}</text>`;
+  });
+  const pts=UG_ENR.map((v,i)=>[PL+i*gap+gap/2, PT+scaleR(v)]);
+  svg+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--warn)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  pts.forEach(([cx,cy])=>svg+=`<circle cx="${cx}" cy="${cy}" r="3" fill="var(--warn)"/>`);
+  svg+=`</svg>`;
+  document.getElementById('chart4').innerHTML=svg;
+}
+
+// Chart 5 — Grad combo: bars=small sections, line=grad enrollment
+function buildChart5(){
+  const W=700,H=220,PL=32,PR=52,PT=16,PB=36;
+  const cW=W-PL-PR,cH=H-PT-PB;
+  const gap=cW/TERMS.length;
+  const bw=Math.floor(gap)-8;
+  const maxSec=5,yrMin=8,yrMax=21;
+  const scaleL=v=>cH-v*(cH/maxSec);
+  const scaleR=v=>cH-(v-yrMin)/(yrMax-yrMin)*cH;
+  let svg=`<svg viewBox="0 0 ${W} ${H}">`;
+  [0,1,2,3,4,5].forEach(v=>{
+    const y=PT+scaleL(v);
+    svg+=`<line class="gl" x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}"/>`;
+    svg+=`<text class="ax" x="${PL-4}" y="${y+4}" text-anchor="end">${v}</text>`;
+  });
+  [10,12,14,16,18,20].forEach(v=>{
+    const y=PT+scaleR(v);
+    svg+=`<text class="ax" x="${W-PR+6}" y="${y+4}" style="font-size:10px;opacity:.7">${v}</text>`;
+  });
+  SMALL_GR.forEach((count,i)=>{
+    const x=PL+i*gap+(gap-bw)/2;
+    const bh=count*cH/maxSec;
+    if(count>0)svg+=`<rect x="${x}" y="${PT+cH-bh}" width="${bw}" height="${bh}" fill="var(--gr)" rx="2" opacity=".65"/>`;
+    svg+=`<text class="ax" x="${x+bw/2}" y="${H-PB+16}" text-anchor="middle">${TERMS[i]}</text>`;
+  });
+  const pts=GR_ENR.map((v,i)=>[PL+i*gap+gap/2, PT+scaleR(v)]);
+  svg+=`<polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="var(--ae)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  pts.forEach(([cx,cy])=>svg+=`<circle cx="${cx}" cy="${cy}" r="3" fill="var(--ae)"/>`);
+  svg+=`</svg>`;
+  document.getElementById('chart5').innerHTML=svg;
+}
+
+buildChart1();buildChart2();buildChart3();buildChart4();buildChart5();
 </script>
 </body>
 </html>
