@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Small Class Report &#8212; Visual Arts</title>
+<style>
+:root{
+  --surface-0:#f7f7f5;--surface-1:#fcfcfb;--border:#e2e1dc;
+  --text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#83827c;
+  --ug:#2a78d6;--ae:#c4612a;--gr:#1baf7a;
+  --warn:#eda100;--crit:#e34948;--good:#008300;
+  --grid:#eceae5;
+  color-scheme:light;
+}
+@media(prefers-color-scheme:dark){
+  :root:where(:not([data-theme="light"])){
+    --surface-0:#121211;--surface-1:#1a1a19;--border:#33332f;
+    --text-primary:#ffffff;--text-secondary:#c3c2b7;--text-muted:#8f8e85;
+    --ug:#3987e5;--ae:#d95926;--gr:#199e70;
+    --warn:#c98500;--crit:#e66767;--good:#3fa93f;
+    --grid:#2b2b28;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --surface-0:#121211;--surface-1:#1a1a19;--border:#33332f;
+  --text-primary:#ffffff;--text-secondary:#c3c2b7;--text-muted:#8f8e85;
+  --ug:#3987e5;--ae:#d95926;--gr:#199e70;
+  --warn:#c98500;--crit:#e66767;--good:#3fa93f;
+  --grid:#2b2b28;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface-0);color:var(--text-primary);
+  font:15px/1.62 ui-sans-serif,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;}
+.wrap{max-width:1080px;margin:0 auto;padding:40px 24px 80px}
+header.top{border-bottom:1px solid var(--border);padding-bottom:22px;margin-bottom:30px;
+  display:flex;gap:20px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:27px;line-height:1.24;margin:0 0 6px;letter-spacing:-.018em;font-weight:640}
+.sub{color:var(--text-secondary);font-size:13.5px;margin:0}
+h2{font-size:19px;margin:44px 0 4px;letter-spacing:-.012em;font-weight:640}
+h2:first-of-type{margin-top:34px}
+h3{font-size:15px;margin:26px 0 6px;font-weight:640}
+.lede{color:var(--text-secondary);font-size:14px;margin:0 0 18px;max-width:74ch}
+p{max-width:76ch}
+.themebtn{background:var(--surface-1);border:1px solid var(--border);color:var(--text-secondary);
+  border-radius:7px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.themebtn:hover{color:var(--text-primary)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:22px 0 8px}
+.tile{background:var(--surface-1);border:1px solid var(--border);border-radius:11px;padding:15px 16px 14px}
+.tile .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.055em;color:var(--text-muted);margin-bottom:7px;font-weight:600}
+.tile .val{font-size:31px;line-height:1;font-weight:660;letter-spacing:-.026em;font-variant-numeric:tabular-nums}
+.tile .val small{font-size:15px;font-weight:500;color:var(--text-secondary);letter-spacing:0}
+.tile .note{font-size:12.5px;color:var(--text-secondary);margin-top:8px;line-height:1.45}
+figure{margin:0 0 10px;background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:18px 18px 12px}
+figcaption{font-size:14.5px;font-weight:640;margin-bottom:2px}
+.fignote{font-size:12.5px;color:var(--text-secondary);margin:0 0 14px;line-height:1.5}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:12px 0 2px;font-size:12.5px;color:var(--text-secondary)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:11px;height:11px;border-radius:3px;display:inline-block;flex:none}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gl{stroke:var(--grid);stroke-width:1}
+.ax{fill:var(--text-muted);font-size:11px;font-variant-numeric:tabular-nums}
+.dl{font-size:11.5px;font-weight:640;font-variant-numeric:tabular-nums;fill:var(--text-secondary)}
+table{border-collapse:collapse;width:100%;font-size:12.5px;font-variant-numeric:tabular-nums;margin-top:8px}
+th,td{border-bottom:1px solid var(--border);padding:6px 8px;text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--text-muted);font-weight:640;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+tbody tr:hover{background:var(--surface-0)}
+.tblwrap{overflow-x:auto}
+.callout{border:1px solid var(--border);border-left:3px solid var(--ug);background:var(--surface-1);
+  border-radius:9px;padding:14px 17px;margin:20px 0;font-size:14px}
+.callout.warn{border-left-color:var(--warn)}
+.callout.ae{border-left-color:var(--ae)}
+.callout .ct{font-weight:660;margin-bottom:5px;display:block;font-size:13.5px}
+.callout p{margin:0;max-width:none;color:var(--text-secondary)}
+.callout p+p{margin-top:8px}
+ul.tight{padding-left:20px;max-width:76ch}ul.tight li{margin:7px 0;color:var(--text-secondary)}
+ul.tight li b,ul.tight li strong{color:var(--text-primary)}
+.pri{display:grid;gap:11px;margin:18px 0}
+.pri .item{background:var(--surface-1);border:1px solid var(--border);border-radius:11px;padding:14px 17px;display:grid;grid-template-columns:30px 1fr;gap:14px;align-items:start}
+.pri .n{font-size:14px;font-weight:680;color:var(--text-muted);font-variant-numeric:tabular-nums;padding-top:1px}
+.pri .h{font-weight:640;margin-bottom:4px;font-size:14.5px}
+.pri .b{color:var(--text-secondary);font-size:13.5px;line-height:1.58}
+details{margin:10px 0 0;background:var(--surface-1);border:1px solid var(--border);border-radius:11px;padding:12px 16px}
+details summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--text-secondary)}
+details[open] summary{margin-bottom:8px}
+nav.topnav{display:flex;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+nav.topnav a{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text-secondary);
+  text-decoration:none;background:var(--surface-1);border:1px solid var(--border);border-radius:7px;
+  padding:5px 12px;transition:color .1s}
+nav.topnav a:hover{color:var(--text-primary)}
+nav.topnav a::before{content:'&#8592;';font-size:11px}
+footer{margin-top:52px;padding-top:18px;border-top:1px solid var(--border);color:var(--text-muted);font-size:12px}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:1px 6px;border-radius:20px;vertical-align:middle}
+.badge.ug{background:color-mix(in srgb,var(--ug) 14%,transparent);color:var(--ug)}
+.badge.ae{background:color-mix(in srgb,var(--ae) 14%,transparent);color:var(--ae)}
+.badge.gr{background:color-mix(in srgb,var(--gr) 14%,transparent);color:var(--gr)}
+.badge.miss{background:color-mix(in srgb,var(--warn) 14%,transparent);color:var(--warn)}
+.sel{background:var(--surface-1);border:1px solid var(--border);border-radius:7px;padding:5px 10px;
+  font-size:12.5px;font-family:inherit;color:var(--text-primary);cursor:pointer}
+.sel:focus{outline:none;border-color:var(--ug)}
+tr[hidden]{display:none}
+@media(max-width:640px){.wrap{padding:26px 15px 60px}h1{font-size:22px}.tile .val{font-size:26px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav class="topnav">
+  <a href="index.html">Faculty View</a>
+</nav>
+
+<header class="top">
+  <div>
+    <h1>Small Class Report</h1>
+    <p class="sub">Visual Arts Department &middot; Texas Woman&#8217;s University &middot; Fall 2021 &#8212; Fall 2026 &middot; 11 terms</p>
+  </div>
+  <button class="themebtn" id="tbtn">Toggle theme</button>
+</header>
+
+<div class="tiles" id="tiles"></div>
+
+<h2>Sections Below Minimum &#8212; by Term</h2>
+<p class="lede">Count of regular instructional courses running below the applicable enrollment minimum (undergrad &#8804; 11, grad &#8804; 7). Structural sections &#8212; internships, capstones, thesis exhibitions &#8212; are excluded from this chart and tallied separately below.</p>
+<figure>
+  <figcaption>Scheduling concerns per term</figcaption>
+  <div class="fignote">Stacked by category: undergrad studio/lecture, Art Education track, graduate coursework</div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--ug)"></span>Undergrad studio/lecture</span>
+    <span><span class="sw" style="background:var(--ae)"></span>Art Education track</span>
+    <span><span class="sw" style="background:var(--gr)"></span>Graduate</span>
+  </div>
+  <div id="chart"></div>
+</figure>
+
+<div class="callout warn">
+  <span class="ct">Fall 2022 was the worst single term &#8212; eight courses below minimum</span>
+  <p>Five of those eight were graduate-level courses that the existing SMALL_CLASS system flag did not identify, because the flag applies a single 12-student threshold regardless of level. The corrected standard uses 8 students for graduate courses (levels 500&#8211;600).</p>
+</div>
+
+<h2>Bracketed Course Pairs Below Combined Threshold</h2>
+<p class="lede">When two sections are bracketed, their enrollments are combined. Mixed UG/Grad pairs must meet the higher threshold of 12. Five bracketed pairs failed to meet this standard across the five terms where bracketing was used.</p>
+<div class="tblwrap">
+<table id="bkt-table">
+  <thead>
+    <tr>
+      <th>Term</th>
+      <th style="text-align:left">UG Section</th>
+      <th>Lvl</th>
+      <th>Enr</th>
+      <th style="text-align:left">Grad / Partner Section</th>
+      <th>Lvl</th>
+      <th>Enr</th>
+      <th>Combined</th>
+      <th>Min</th>
+      <th>Gap</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+  <tbody id="bkt-body"></tbody>
+</table>
+</div>
+
+<h2>All Scheduling Concerns by Term</h2>
+<p class="lede">Regular instructional courses below the applicable minimum. Use the filter to focus on a specific term. <span class="badge miss">sys missed</span> indicates courses the existing SMALL_CLASS flag did not identify (grad courses below 8, or bracketed sections whose individual enrollment looks small but combined total meets threshold).</p>
+<div style="margin-bottom:10px">
+  <label for="term-sel" style="font-size:13px;color:var(--text-secondary);margin-right:8px">Filter by term:</label>
+  <select class="sel" id="term-sel">
+    <option value="all">All terms</option>
+  </select>
+</div>
+<div class="tblwrap">
+<table id="sc-table">
+  <thead>
+    <tr>
+      <th>Term</th>
+      <th style="text-align:left">Course</th>
+      <th style="text-align:left">Title</th>
+      <th>Level</th>
+      <th>Enrolled</th>
+      <th>Min</th>
+      <th>Gap</th>
+      <th>Category</th>
+      <th>System Flag</th>
+    </tr>
+  </thead>
+  <tbody id="sc-body"></tbody>
+</table>
+</div>
+
+<h2>Recurring Patterns</h2>
+<div class="pri" id="patterns">
+  <div class="item">
+    <div class="n">1</div>
+    <div>
+      <div class="h">Art Education track shows chronic underenrollment</div>
+      <div class="b">Art Education courses appeared below the 12-student minimum in 6 instances across 5 different terms: Elementary Art Education (ART 3223) in Fa 21, Fa 24, and Fa 25; Approaches to Art Education (ART 4133) in Fa 25; Principles of Art Education (ART 3013) and Secondary Art Education (ART 3233) in Fa 26 and Sp 26. This mirrors the declining BFA Art Education enrollment trend visible in the enrollment data and warrants a scheduling or recruitment review for that track specifically.</div>
+    </div>
+  </div>
+  <div class="item">
+    <div class="n">2</div>
+    <div>
+      <div class="h">Graduate courses systematically undercounted by the current system flag</div>
+      <div class="b">The existing SMALL_CLASS flag applies a single threshold (apparently 12) to all sections, missing grad courses that fall between 8 and 11 students. In Fall 2022 alone, four graduate courses &#8212; Critique Seminar, Interdisciplinary Ceramics, Art &amp; Decoloniality, and Creative Photography &#8212; each enrolled 7 students (one below the grad minimum of 8) without being flagged. Additional grad misses occurred in Fa 21 (History of Art, enr 6) and Fa 26 (Art &amp; Social Movements, enr 6). The corrected standard distinguishes the two tiers.</div>
+    </div>
+  </div>
+  <div class="item">
+    <div class="n">3</div>
+    <div>
+      <div class="h">ART 3393 (Prof Practices Visual Arts) is the most frequently underenrolled named course</div>
+      <div class="b">This required professional development course appeared below the 12-student minimum in three separate terms: Spring 2022 (enr 11), Fall 2022 (enr 10), and Fall 2026 (enr 6). In Fall 2026 the enrollment gap of 6 is the largest single-course shortfall in the dataset for an upper-division course. Because professional practices is a required course for multiple tracks, persistent low enrollment may reflect cohort-size issues rather than scheduling problems.</div>
+    </div>
+  </div>
+  <div class="item">
+    <div class="n">4</div>
+    <div>
+      <div class="h">Bracketing addresses viability but does not guarantee it</div>
+      <div class="b">The department used bracketing in 9 of 11 terms, creating 14 UG/Grad pairs total. Nine of those pairs met or exceeded the combined threshold of 12. Five did not &#8212; including Fall 2025&#8217;s ST: Paint: Public Discourse pair, which had a combined enrollment of just 9, and Spring 2026&#8217;s Interdisciplinary Ceramics pair (combined 8, driven almost entirely by the grad side with only 1 undergrad enrolling). When the UG side fails to generate demand, bracketing cannot compensate.</div>
+    </div>
+  </div>
+  <div class="item">
+    <div class="n">5</div>
+    <div>
+      <div class="h">Fall 2025 shows an across-the-board enrollment thinning</div>
+      <div class="b">Seven scheduling concerns appeared in a single fall term &#8212; spread across five different course numbers, three area tracks (photography, sculpture, ceramics, art education, graphic design). None of these courses were structurally small; they simply drew fewer students than the previous pattern suggests they should. Given the enrollment context (overall UG headcount held roughly stable), this may reflect scheduling collisions, student distribution across too many elective offerings, or the early stages of the graduation cliff documented in the enrollment analysis.</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout ae" style="margin-top:30px">
+  <span class="ct">A note on Fall 2026 data</span>
+  <p>The Fall 2026 figures in this report are drawn from a snapshot taken September 4, 2026 &#8212; approximately two weeks into the semester. Enrollment in active courses typically changes through the add/drop period. Numbers for Fa 26 should be treated as preliminary; some courses currently below threshold may resolve, and some may not.</p>
+</div>
+
+<details>
+  <summary>Structural small sections (not scheduling concerns &#8212; click to expand)</summary>
+  <p class="lede" style="margin-top:12px">The following course types run below the minimum by design and are excluded from the main analysis. They are listed here for completeness.</p>
+  <ul class="tight">
+    <li><strong>ART 4993 &#8212; BFA Exhibition</strong>: Enrolls the graduating BFA cohort each term. Ranged 9&#8211;11 students across five terms (Fa 21, Fa 22, Sp 23, Fa 23, Fa 25) &#8212; always below the UG minimum of 12. This reflects graduating class size, not a scheduling problem.</li>
+    <li><strong>ART 4953 / 5953 &#8212; Internship</strong>: Multiple sections per term (up to six), each supervising 0&#8211;7 individual students in outside placements. By nature individually small. Appeared in every term.</li>
+    <li><strong>ART 5883 / 5963 &#8212; MFA Thesis Exhibition</strong>: 1&#8211;2 students per section, reflecting students at the thesis completion stage. Always below the grad minimum of 8. Multiple sections per term in later years as the MFA cohort expanded.</li>
+    <li><strong>ART 5993 &#8212; Thesis</strong>: Individual thesis supervision, 1 student per section. Appeared in Sp 23 and Sp 26.</li>
+    <li><strong>ART 5843 &#8212; Art-Based Research Writing (individual mentorship sections)</strong>: In recent terms (Fa 23 onward) this course appears as multiple sections of 0&#8211;3 students, used for individual dissertation-stage writing supervision. The earlier single-section format (ART 5943, Fa 21 enr&nbsp;10) was a cohort class and is included in the main analysis above.</li>
+  </ul>
+</details>
+
+<details style="margin-top:10px">
+  <summary>Methodology</summary>
+  <ul class="tight" style="margin-top:10px">
+    <li><strong>Source</strong>: Visual Arts Course Schedule 2021&#8211;2026 (CLEANED), generated 9/4/2026. Contains 11 academic terms, Fa 2021 through Fa 2026.</li>
+    <li><strong>De-duplication</strong>: Each section appears multiple times in the source data (once per meeting component). Enrollment was counted once per unique term&#160;+&#160;section combination.</li>
+    <li><strong>Active sections only</strong>: Cancelled and pending sections (SEC_STATUS &#8800; A) were excluded.</li>
+    <li><strong>Exempt categories</strong>: Independent Study courses and cross-listed courses (cross-listed with another department) were excluded from the analysis. No cross-department enrollment data is available in this report, so cross-listed courses cannot be evaluated fairly on enrollment alone.</li>
+    <li><strong>Thresholds</strong>: Undergraduate courses (course levels 100&#8211;400): minimum 12 enrolled. Graduate courses (levels 500&#8211;600): minimum 8 enrolled.</li>
+    <li><strong>Bracketed courses</strong>: When two sections are bracketed, their individual enrollments are combined. A mixed UG/Grad pair is evaluated against the higher threshold (12). A UG+UG pair is evaluated against 12. A Grad+Grad pair would use 8, though none appeared in this dataset.</li>
+    <li><strong>499 unique active non-exempt sections</strong> were analyzed in total.</li>
+  </ul>
+</details>
+
+<footer>Visual Arts Department &middot; Data never leaves your browser &middot; Source: Course Schedule 2021&#8211;2026, generated 9/4/2026</footer>
+</div>
+
+<script>
+const TERMS=['Fa 21','Sp 22','Fa 22','Sp 23','Fa 23','Sp 24','Fa 24','Sp 25','Fa 25','Sp 26','Fa 26'];
+
+const SC=[
+  {t:'Fa 21',crs:'ART 1213 01',title:'3D Foundations',lvl:100,enr:10,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 21',crs:'ART 2223 01',title:'Digital Art Foundations',lvl:200,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 21',crs:'ART 2653 01',title:'Black & White Photography',lvl:200,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 21',crs:'ART 3223 01',title:'Elementary Art Education',lvl:300,enr:7,min:12,sys:'Y',cat:'ae'},
+  {t:'Fa 21',crs:'ART 4363 01',title:'Community Focus Design Studio',lvl:400,enr:9,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 21',crs:'ART 5503 01',title:'History of Art',lvl:600,enr:6,min:8,sys:'N',cat:'gr'},
+  {t:'Fa 21',crs:'ART 5903 02',title:'ST: Hybrid Forms',lvl:600,enr:3,min:8,sys:'Y',cat:'gr'},
+  {t:'Sp 22',crs:'ART 3393 01',title:'Prof Practices Visual Arts',lvl:300,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Sp 22',crs:'ART 4653 01',title:'Color Photography',lvl:400,enr:10,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 22',crs:'ART 3393 01',title:'Prof Practices Visual Arts',lvl:300,enr:10,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 22',crs:'ART 4013 01',title:'Sculpture & the Environment',lvl:400,enr:8,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 22',crs:'ART 4683 01',title:'Photographic Possibilities',lvl:400,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 22',crs:'ART 5003 01',title:'Critique Seminar',lvl:500,enr:7,min:8,sys:'N',cat:'gr'},
+  {t:'Fa 22',crs:'ART 5123 01',title:'Interdisciplinary Ceramics',lvl:500,enr:7,min:8,sys:'N',cat:'gr'},
+  {t:'Fa 22',crs:'ART 5543 01',title:'Art & Decoloniality',lvl:500,enr:7,min:8,sys:'N',cat:'gr'},
+  {t:'Fa 22',crs:'ART 5653 01',title:'Creative Photography',lvl:600,enr:7,min:8,sys:'N',cat:'gr'},
+  {t:'Fa 22',crs:'ART 5943 01',title:'Art-Based Research Writing',lvl:500,enr:3,min:8,sys:'Y',cat:'gr'},
+  {t:'Fa 23',crs:'ART 1603 02',title:'Intro to Photography',lvl:100,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 23',crs:'ART 1603 03',title:'Intro to Photography',lvl:100,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 23',crs:'ART 2293 02',title:'Visual Identity & Symbol',lvl:200,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Sp 24',crs:'ART 3683 01',title:'Sculpt Process/Possibilities',lvl:300,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Sp 24',crs:'ART 3893 01',title:'Ceramics: Sculptural',lvl:300,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 24',crs:'ART 1503 02',title:'Intro to Painting',lvl:100,enr:10,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 24',crs:'ART 3223 01',title:'Elementary Art Education',lvl:300,enr:6,min:12,sys:'Y',cat:'ae'},
+  {t:'Sp 25',crs:'ART 3263 01',title:'Experiments Functional Design',lvl:300,enr:9,min:12,sys:'Y',cat:'ug'},
+  {t:'Sp 25',crs:'ART 3793 01',title:'Functional Ceramics',lvl:300,enr:10,min:12,sys:'Y',cat:'ug'},
+  {t:'Sp 25',crs:'ART 4693 01',title:'Looking at the Landscape',lvl:400,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Sp 25',crs:'ART 4703 01',title:'Advanced Painting',lvl:400,enr:8,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 25',crs:'ART 2293 01',title:'Visual Identity & Symbol',lvl:200,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 25',crs:'ART 2653 01',title:'Black & White Photography',lvl:200,enr:8,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 25',crs:'ART 2753 01',title:'Introduction to Sculpture',lvl:200,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 25',crs:'ART 3223 01',title:'Elementary Art Education',lvl:300,enr:9,min:12,sys:'Y',cat:'ae'},
+  {t:'Fa 25',crs:'ART 3613 01',title:'Ceramic Surfaces',lvl:300,enr:8,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 25',crs:'ART 3693 01',title:'Alternative Photo Processes',lvl:300,enr:9,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 25',crs:'ART 4133 01',title:'Approaches to Art Education',lvl:400,enr:9,min:12,sys:'Y',cat:'ae'},
+  {t:'Sp 26',crs:'ART 1213 02',title:'3D Foundations',lvl:100,enr:7,min:12,sys:'Y',cat:'ug'},
+  {t:'Sp 26',crs:'ART 3233 01',title:'Secondary Art Education',lvl:300,enr:10,min:12,sys:'Y',cat:'ae'},
+  {t:'Sp 26',crs:'ART 3253 01',title:'Motion Graphics',lvl:300,enr:11,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 26',crs:'ART 3013 01',title:'Principles of Art Education',lvl:300,enr:10,min:12,sys:'Y',cat:'ae'},
+  {t:'Fa 26',crs:'ART 3393 01',title:'Prof Practices Visual Arts',lvl:300,enr:6,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 26',crs:'ART 3723 01',title:'Mural Painting',lvl:300,enr:10,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 26',crs:'ART 4253 01',title:'Publication Design',lvl:400,enr:10,min:12,sys:'Y',cat:'ug'},
+  {t:'Fa 26',crs:'ART 5533 01',title:'Art & Social Movements',lvl:500,enr:6,min:8,sys:'N',cat:'gr'},
+];
+
+const BKTS=[
+  {t:'Sp 22',a:'ART 3703 (Intermediate Painting)',aLvl:300,aEnr:8,b:'ART 4703 (Advanced Painting I)',bLvl:400,bEnr:3,combined:11,min:12,note:'UG+UG'},
+  {t:'Sp 24',a:'ART 4903 02 (ST: Photography)',aLvl:400,aEnr:8,b:'ART 5663 (Alternative Photo Process)',bLvl:500,bEnr:3,combined:11,min:12,note:'UG+Grad'},
+  {t:'Fa 25',a:'ART 4903 02 (ST: Paint: Public Discourse)',aLvl:400,aEnr:4,b:'ART 5903 02 (same)',bLvl:600,bEnr:5,combined:9,min:12,note:'UG+Grad'},
+  {t:'Sp 25',a:'ART 3683 (Sculpt Process/Possibilities)',aLvl:300,aEnr:6,b:'ART 5753 (Sculpture)',bLvl:600,bEnr:5,combined:11,min:12,note:'UG+Grad'},
+  {t:'Sp 26',a:'ART 4903 02 (ST: Interdisciplinary Ceramics)',aLvl:400,aEnr:1,b:'ART 5123 (Interdisciplinary Ceramics)',bLvl:500,bEnr:7,combined:8,min:12,note:'UG+Grad'},
+];
+
+const CAT_LABEL={ug:'Undergrad',ae:'Art Education',gr:'Graduate'};
+const CAT_COLOR={ug:'var(--ug)',ae:'var(--ae)',gr:'var(--gr)'};
+
+// Tiles
+function buildTiles(){
+  const totalConcerns=SC.length;
+  const bktSmall=BKTS.length;
+  const counts=TERMS.map(t=>SC.filter(r=>r.t===t).length);
+  const maxTerm=TERMS[counts.indexOf(Math.max(...counts))];
+  const maxCount=Math.max(...counts);
+  const aeCnt=SC.filter(r=>r.cat==='ae').length;
+  document.getElementById('tiles').innerHTML=`
+    <div class="tile"><div class="lab">Terms Analyzed</div><div class="val">11</div><div class="note">Fa 2021 &#8212; Fa 2026</div></div>
+    <div class="tile"><div class="lab">Scheduling Concerns</div><div class="val">${totalConcerns}</div><div class="note">Regular courses below minimum</div></div>
+    <div class="tile"><div class="lab">Bracketed Pair Issues</div><div class="val">${bktSmall}</div><div class="note">Combined enrollment below 12</div></div>
+    <div class="tile"><div class="lab">Worst Term</div><div class="val">${maxTerm} <small>${maxCount}</small></div><div class="note">${maxCount} courses below minimum</div></div>
+    <div class="tile"><div class="lab">Art Education Instances</div><div class="val">${aeCnt}</div><div class="note">Across ${[...new Set(SC.filter(r=>r.cat==='ae').map(r=>r.t))].length} terms</div></div>
+  `;
+}
+
+// Chart
+function buildChart(){
+  const W=800,H=220,PL=32,PR=12,PT=14,PB=36;
+  const cW=W-PL-PR,cH=H-PT-PB;
+  const n=TERMS.length;
+  const bw=Math.floor(cW/n)-6;
+  const gap=(cW/n);
+
+  const counts=TERMS.map(t=>{
+    const rows=SC.filter(r=>r.t===t);
+    return{ug:rows.filter(r=>r.cat==='ug').length,ae:rows.filter(r=>r.cat==='ae').length,gr:rows.filter(r=>r.cat==='gr').length};
+  });
+  const maxVal=Math.max(...counts.map(c=>c.ug+c.ae+c.gr),1);
+  const gridLines=[0,2,4,6,8,10].filter(v=>v<=maxVal+1);
+
+  let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  // grid
+  gridLines.forEach(v=>{
+    const y=PT+cH-v*(cH/maxVal);
+    svg+=`<line class="gl" x1="${PL}" x2="${W-PR}" y1="${y}" y2="${y}"/>`;
+    svg+=`<text class="ax" x="${PL-4}" y="${y+4}" text-anchor="end">${v}</text>`;
+  });
+  // bars
+  counts.forEach((c,i)=>{
+    const x=PL+i*gap+(gap-bw)/2;
+    const total=c.ug+c.ae+c.gr;
+    let yOff=PT+cH;
+    const draw=(val,color)=>{
+      if(!val)return;
+      const bh=val*(cH/maxVal);
+      yOff-=bh;
+      svg+=`<rect x="${x}" y="${yOff}" width="${bw}" height="${bh}" fill="${color}" rx="2"/>`;
+    };
+    draw(c.gr,'var(--gr)');
+    draw(c.ae,'var(--ae)');
+    draw(c.ug,'var(--ug)');
+    if(total>0){
+      const labelY=PT+cH-total*(cH/maxVal)-4;
+      svg+=`<text class="dl" x="${x+bw/2}" y="${labelY}" text-anchor="middle">${total}</text>`;
+    }
+    svg+=`<text class="ax" x="${x+bw/2}" y="${H-PB+16}" text-anchor="middle">${TERMS[i]}</text>`;
+  });
+  svg+=`</svg>`;
+  document.getElementById('chart').innerHTML=svg;
+}
+
+// Bracketed table
+function buildBktTable(){
+  const body=document.getElementById('bkt-body');
+  body.innerHTML=BKTS.map(r=>{
+    const gap=r.combined-r.min;
+    return`<tr>
+      <td>${r.t}</td>
+      <td style="text-align:left">${r.a}</td>
+      <td>${r.aLvl}</td>
+      <td>${r.aEnr}</td>
+      <td style="text-align:left">${r.b}</td>
+      <td>${r.bLvl}</td>
+      <td>${r.bEnr}</td>
+      <td><strong>${r.combined}</strong></td>
+      <td>${r.min}</td>
+      <td style="color:var(--crit)">${gap}</td>
+      <td>${r.note}</td>
+    </tr>`;
+  }).join('');
+}
+
+// SC table
+function buildSCTable(filter){
+  const sel=document.getElementById('term-sel');
+  if(!sel.querySelector('option[value="all"]').nextSibling){
+    TERMS.forEach(t=>{
+      const o=document.createElement('option');
+      o.value=t;o.textContent=t;
+      sel.appendChild(o);
+    });
+  }
+  const rows=document.querySelectorAll('#sc-body tr');
+  if(rows.length===0){
+    const body=document.getElementById('sc-body');
+    body.innerHTML=SC.map(r=>{
+      const gap=r.enr-r.min;
+      const catBadge=`<span class="badge ${r.cat}">${CAT_LABEL[r.cat]}</span>`;
+      const sysBadge=r.sys==='N'?`<span class="badge miss">sys missed</span>`:`<span style="color:var(--text-muted);font-size:11px">&#10003;</span>`;
+      return`<tr data-term="${r.t}">
+        <td>${r.t}${r.t==='Fa 26'?'<span style="color:var(--text-muted);font-size:10px;margin-left:4px">*</span>':''}</td>
+        <td style="text-align:left;font-family:ui-monospace,monospace">${r.crs}</td>
+        <td style="text-align:left">${r.title}</td>
+        <td>${r.lvl}</td>
+        <td>${r.enr}</td>
+        <td>${r.min}</td>
+        <td style="color:var(--crit)">${gap}</td>
+        <td>${catBadge}</td>
+        <td style="text-align:center">${sysBadge}</td>
+      </tr>`;
+    }).join('');
+  }
+  document.querySelectorAll('#sc-body tr').forEach(tr=>{
+    tr.hidden=!(filter==='all'||tr.dataset.term===filter);
+  });
+}
+
+// Theme
+let theme=null;
+try{theme=localStorage.getItem('sc-theme')}catch(e){}
+if(theme)document.documentElement.setAttribute('data-theme',theme);
+document.getElementById('tbtn').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  try{localStorage.setItem('sc-theme',next)}catch(e){}
+});
+
+document.getElementById('term-sel').addEventListener('change',e=>buildSCTable(e.target.value));
+
+buildTiles();
+buildChart();
+buildBktTable();
+buildSCTable('all');
+</script>
+</body>
+</html>
