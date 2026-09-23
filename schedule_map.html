@@ -1382,9 +1382,13 @@ function pdfRoom(r){
   return 'Room '+r;
 }
 
-function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH){
+function drawMapChips(doc,coursesOrItems,x,y,maxW,maxH,chipH,gapScale){
   const INK=[26,20,16];
-  const CHIP_GAP=2.0;
+  // Gap must shrink by the same factor as chipH, or the fixed-height layout
+  // computed in visualHeight() (which scales as one uniform block) drifts out
+  // of sync with what's actually drawn here — causing items near the bottom
+  // of a dense column to silently fail the "does it fit" check and vanish.
+  const CHIP_GAP=2.0*(gapScale===undefined?1:gapScale);
   const PATTERN_BG={
     mw:[242,246,248],tth:[247,241,248],once:[241,247,242],async:[248,248,248],hidden:[255,244,227]
   };
@@ -1604,10 +1608,10 @@ function generatePDF(){
     doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...INK);
     doc.text('–'+t2,ML+TIME_W/2,y+rh/2+2,{align:'center'});
     const cp=CELL_PAD*sf;
-    drawMapChips(doc,mwA,x1+1,y+cp,colW-2,rh-cp*2,chipH);
-    drawMapChips(doc,mwB,x2+1,y+cp,colW-2,rh-cp*2,chipH);
-    drawMapChips(doc,tthA,x3+1,y+cp,colW-2,rh-cp*2,chipH);
-    drawMapChips(doc,tthB,x4+1,y+cp,colW-2,rh-cp*2,chipH);
+    drawMapChips(doc,mwA,x1+1,y+cp,colW-2,rh-cp*2,chipH,sf);
+    drawMapChips(doc,mwB,x2+1,y+cp,colW-2,rh-cp*2,chipH,sf);
+    drawMapChips(doc,tthA,x3+1,y+cp,colW-2,rh-cp*2,chipH,sf);
+    drawMapChips(doc,tthB,x4+1,y+cp,colW-2,rh-cp*2,chipH,sf);
     y+=rh;
   });
   const gridBottom=y;
