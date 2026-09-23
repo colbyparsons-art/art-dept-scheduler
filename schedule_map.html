@@ -563,8 +563,18 @@ function applyFacultyHighlight(){
 }
 
 // ── Data ───────────────────────────────────────────────────────────────────
+// Bump SCHEDULE_VERSION on every push that changes DEFAULT_SCHEDULE — this
+// discards any stale local cache so viewers always see the current official
+// version, without needing to clear browser data or use a fresh browser.
+const SCHEDULE_VERSION = 2;
 function loadData(){
   try{
+    const storedVersion=parseInt(localStorage.getItem('twu_schedule_version')||'0',10);
+    if(storedVersion<SCHEDULE_VERSION){
+      localStorage.setItem('twu_schedule_version',String(SCHEDULE_VERSION));
+      localStorage.removeItem('twu_schedule');
+      return JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
+    }
     const s=localStorage.getItem('twu_schedule');
     if(s){const d=JSON.parse(s);if(Object.keys(d).length>0)return d;}
   }catch(e){}
