@@ -260,7 +260,7 @@ const DEFAULT_ROTATION = [
   ["ART 3723","MURAL PAINTING","FALL","ALL"],
   ["ART 3783","ALTERNATIVE DRAWING","SPRING","ALL"],
   ["ART 3793","FUNCTIONAL CERAMICS","FALL","EVEN"],
-  ["ART 3893","SCULPTURAL CERAMICS","SPRING","ODD"],
+  ["ART 3893","SCULPTURAL CERAMICS","FALL","ODD"],
   ["ART 3913","SCIENTIFIC ILLUSTRATION","FALL","ALL"],
   ["ART 4013","SCULPTURE & THE ENVIRONMENT","SPRING","EVEN"],
   ["ART 4033","PACKAGING DESIGN","FALL","ALL"],
@@ -288,7 +288,7 @@ const DEFAULT_ROTATION = [
   ["ART 5843","ART-BASED RESEARCH WRITING","FALL","ALL"],
   ["ART 5883","MFA THESIS EXHIBITION","FALL/SPRING","ALL"],
   ["ART 5993","THESIS","FALL/SPRING","ALL"],
-  ["ENG 3433","PROFESSIONAL WRITING","FALL","ODD"],
+  ["ENG 3433","PROFESSIONAL WRITING","FALL/SPRING","ALL"],
   ["EDUC 4946","CLINICAL STUDENT TEACHING","FALL/SPRING","ALL"],
 ];
 
@@ -666,7 +666,7 @@ function renderTable(){
     return `<tr>
       <td><strong style="font-size:.76rem;">${h(c)}</strong></td>
       <td>${h(t)}${iFlag}<button class="tbl-edit-btn" title="Edit" onclick="openEditModal('${ce}')">✏</button></td>
-      <td>${sp==='IRREGULAR'?'—':h(sp.replace('/',' &amp; '))}</td>
+      <td>${sp==='IRREGULAR'?'—':h(sp).replace('/',' &amp; ')}</td>
       <td>${yp?`<span class="cell-year badge-${yp.toLowerCase()}">${yp}</span>`:'—'}</td>
       ${cells}
     </tr>`;
