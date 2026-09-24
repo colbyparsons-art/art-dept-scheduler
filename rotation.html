@@ -423,6 +423,7 @@ try{
     appId:"1:376304402964:web:ba77320b038bda33eb1d01"
   });
   fsRotDoc=firebase.firestore().collection('shared').doc('rotation');
+  let firestoreSeededRot=false;
   fsRotDoc.onSnapshot(function(doc){
     if(doc.exists){
       const payload=doc.data()&&doc.data().payload;
@@ -432,10 +433,15 @@ try{
         if(typeof renderAll==='function')renderAll();
         showSaveNotice('✓ Showing the current published rotation.');
       }
-    } else if(firestoreLiveRot){
-      publishToShared(true);
+    } else if(!firestoreSeededRot){
+      // Nobody has published yet — silently seed from what's currently
+      // loaded, using the embedded passcode automatically (no prompt),
+      // since this bootstraps the already-agreed-upon baseline.
+      firestoreSeededRot=true;
+      const payload={rotation:getRotation(),assignments:getAssignments()};
+      fsRotDoc.set({passcode:EDIT_PASSCODE,payload:payload,updatedAt:new Date().toISOString()})
+        .catch(function(err){console.error('Seed publish failed',err);});
     }
-    firestoreLiveRot=true;
   },function(err){
     console.error('Firestore sync error',err);
     showSaveNotice('⚠ Could not connect to the shared rotation — showing your local copy. ('+err.message+')');
@@ -447,23 +453,17 @@ function showSaveNotice(msg){
   if(el)el.textContent=msg;
 }
 
-function publishToShared(silent){
+function publishToShared(){
   if(!fsRotDoc){alert('Not connected to the shared database yet — try again in a moment.');return;}
-  let pass=sessionStorage.getItem('twu_edit_pass');
-  if(!pass){
-    pass=window.prompt('Enter the department edit passcode to publish this rotation for everyone:');
-    if(pass===null)return;
-  }
+  const pass=window.prompt('Enter the department edit passcode to publish this rotation for everyone:');
+  if(pass===null)return;
   const payload={rotation:getRotation(),assignments:getAssignments()};
   fsRotDoc.set({passcode:pass,payload:payload,updatedAt:new Date().toISOString()})
     .then(function(){
-      sessionStorage.setItem('twu_edit_pass',pass);
-      if(!silent){showSaveNotice('✓ Published — everyone will now see this version.');}
+      showSaveNotice('✓ Published — everyone will now see this version.');
     })
     .catch(function(err){
-      sessionStorage.removeItem('twu_edit_pass');
-      if(!silent)alert('Could not publish — the passcode may be wrong, or there was a connection problem.\n\n'+err.message);
-      else console.error('Seed publish failed',err);
+      alert('Could not publish — the passcode may be wrong, or there was a connection problem.\n\n'+err.message);
     });
 }
 
