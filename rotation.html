@@ -115,6 +115,8 @@
   @media print{.site-nav,.toolbar,footer{display:none!important;}main{padding:0;}}
   @media(max-width:700px){header,main,.toolbar,.site-nav{padding-left:20px;padding-right:20px;}}
 </style>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <nav class="site-nav" id="siteNav">
@@ -122,15 +124,18 @@
   <span class="sep">/</span>
   <a href="rotation.html" class="current">Course Rotation</a>
 </nav>
-<div style="background:var(--light-clay);border-bottom:2px solid var(--gold);padding:10px 40px;font-size:.85rem;color:var(--ink);">
-  ⚠ Edits made here save only to <strong>this device's browser</strong> — they are not shared with anyone else and won't show up on other computers or phones. To make a change official, write down what should change and email Colby so it can be updated for everyone.
+<div id="saveNotice" style="background:var(--light-clay);border-bottom:2px solid var(--gold);padding:10px 40px;font-size:.85rem;color:var(--ink);">
+  ⚠ Edits auto-save only to <strong>this device's browser</strong> as you make them. When you're ready for everyone to see your changes, click <strong>☁ Publish for Everyone</strong> and enter the department passcode.
 </div>
 <header>
   <div>
     <h1>Undergraduate Course Rotation</h1>
     <p>Department of Visual Arts — Two-Year Cycle View</p>
   </div>
-  <button class="btn" onclick="window.print()" style="background:rgba(255,255,255,.1);color:var(--cream);border-color:rgba(255,255,255,.2);">🖨 Print</button>
+  <div style="display:flex;gap:8px;">
+    <button class="btn" onclick="window.print()" style="background:rgba(255,255,255,.1);color:var(--cream);border-color:rgba(255,255,255,.2);">🖨 Print</button>
+    <button class="btn" id="publishBtn" onclick="publishToShared()" style="background:var(--gold);color:var(--ink);border-color:var(--gold);">☁ Publish for Everyone</button>
+  </div>
 </header>
 
 <div class="toolbar">
@@ -403,6 +408,63 @@ function saveAssign(code,sem,year,fac){
   const a=getAssignments();
   a[`${code}|||${sem}|||${year}`]=fac;
   localStorage.setItem(ASSIGN_KEY, JSON.stringify(a));
+}
+
+// ── Shared publish (Firestore) ──────────────────────────────────────────────
+const EDIT_PASSCODE='TWUart';
+let fsRotDoc=null, firestoreLiveRot=false;
+try{
+  firebase.initializeApp({
+    apiKey:"AIzaSyAStmkctkE8r7g4_4_0BFYcpSzN5zXbzUc",
+    authDomain:"twu-visual-arts-scheduler.firebaseapp.com",
+    projectId:"twu-visual-arts-scheduler",
+    storageBucket:"twu-visual-arts-scheduler.firebasestorage.app",
+    messagingSenderId:"376304402964",
+    appId:"1:376304402964:web:ba77320b038bda33eb1d01"
+  });
+  fsRotDoc=firebase.firestore().collection('shared').doc('rotation');
+  fsRotDoc.onSnapshot(function(doc){
+    if(doc.exists){
+      const payload=doc.data()&&doc.data().payload;
+      if(payload&&(payload.rotation||payload.assignments)){
+        if(payload.rotation)localStorage.setItem(ROTATION_KEY,JSON.stringify(payload.rotation));
+        if(payload.assignments)localStorage.setItem(ASSIGN_KEY,JSON.stringify(payload.assignments));
+        if(typeof renderAll==='function')renderAll();
+        showSaveNotice('✓ Showing the current published rotation.');
+      }
+    } else if(firestoreLiveRot){
+      publishToShared(true);
+    }
+    firestoreLiveRot=true;
+  },function(err){
+    console.error('Firestore sync error',err);
+    showSaveNotice('⚠ Could not connect to the shared rotation — showing your local copy. ('+err.message+')');
+  });
+}catch(e){console.error('Firebase init failed',e);}
+
+function showSaveNotice(msg){
+  const el=document.getElementById('saveNotice');
+  if(el)el.textContent=msg;
+}
+
+function publishToShared(silent){
+  if(!fsRotDoc){alert('Not connected to the shared database yet — try again in a moment.');return;}
+  let pass=sessionStorage.getItem('twu_edit_pass');
+  if(!pass){
+    pass=window.prompt('Enter the department edit passcode to publish this rotation for everyone:');
+    if(pass===null)return;
+  }
+  const payload={rotation:getRotation(),assignments:getAssignments()};
+  fsRotDoc.set({passcode:pass,payload:payload,updatedAt:new Date().toISOString()})
+    .then(function(){
+      sessionStorage.setItem('twu_edit_pass',pass);
+      if(!silent){showSaveNotice('✓ Published — everyone will now see this version.');}
+    })
+    .catch(function(err){
+      sessionStorage.removeItem('twu_edit_pass');
+      if(!silent)alert('Could not publish — the passcode may be wrong, or there was a connection problem.\n\n'+err.message);
+      else console.error('Seed publish failed',err);
+    });
 }
 
 function defaultFac(code,sem,year){
