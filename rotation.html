@@ -394,6 +394,23 @@ let editMode   = false;
 let editingCode = null;
 
 // ── Storage helpers ──────────────────────────────────────────────────────────
+// Bump ROTATION_VERSION whenever DEFAULT_ROTATION changes — this discards any
+// stale local override (e.g. a forgotten test edit from "Edit Rotation" mode)
+// so viewers always see the current official rotation, without needing to
+// clear browser data manually. Mirrors the same mechanism in schedule_map.html.
+const ROTATION_VERSION = 1;
+function checkRotationVersion(){
+  try{
+    const stored=parseInt(localStorage.getItem('twu_rotation_version')||'0',10);
+    if(stored<ROTATION_VERSION){
+      localStorage.setItem('twu_rotation_version',String(ROTATION_VERSION));
+      localStorage.removeItem(ROTATION_KEY);
+      localStorage.removeItem(ASSIGN_KEY);
+    }
+  }catch(e){}
+}
+checkRotationVersion();
+
 function getRotation(){
   try{ const s=localStorage.getItem(ROTATION_KEY); if(s) return JSON.parse(s); }catch(e){}
   return DEFAULT_ROTATION.map(r=>[...r]);
