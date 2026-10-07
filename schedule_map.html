@@ -569,7 +569,7 @@ function applyFacultyHighlight(){
 // Bump SCHEDULE_VERSION on every push that changes DEFAULT_SCHEDULE — this
 // discards any stale local cache so viewers always see the current official
 // version, without needing to clear browser data or use a fresh browser.
-const SCHEDULE_VERSION = 7;
+const SCHEDULE_VERSION = 8;
 function loadData(){
   try{
     const storedVersion=parseInt(localStorage.getItem('twu_schedule_version')||'0',10);
@@ -584,6 +584,18 @@ function loadData(){
   return JSON.parse(JSON.stringify(DEFAULT_SCHEDULE));
 }
 function saveData(d){localStorage.setItem('twu_schedule',JSON.stringify(d));}
+
+// Firestore map fields don't preserve insertion order the way a plain JS
+// object literal does, so once db comes from a Firestore payload its key
+// order can come back scrambled (e.g. Fall 2028 before Spring 2027). Sort
+// semester keys chronologically wherever order matters instead of trusting
+// Object.keys().
+function semSortVal(label){
+  const m=(label||'').match(/(Spring|Fall)\s+(\d+)/);
+  if(!m)return 0;
+  return parseInt(m[2],10)*2+(m[1]==='Fall'?1:0);
+}
+function sortedSemKeys(obj){return Object.keys(obj).sort((a,b)=>semSortVal(a)-semSortVal(b));}
 
 let db=loadData();
 
@@ -606,7 +618,7 @@ try{
       const payload=doc.data()&&doc.data().payload;
       if(payload&&Object.keys(payload).length){
         db=payload;
-        if(!currentSem||!db[currentSem])currentSem=Object.keys(db)[0]||null;
+        if(!currentSem||!db[currentSem])currentSem=sortedSemKeys(db)[0]||null;
         if(typeof buildSemSelect==='function')buildSemSelect();
         if(typeof renderAll==='function')renderAll();
         if(typeof renderLoad==='function')renderLoad();
@@ -764,7 +776,7 @@ function publishToShared(){
   if(changed)saveData(db);
 })();
 
-let currentSem=Object.keys(db)[0]||null;
+let currentSem=sortedSemKeys(db)[0]||null;
 let editingId=null;
 
 // ── Semester management ────────────────────────────────────────────────────
@@ -773,7 +785,7 @@ function semKey(sem,year){return sem+' '+year;}
 function buildSemSelect(){
   const sel=document.getElementById('semSelect');
   sel.innerHTML='';
-  Object.keys(db).forEach(k=>{
+  sortedSemKeys(db).forEach(k=>{
     const opt=document.createElement('option');
     opt.value=k;opt.textContent=k;
     if(k===currentSem)opt.selected=true;
@@ -893,7 +905,7 @@ function deleteSemester(){
   if(!confirm('Delete '+currentSem+' and all its courses?'))return;
   delete db[currentSem];
   saveData(db);
-  currentSem=Object.keys(db)[0]||null;
+  currentSem=sortedSemKeys(db)[0]||null;
   buildSemSelect();
   renderAll();
 }
@@ -1411,7 +1423,7 @@ function importData(e){
     try{
       const d=JSON.parse(ev.target.result);
       db=d;saveData(db);
-      currentSem=Object.keys(db)[0]||null;
+      currentSem=sortedSemKeys(db)[0]||null;
       buildSemSelect();renderAll();
       alert('Imported successfully.');
     }catch(err){alert('Error: '+err.message);}
