@@ -1747,10 +1747,16 @@ function generatePDF(){
   }
 
   // ── Footer ───────────────────────────────────────────────────────────────
+  const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const now=new Date();
+  let stampH=now.getHours();const ampm=stampH>=12?'PM':'AM';stampH=stampH%12;if(stampH===0)stampH=12;
+  const stampMin=String(now.getMinutes()).padStart(2,'0');
+  const timestamp='Current as of '+stampH+':'+stampMin+' '+ampm+', '+MONTH_NAMES[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+
   doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(160,150,140);
   doc.setDrawColor(...MIST);doc.setLineWidth(0.2);
   doc.line(ML,PH-8,ML+CW,PH-8);
-  doc.text('Visual Arts Department · '+currentSem+' · Draft',ML,PH-4.5);
+  doc.text('Visual Arts Department · '+currentSem+' · Draft · '+timestamp,ML,PH-4.5);
   doc.text('Page 1',ML+CW-doc.getTextWidth('Page 1'),PH-4.5);
 
   doc.save(currentSem.toLowerCase().replace(/\s+/g,'-')+'-schedule.pdf');
