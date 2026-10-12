@@ -1759,7 +1759,8 @@ function generatePDF(){
   doc.text('Visual Arts Department · '+currentSem+' · Draft · '+timestamp,ML,PH-4.5);
   doc.text('Page 1',ML+CW-doc.getTextWidth('Page 1'),PH-4.5);
 
-  doc.save(currentSem.toLowerCase().replace(/\s+/g,'-')+'-schedule.pdf');
+  const fnameDate=String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'-'+now.getFullYear();
+  doc.save(currentSem.toLowerCase().replace(/\s+/g,'-')+'-schedule-'+fnameDate+'.pdf');
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────
