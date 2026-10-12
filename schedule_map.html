@@ -212,7 +212,7 @@
     <button class="btn btn-outline admin-only" onclick="document.getElementById('importFile').click()">⬆ Import</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
     <button class="btn btn-gold admin-only" onclick="openAddModal(null,null)">+ Add Course</button>
-    <button class="btn btn-gold" id="publishBtn" onclick="publishToShared()">☁ Publish for Everyone</button>
+    <button class="btn btn-gold admin-only" id="publishBtn" onclick="publishToShared()">☁ Publish for Everyone</button>
   </div>
 </header>
 
@@ -238,6 +238,7 @@
   <button class="fac-btn" onclick="toggleFacultyHighlight('LAURA LEE',this)">Laura Lee</button>
   <button class="fac-btn" onclick="toggleFacultyHighlight('CHRISTINE',this)">Christine</button>
   <button class="fac-btn" onclick="toggleFacultyHighlight('COLBY',this)">Colby</button>
+  <button class="fac-btn" style="margin-left:10px;" onclick="toggleFacultyHighlight('STAFF',this)">Staff-taught</button>
   <button class="fac-btn fac-btn-clear" id="facClearBtn" style="display:none" onclick="clearFacultyHighlight()">✕ Clear</button>
 </div>
 
