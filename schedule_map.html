@@ -173,6 +173,7 @@
   @media print{header,.toolbar,.header-btns,.add-chip,.chip-actions,.site-nav,footer{display:none!important;}main{padding:0;}body{background:white;}}
   @media(max-width:700px){.schedule-grid{grid-template-columns:60px 1fr 1fr;}main,.toolbar,header,.site-nav{padding-left:16px;padding-right:16px;}}
   body.faculty .admin-only{display:none!important;}
+  .adj-name{font-style:italic;font-weight:600;}
 
   /* Faculty highlight bar */
   .faculty-bar{background:#fdf5ed;border-bottom:1px solid rgba(158,133,109,.2);padding:8px 40px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -294,7 +295,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Faculty</label>
-          <input type="text" id="c_faculty" placeholder="e.g. GIOVANNI or staff" list="facultyList"/>
+          <input type="text" id="c_faculty" placeholder="e.g. GIOVANNI or staff" list="facultyList" oninput="toggleAdjunctRow()"/>
           <datalist id="facultyList">
             <option value="GIOVANNI"/><option value="SARA"/><option value="SHELI"/>
             <option value="MEG"/><option value="JULIE"/><option value="TANYA"/>
@@ -320,6 +321,13 @@
             <option value="306">306 — Art Education (cap 20)</option>
           </select>
         </div>
+      </div>
+      <div class="form-row" id="adjunct_row" style="display:none">
+        <div class="form-group">
+          <label>Adjunct / GTA first name <span style="opacity:.6;font-weight:400;">(admin view only)</span></label>
+          <input type="text" id="c_adjunct" placeholder="e.g. Maria"/>
+        </div>
+        <div class="form-group"></div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -937,9 +945,10 @@ function chipHtml(c,idx,extra=''){
   const dispCode=(codePrefix==='ART'?(c.code||'').replace(/^ART\s+/,''):(c.code||''))+(c.section||'');
   const extDeptMap={'ENG':'English dept','EDUC':'Education dept'};
   const extDept=(c.faculty?.toLowerCase()==='staff'&&extDeptMap[codePrefix])||'';
+  const adj=adjunctLabel(c);
   const fac=c.faculty?
     (c.faculty.toLowerCase()==='staff'
-      ?(extDept?`staff (${extDept})`:'staff')
+      ?(adj?`staff ${adj}`:extDept?`staff (${extDept})`:'staff')
       :c.faculty.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase()))
     :'';
   const rm=c.room?(/off.?site/i.test(c.room)?c.room:'Room '+c.room):'';
@@ -958,6 +967,21 @@ function chipHtml(c,idx,extra=''){
     <div class="chip-meta">${meta}</div>
     ${notesLine}
   </div>`;
+}
+
+// Adjunct/GTA first name — admin view only, and only for staff-taught sections
+function cleanAdjunctName(s){
+  const first=(s||'').trim().split(/\s+/)[0]||'';
+  return first?first.charAt(0).toUpperCase()+first.slice(1).toLowerCase():'';
+}
+function adjunctLabel(c){
+  if(FACULTY_MODE||!c.adjunct||(c.faculty||'').toLowerCase()!=='staff')return '';
+  return `<span class="adj-name admin-only">(${escapeHtml(c.adjunct)})</span>`;
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
+function toggleAdjunctRow(){
+  const isStaff=document.getElementById('c_faculty').value.trim().toLowerCase()==='staff';
+  document.getElementById('adjunct_row').style.display=isStaff?'grid':'none';
 }
 
 function formatHybridLabel(c){
@@ -1109,7 +1133,8 @@ function renderGrid(){
       const coursesHtml=dayCourses.map(c=>{
         const idx=courses.indexOf(c);
         const dispCode=(c.code||'').replace(/^[A-Z]+\s+/,'')+(c.section||'');
-        const fac=c.faculty?(c.faculty.toLowerCase()==='staff'?'staff':c.faculty.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase())):'';
+        const adj=adjunctLabel(c);
+        const fac=c.faculty?(c.faculty.toLowerCase()==='staff'?(adj?'staff '+adj:'staff'):c.faculty.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase())):'';
         const rm=c.room?(/off.?site/i.test(c.room)?c.room:'Room '+c.room):'';
         const meta=[fac,rm,c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
         const eb=FACULTY_MODE?'':
@@ -1287,7 +1312,8 @@ function openAddModal(pattern,block){
   editingId=null;
   document.getElementById('modalTitle').textContent='Add Course';
   document.getElementById('deleteBtn').style.display='none';
-  ['c_code','c_section','c_title','c_faculty','c_notes','c_bracketpair'].forEach(id=>document.getElementById(id).value='');
+  ['c_code','c_section','c_title','c_faculty','c_adjunct','c_notes','c_bracketpair'].forEach(id=>document.getElementById(id).value='');
+  toggleAdjunctRow();
   document.getElementById('c_room').value='';
   document.getElementById('c_hidden').checked=false;
   document.getElementById('c_bracketed').checked=false;
@@ -1326,6 +1352,8 @@ function openEditModal(idx){
   document.getElementById('c_section').value=c.section||'';
   document.getElementById('c_title').value=c.title||'';
   document.getElementById('c_faculty').value=c.faculty||'';
+  document.getElementById('c_adjunct').value=c.adjunct||'';
+  toggleAdjunctRow();
   document.getElementById('c_room').value=c.room||'';
   document.getElementById('c_pattern').value=c.pattern||'mw';
   updateTimeOptions();
@@ -1382,6 +1410,9 @@ function saveCourse(){
     bracketpair:document.getElementById('c_bracketpair').value.trim(),
     notes:document.getElementById('c_notes').value.trim(),
   };
+  // Adjunct/GTA first name only applies to staff-taught sections
+  const adjName=cleanAdjunctName(document.getElementById('c_adjunct').value);
+  if(adjName&&record.faculty.toLowerCase()==='staff')record.adjunct=adjName;
   // If hybrid and a day is selected, write it into notes (only if notes are blank or already a hybrid note)
   if(record.hybrid){
     const day=document.getElementById('c_hybridday').value;
