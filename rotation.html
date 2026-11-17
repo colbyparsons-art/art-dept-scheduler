@@ -58,6 +58,7 @@
   .badge-all{background:#EBF1F5;color:var(--all);}
   .badge-even{background:#F0EBF5;color:var(--even);}
   .badge-odd{background:#F5F0EB;color:var(--odd);}
+  .badge-4yr{background:#EEF3EC;color:#5C7A5F;}
   .irreg-row{opacity:.5;font-style:italic;}
 
   /* Faculty dropdown */
@@ -211,6 +212,10 @@
         <option value="ALL">Every year</option>
         <option value="EVEN">Even years only</option>
         <option value="ODD">Odd years only</option>
+        <option value="4YR-2027">Every 4 years ('27, '31…)</option>
+        <option value="4YR-2028">Every 4 years ('28, '32…)</option>
+        <option value="4YR-2029">Every 4 years ('29, '33…)</option>
+        <option value="4YR-2030">Every 4 years ('30, '34…)</option>
         <option value="">— (use with Irregular)</option>
       </select>
     </div>
@@ -255,7 +260,7 @@ const DEFAULT_ROTATION = [
   ["ART 3233","SECONDARY ART EDUCATION","SPRING","EVEN"],
   ["ART 3253","MOTION GRAPHICS","SPRING","ALL"],
   ["ART 3263","EXPERIMENTS IN FUNCTIONAL DESIGN","IRREGULAR",""],
-  ["ART 3333","HISTORY OF CAMERA ARTS","SPRING","EVEN"],
+  ["ART 3333","HISTORY OF CAMERA ARTS","SPRING","4YR-2029"],
   ["ART 3343","WOMEN IN THE VISUAL ARTS","FALL/SPRING","ALL"],
   ["ART 3363","CHARACTER DESIGN","SPRING","EVEN"],
   ["ART 3383","DIGITAL ILLUSTRATION","FALL","EVEN"],
@@ -272,15 +277,15 @@ const DEFAULT_ROTATION = [
   ["ART 3913","SCIENTIFIC ILLUSTRATION","FALL","ALL"],
   ["ART 4013","SCULPTURE & THE ENVIRONMENT","SPRING","EVEN"],
   ["ART 4033","PACKAGING DESIGN","FALL","ALL"],
-  ["ART 4043","LATINX ART","SPRING","ODD"],
-  ["ART 4053","AFRICAN AMERICAN ART","FALL","EVEN"],
+  ["ART 4043","LATINX ART","SPRING","4YR-2027"],
+  ["ART 4053","AFRICAN AMERICAN ART","SPRING","4YR-2030"],
   ["ART 4133","APPROACHES TO ART EDUCATION","SPRING","ODD"],
   ["ART 4253","PUBLICATION DESIGN","FALL","ALL"],
   ["ART 4283","WEB AND APP DESIGN","SPRING","ALL"],
   ["ART 4313","ADVERTISING & SOCIAL MEDIA","SPRING","EVEN"],
   ["ART 4363","COMMUNITY FOCUS DESIGN STUDIO","FALL","ALL"],
   ["ART 4483","NARRATIVE ILLUSTRATION","SPRING","ODD"],
-  ["ART 4543","INTERDISCIPLINARY INFLUENCES","FALL","ODD"],
+  ["ART 4543","INTERDISCIPLINARY INFLUENCES","SPRING","4YR-2028"],
   ["ART 4653","COLOR PHOTOGRAPHY","FALL","EVEN"],
   ["ART 4683","PHOTOGRAPHIC POSSIBILITIES","FALL","ODD"],
   ["ART 4703","ADVANCED PAINTING","SPRING","ALL"],
@@ -411,6 +416,23 @@ function checkRotationVersion(){
 }
 checkRotationVersion();
 
+// One-time patch (Nov 2026): four BA art history electives moved to a
+// spring-only, every-4-years cycle. Patches only those rows in any cached
+// rotation so locally saved faculty assignments are kept.
+const FOUR_YEAR_ELECTIVES={'ART 4043':'4YR-2027','ART 4543':'4YR-2028','ART 3333':'4YR-2029','ART 4053':'4YR-2030'};
+function patchFourYearElectives(arr){
+  let changed=false;
+  (arr||[]).forEach(r=>{
+    const yr=FOUR_YEAR_ELECTIVES[r[0]];
+    if(yr&&(r[2]!=='SPRING'||r[3]!==yr)){r[2]='SPRING';r[3]=yr;changed=true;}
+  });
+  return changed;
+}
+try{
+  const s=localStorage.getItem(ROTATION_KEY);
+  if(s){const arr=JSON.parse(s);if(patchFourYearElectives(arr))localStorage.setItem(ROTATION_KEY,JSON.stringify(arr));}
+}catch(e){}
+
 function getRotation(){
   try{ const s=localStorage.getItem(ROTATION_KEY); if(s) return JSON.parse(s); }catch(e){}
   return DEFAULT_ROTATION.map(r=>[...r]);
@@ -445,7 +467,7 @@ try{
     if(doc.exists){
       const payload=doc.data()&&doc.data().payload;
       if(payload&&(payload.rotation||payload.assignments)){
-        if(payload.rotation)localStorage.setItem(ROTATION_KEY,JSON.stringify(payload.rotation));
+        if(payload.rotation){patchFourYearElectives(payload.rotation);localStorage.setItem(ROTATION_KEY,JSON.stringify(payload.rotation));}
         if(payload.assignments)localStorage.setItem(ASSIGN_KEY,JSON.stringify(payload.assignments));
         if(typeof renderAll==='function')renderAll();
         showSaveNotice('✓ Showing the current published rotation.');
@@ -640,13 +662,20 @@ function offered(sp,yp,sem,year){
   if(sp==='IRREGULAR') return false;
   if(!sp.split('/').includes(sem)) return false;
   if(yp==='ALL') return true;
+  const m4=/^4YR-(\d{4})$/.exec(yp||'');
+  if(m4) return ((year-+m4[1])%4+4)%4===0;
   return yp===(year%2===0?'EVEN':'ODD');
+}
+// "4YR-2027" = offered every 4 years, starting 2027 (2027, 2031, 2035…)
+function yrLabel(yp){
+  const m4=/^4YR-(\d{4})$/.exec(yp||'');
+  if(m4) return `Every 4 yrs ('${m4[1].slice(2)})`;
+  return yp==='ALL'?'Every yr':yp==='EVEN'?'Even yrs':yp==='ODD'?'Odd yrs':(yp||'');
 }
 function badgeHtml(yp){
   if(!yp) return '';
-  const cls=yp==='ALL'?'badge-all':yp==='EVEN'?'badge-even':'badge-odd';
-  const lbl=yp==='ALL'?'Every yr':yp==='EVEN'?'Even yrs':'Odd yrs';
-  return `<span class="year-badge ${cls}">${lbl}</span>`;
+  const cls=yp==='ALL'?'badge-all':yp==='EVEN'?'badge-even':/^4YR-/.test(yp)?'badge-4yr':'badge-odd';
+  return `<span class="year-badge ${cls}">${yrLabel(yp)}</span>`;
 }
 function getQ(){ return (document.getElementById('searchBox').value||'').toLowerCase(); }
 function matches(code,title){ const q=getQ(); return !q||code.toLowerCase().includes(q)||title.toLowerCase().includes(q); }
@@ -749,7 +778,7 @@ function renderTable(){
       <td><strong style="font-size:.76rem;">${h(c)}</strong></td>
       <td>${h(t)}${iFlag}<button class="tbl-edit-btn" title="Edit" onclick="openEditModal('${ce}')">✏</button></td>
       <td>${sp==='IRREGULAR'?'—':h(sp).replace('/',' &amp; ')}</td>
-      <td>${yp?`<span class="cell-year badge-${yp.toLowerCase()}">${yp}</span>`:'—'}</td>
+      <td>${yp?`<span class="cell-year badge-${/^4YR-/.test(yp)?'4yr':yp.toLowerCase()}">${/^4YR-/.test(yp)?yrLabel(yp):yp}</span>`:'—'}</td>
       ${cells}
     </tr>`;
   }).join('');
