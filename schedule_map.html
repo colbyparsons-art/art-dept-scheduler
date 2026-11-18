@@ -392,8 +392,18 @@
         </div>
         <div class="form-group">
           <label>Time Block</label>
-          <select id="c_time">
+          <select id="c_time" onchange="toggleCustomTime()">
           </select>
+        </div>
+      </div>
+      <div class="form-row" id="customTime_row" style="display:none">
+        <div class="form-group">
+          <label>Start time</label>
+          <input id="c_tstart" placeholder="e.g. 4:00">
+        </div>
+        <div class="form-group">
+          <label>End time</label>
+          <input id="c_tend" placeholder="e.g. 6:50">
         </div>
       </div>
       <div class="form-row" id="onceDay_row" style="display:none">
@@ -1582,11 +1592,17 @@ function renderGrid(){
 }
 
 function blockContains(block,time){
-  // Check if a lecture time slot falls within a studio block range
-  const blockStart=parseTime(block.split('–')[0]);
-  const blockEnd=parseTime(block.split('–')[1]);
+  // Which grid row a time belongs to: the last block that starts at or before it.
+  // Unusual times (e.g. 4:00 or 5:30) land in the nearest earlier row; anything
+  // before 8:00 goes in the first row.
+  return blockFor(time)===block;
+}
+function blockFor(time){
+  if(!/\d/.test(time||''))return null;
   const slotStart=parseTime(time.split('–')[0]);
-  return slotStart>=blockStart&&slotStart<blockEnd;
+  let found=BLOCKS[0];
+  BLOCKS.forEach(b=>{if(parseTime(b.split('–')[0])<=slotStart)found=b;});
+  return found;
 }
 function parseTime(t){
   if(!t)return 0;
@@ -1716,11 +1732,63 @@ function renderRotation(){
 }
 
 // ── Modal ──────────────────────────────────────────────────────────────────
+// Custom (unusual) times: any time already used in the schedule shows up in the
+// dropdown, and "Custom time…" lets you type a new start and end.
+const CUSTOM_TIME='__custom__';
+function cleanClock(t){
+  const m=/^\s*(\d{1,2})(?::?(\d{2}))?\s*$/.exec((t||'').replace(/\s*(am|pm|a\.m\.|p\.m\.)\s*$/i,''));
+  if(!m)return '';
+  let h=+m[1];const mm=m[2]===undefined?0:+m[2];
+  if(h>12&&h<24)h-=12;   // accept 24-hour times like 16:00
+  if(h<1||h>12||mm>59)return '';
+  return h+':'+String(mm).padStart(2,'0');
+}
+function usedCustomTimes(pat){
+  const std=new Set([...(TIME_OPTIONS[pat]||[]),'No set time','Other','']);
+  const found=new Set();
+  Object.values(db||{}).forEach(s=>((s&&s.courses)||[]).forEach(c=>{
+    if(c&&c.pattern===pat&&c.time&&!std.has(c.time))found.add(c.time);
+  }));
+  return [...found].sort((a,b)=>parseTime(a)-parseTime(b));
+}
 function updateTimeOptions(){
   const pat=document.getElementById('c_pattern').value;
   const sel=document.getElementById('c_time');
-  sel.innerHTML=(TIME_OPTIONS[pat]||[]).map(t=>`<option value="${t}">${t}</option>`).join('');
+  let opts=(TIME_OPTIONS[pat]||[]).map(t=>`<option value="${t}">${t}</option>`).join('');
+  if(pat!=='async'){
+    opts+=usedCustomTimes(pat).map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+    opts+=`<option value="${CUSTOM_TIME}">Custom time…</option>`;
+  }
+  sel.innerHTML=opts;
   document.getElementById('onceDay_row').style.display=pat==='once'?'grid':'none';
+  toggleCustomTime();
+}
+function toggleCustomTime(){
+  const custom=document.getElementById('c_time').value===CUSTOM_TIME;
+  document.getElementById('customTime_row').style.display=custom?'grid':'none';
+  if(custom&&!document.getElementById('c_tstart').value)document.getElementById('c_tstart').focus();
+}
+// Put a saved time into the dropdown, adding it as an option if it isn't one
+function setTimeValue(t){
+  const sel=document.getElementById('c_time');
+  document.getElementById('c_tstart').value='';
+  document.getElementById('c_tend').value='';
+  if(t&&![...sel.options].some(o=>o.value===t)){
+    const o=document.createElement('option');o.value=t;o.textContent=t;
+    sel.insertBefore(o,sel.querySelector(`option[value="${CUSTOM_TIME}"]`));
+  }
+  sel.value=t||'';
+  toggleCustomTime();
+}
+// The time to save; null means the custom time wasn't filled in correctly
+function readTimeValue(){
+  const v=document.getElementById('c_time').value;
+  if(v!==CUSTOM_TIME)return v;
+  const a=cleanClock(document.getElementById('c_tstart').value);
+  const b=cleanClock(document.getElementById('c_tend').value);
+  if(!a||!b){alert('Please enter a start and end time, like 4:00 and 6:50.');return null;}
+  if(parseTime(b)<=parseTime(a)){alert('The end time needs to be after the start time.');return null;}
+  return a+'–'+b;
 }
 
 function openAddModal(pattern,block){
@@ -1773,7 +1841,7 @@ function openEditModal(idx){
   document.getElementById('c_room').value=c.room||'';
   document.getElementById('c_pattern').value=c.pattern||'mw';
   updateTimeOptions();
-  document.getElementById('c_time').value=c.time||'';
+  setTimeValue(c.time||'');
   document.getElementById('c_oncedday').value=c.oncedday||'Monday';
   document.getElementById('c_hidden').checked=!!c.hidden;
   document.getElementById('c_bracketed').checked=!!c.bracketed;
@@ -1810,6 +1878,8 @@ function closeModal(){document.getElementById('modalOverlay').classList.remove('
 
 function saveCourse(){
   if(!currentSem)return;
+  const chosenTime=readTimeValue();
+  if(chosenTime===null)return;
   const record={
     code:document.getElementById('c_code').value.trim().toUpperCase(),
     section:document.getElementById('c_section').value.trim(),
@@ -1817,7 +1887,7 @@ function saveCourse(){
     faculty:document.getElementById('c_faculty').value.trim(),
     room:document.getElementById('c_room').value,
     pattern:document.getElementById('c_pattern').value,
-    time:document.getElementById('c_time').value,
+    time:chosenTime,
     oncedday:document.getElementById('c_oncedday').value,
     hidden:document.getElementById('c_hidden').checked,
     bracketed:document.getElementById('c_bracketed').checked,
