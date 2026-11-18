@@ -303,6 +303,7 @@ const DEFAULT_ROTATION = [
   ["ART 5993","THESIS","FALL/SPRING","ALL"],
   ["ENG 3433","PROFESSIONAL WRITING","FALL/SPRING","ALL"],
   ["EDUC 4946","CLINICAL STUDENT TEACHING","FALL/SPRING","ALL"],
+  ["UNIV 1333","PASSION AND PURPOSE","FALL","ALL"],
 ];
 
 // Qualified faculty per course (first = most typical/predicted)
@@ -375,6 +376,7 @@ const CAP = {
   "ART 5993": ["Sara"],
   "ENG 3433": [],
   "EDUC 4946": ["Laura Lee"],
+  "UNIV 1333": ["Christine"],
 };
 
 // Specific known assignments from schedule data
@@ -426,6 +428,8 @@ function patchFourYearElectives(arr){
     const yr=FOUR_YEAR_ELECTIVES[r[0]];
     if(yr&&(r[2]!=='SPRING'||r[3]!==yr)){r[2]='SPRING';r[3]=yr;changed=true;}
   });
+  // Nov 2026: new course, every fall
+  if(arr&&!arr.some(r=>r[0]==='UNIV 1333')){arr.push(["UNIV 1333","PASSION AND PURPOSE","FALL","ALL"]);changed=true;}
   return changed;
 }
 try{

@@ -596,6 +596,7 @@ const ROTATION=[
   {code:'ART 4953',title:'INTERNSHIP',sem:'FALL/SPRING',yr:'ALL'},
   {code:'ART 4973',title:'SENIOR RESEARCH IN ART HISTORY',sem:'IRREGULAR',yr:''},
   {code:'ART 4993',title:'BFA EXHIBITION',sem:'FALL/SPRING',yr:'ALL'},
+  {code:'UNIV 1333',title:'PASSION AND PURPOSE',sem:'FALL',yr:'ALL'},
 ];
 
 // Rotation overrides — lets admins change sem/yr in-browser, persisted to localStorage
@@ -771,7 +772,7 @@ try{
       if(typeof refreshCommentsUI==='function')refreshCommentsUI();
       const payload=doc.data()&&doc.data().payload;
       if(payload&&Object.keys(payload).length){
-        const fixed=applyFourYearElectives(payload);
+        const fixed=applyFourYearElectives(payload)|applyUnivPassionPurpose(payload);
         const first=!firstSnapshotSeen; firstSnapshotSeen=true;
         // Admin view: never throw away edits that haven't been published.
         // Keep the local copy and let the user choose, if this browser has
@@ -792,7 +793,7 @@ try{
         if(typeof renderAll==='function')renderAll();
         if(typeof renderLoad==='function')renderLoad();
         showSaveNotice(fixed&&!FACULTY_MODE
-          ?'⚠ Updated Latinx Art / Interdisciplinary Influences / History of Camera Arts / African American Art to the new 4-year spring rotation — click "Publish for Everyone" to save.'
+          ?'⚠ Automatic schedule updates were applied on this page (e.g. UNIV 1333 Passion and Purpose added to each fall from 2027) — click "Publish for Everyone" to save them.'
           :'✓ Showing the current published schedule.');
       }
     } else if(!firestoreSeeded){
@@ -859,6 +860,25 @@ function applyFourYearElectives(d){
       if(CODES.includes(cs[k].code)&&cs[k].code!==target){cs.splice(k,1);changed=true;}
     }
     if(target&&TEMPLATES[sem]&&!cs.some(c=>c.code===target)){cs.push({...TEMPLATES[sem]});changed=true;}
+  });
+  return changed;
+}
+
+// Nov 2026: new course UNIV 1333 Passion and Purpose, every fall from 2027.
+// Christine teaches FA27; later falls are TBD (staff). Added once per semester
+// (flagged) so deleting or editing it later sticks. Returns true if changed.
+function applyUnivPassionPurpose(d){
+  let changed=false;
+  Object.keys(d||{}).forEach(sem=>{
+    const [season,yr]=sem.split(' ');
+    if(season!=='Fall'||+yr<2027||!d[sem]||!d[sem].courses||d[sem].univ1333Added)return;
+    if(!d[sem].courses.some(c=>c.code==='UNIV 1333')){
+      d[sem].courses.push({code:'UNIV 1333',section:'.01',title:'PASSION AND PURPOSE',
+        faculty:+yr===2027?'CHRISTINE':'staff',room:'',pattern:'async',time:'',
+        hidden:false,bracketed:false,hybrid:false,grad:false,bracketpair:'',
+        notes:+yr===2027?'':'Instructor TBD',oncedday:''});
+    }
+    d[sem].univ1333Added=true;changed=true;
   });
   return changed;
 }
@@ -980,6 +1000,7 @@ function applyFourYearElectives(d){
     });
   });
   if(applyFourYearElectives(db))changed=true;
+  if(applyUnivPassionPurpose(db))changed=true;
   if(changed)saveData(db);
 })();
 
