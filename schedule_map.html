@@ -1907,16 +1907,35 @@ const XL_INSTRUCTORS={
 };
 const XL_HEADERS=['SEC TERM','COURSE','COURSE TYPES','COURSE TYPE DESC','SEC START DATE','SEC END DATE','SHORT TITLE','COLLEGE','SUBJECT','COURSE LEVEL','CIP CODE','ENR','Wait','Section Cap','SCH','UGL SCH (FR/SO)','UGU SCH (JR/SR)','PB SCH','GM SCH','GD SCH','INSTRUCTOR','TWU ID','METH','DAYS','BLDG','ROOM','ROOM CAPACITY','LOCATION','START ','END','COMMENTS','SEC STATUS','PROG FEE','LAB FEE','DIS FEE','DL FEE','SYLLABUS','VITAE','REPORTING TERM','DUAL CREDIT','CROSS LISTED','CROSS LISTING ENROLLMENT','SMALL CLASS','BRACKETED COURSE','INSTRUCTOR CAMPUS'];
 const XL_EXPENSES='ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT.';
-const XL_KNOWN_DATES={'Spring 2027':{start:'2027-01-11',end:'2027-05-07'}};
+// Full-term start/end dates from "TWU Skeletal Term Dates 2024–2033"
+// (all future dates subject to change). Add new years here as they're published.
+const XL_KNOWN_DATES={
+  'Fall 2026':{start:'2026-08-24',end:'2026-12-11'},
+  'Spring 2027':{start:'2027-01-11',end:'2027-05-07'},
+  'Fall 2027':{start:'2027-08-23',end:'2027-12-10'},
+  'Spring 2028':{start:'2028-01-18',end:'2028-05-12'},
+  'Fall 2028':{start:'2028-08-28',end:'2028-12-15'},
+  'Spring 2029':{start:'2029-01-16',end:'2029-05-11'},
+  'Fall 2029':{start:'2029-08-27',end:'2029-12-14'},
+  'Spring 2030':{start:'2030-01-14',end:'2030-05-10'},
+  'Fall 2030':{start:'2030-08-26',end:'2030-12-13'},
+  'Spring 2031':{start:'2031-01-13',end:'2031-05-09'},
+  'Fall 2031':{start:'2031-08-25',end:'2031-12-12'},
+  'Spring 2032':{start:'2032-01-12',end:'2032-05-07'},
+  'Fall 2032':{start:'2032-08-23',end:'2032-12-10'},
+  'Spring 2033':{start:'2033-01-18',end:'2033-05-13'}
+};
 
 function xlTermDefaults(sem){
   const [season,yr]=sem.split(' ');
-  const saved=(()=>{try{return JSON.parse(localStorage.getItem('twu_export_terms')||'{}')[sem]||null;}catch(e){return null;}})();
-  if(saved)return saved;
-  const s=season==='Spring'?'SP':season==='Fall'?'FA':'SU';
-  const r=season==='Spring'?'SPR':season==='Fall'?'FAL':'SUM';
   const d=XL_KNOWN_DATES[sem]||{start:'',end:''};
-  return {term:yr+s,rep:yr+r,start:d.start,end:d.end};
+  const saved=(()=>{try{return JSON.parse(localStorage.getItem('twu_export_terms')||'{}')[sem]||null;}catch(e){return null;}})();
+  if(saved)return {...saved,start:saved.start||d.start,end:saved.end||d.end};
+  const s=season==='Spring'?'SP':season==='Fall'?'FA':'SU';
+  // TWU's reporting year: a fall term reports under the next year (Fall 2027 → 2028)
+  const rptYear=season==='Fall'?(+yr+1):+yr;
+  const r=season==='Spring'?'SPR':season==='Fall'?'FAL':'SUM';
+  return {term:yr+s,rep:rptYear+r,start:d.start,end:d.end};
 }
 function openExcelExport(){
   if(!currentSem){alert('Please select a semester first.');return;}
@@ -1926,7 +1945,7 @@ function openExcelExport(){
   document.getElementById('xl_rep').value=t.rep;
   document.getElementById('xl_start').value=t.start;
   document.getElementById('xl_end').value=t.end;
-  const fallNote=/^Fall/.test(currentSem)?'Fall term codes are a guess (the example only shows spring: 2027SP / 2027SPR). Please confirm them.':'';
+  const fallNote=/^Fall/.test(currentSem)?'Fall codes are a best guess: the example only shows spring (2027SP / 2027SPR), and TWU reports fall under the next year (e.g. Fall 2027 → 2028). Please confirm them.':'';
   document.getElementById('xlNote').textContent=fallNote;
   document.getElementById('excelOverlay').classList.add('open');
 }
