@@ -511,7 +511,11 @@
   <div class="modal" style="max-width:480px;">
     <div class="modal-header"><h2>SQL Report Upload</h2><button class="modal-close" onclick="closeSqlUpload()">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:.82rem;line-height:1.5;margin-bottom:12px;">Upload the registrar's report for the semester you're preparing (.xlsx or .csv). It's compared with that semester in the schedule map and you get back a marked-up copy to submit.</p>
+      <p style="font-size:.82rem;line-height:1.5;margin-bottom:10px;">Upload the registrar's report for the semester you're preparing. It's compared with that semester in the schedule map and you get back a marked-up copy to submit.</p>
+      <div style="font-size:.78rem;line-height:1.55;background:#f7f3ee;border:1px solid var(--mist);border-radius:3px;padding:8px 10px;margin-bottom:12px;">
+        <strong>File format:</strong> the SQL report as an Excel (.xlsx) or .csv file, one semester per file, with its row of column headings (COURSE, SHORT TITLE, INSTRUCTOR, DAYS…) left in.<br>
+        <strong>Remove before uploading:</strong> the SYN numbers. Clear the numbers but keep the SYN column. (Any SYN numbers left in are blanked automatically, and faculty ID columns are dropped.)
+      </div>
       <div class="form-row"><div class="form-group"><label>Report file</label>
         <div style="display:flex;gap:8px;align-items:center;">
           <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="document.getElementById('sqlFile').click()">Choose file…</button>
@@ -2257,8 +2261,16 @@ function mkStripIds(aoa){
   if(!ids.length)return aoa;
   return aoa.map(r=>{const x=(r||[]).slice();ids.forEach(i=>{if(x.length>i)x.splice(i,1);});return x;});
 }
+// SYN numbers aren't kept either: the column stays (empty) for the department to fill in
+function mkClearSyn(aoa){
+  const hi=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
+  if(hi<0)return aoa;
+  const c=(aoa[hi]||[]).findIndex(v=>mkNorm(v)==='SYN');
+  if(c<0)return aoa;
+  return aoa.map((r,i)=>{if(i<=hi||!r||r.length<=c)return r;const x=r.slice();x[c]='';return x;});
+}
 function markupReport(aoa,appRows){
-  aoa=mkStripIds(aoa);
+  aoa=mkClearSyn(mkStripIds(aoa));
   const headerIdx=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
   if(headerIdx<0)throw new Error('Couldn\'t find the column headings (a "COURSE" column) in that file.');
   const rows=aoa.map(r=>(r||[]).slice());
@@ -2407,7 +2419,7 @@ function sqlFileChosen(e){
   reader.onload=ev=>loadSheetJS().then(()=>{
     const wb=XLSX.read(ev.target.result,{type:'array',cellStyles:true});
     const src=wb.Sheets[wb.SheetNames[0]];
-    const aoa=mkStripIds(XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''}));
+    const aoa=mkClearSyn(mkStripIds(XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''})));
     const hi=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
     if(hi<0){info.innerHTML='<span style="color:#b00020;">Couldn\'t find the column headings (a "COURSE" column) in that file.</span>';return;}
     // Column widths/hidden columns, by heading (IDs removed to match)
