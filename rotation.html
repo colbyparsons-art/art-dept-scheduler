@@ -357,7 +357,7 @@ const CAP = {
   "ART 4623": ["Christine"],
   "ART 4363": ["Julie","Sheli"],
   "ART 4483": ["Sheli","Christine"],
-  "ART 4543": ["Tanya"],
+  "ART 4543": ["Sara"],
   "ART 4653": ["Meg"],
   "ART 4683": ["Meg"],
   "ART 4703": ["Gio"],
@@ -431,6 +431,16 @@ function patchFourYearElectives(arr){
 try{
   const s=localStorage.getItem(ROTATION_KEY);
   if(s){const arr=JSON.parse(s);if(patchFourYearElectives(arr))localStorage.setItem(ROTATION_KEY,JSON.stringify(arr));}
+}catch(e){}
+// One-time fix (Nov 2026): ART 4543 was wrongly listed under Tanya — it's Sara's course.
+// Drop any saved "Tanya" assignment for it so the default (Sara) shows.
+try{
+  const s=localStorage.getItem(ASSIGN_KEY);
+  if(s){
+    const a=JSON.parse(s);let ch=false;
+    Object.keys(a).forEach(k=>{if(k.startsWith('ART 4543|||')&&a[k]==='Tanya'){delete a[k];ch=true;}});
+    if(ch)localStorage.setItem(ASSIGN_KEY,JSON.stringify(a));
+  }
 }catch(e){}
 
 function getRotation(){
