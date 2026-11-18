@@ -496,8 +496,7 @@
     <div class="modal-header"><h2>Excel — <span id="xlSem"></span></h2><button class="modal-close" onclick="closeExcelExport()">✕</button></div>
     <div class="modal-body">
       <p style="font-size:.82rem;line-height:1.5;margin-bottom:12px;">Downloads this semester in the university's Course Schedule format. A second sheet, <strong>Check before sending</strong>, lists anything that was guessed or is missing.</p>
-      <div class="form-row"><div class="form-group"><label>Term code (SEC TERM)</label><input type="text" id="xl_term" placeholder="e.g. 2027SP"/></div>
-        <div class="form-group"><label>Reporting term</label><input type="text" id="xl_rep" placeholder="e.g. 2027SPR"/></div></div>
+      <div class="form-row"><div class="form-group"><label>Term code (SEC TERM)</label><input type="text" id="xl_term" placeholder="e.g. 2027SP"/></div></div>
       <div class="form-row"><div class="form-group"><label>Semester start date</label><input type="date" id="xl_start"/></div>
         <div class="form-group"><label>Semester end date</label><input type="date" id="xl_end"/></div></div>
       <div id="xlNote" style="font-size:.76rem;color:#a35a00;"></div>
@@ -1999,22 +1998,23 @@ function xlTermDefaults(sem){
   const [season,yr]=sem.split(' ');
   const d=XL_KNOWN_DATES[sem]||{start:'',end:''};
   const saved=(()=>{try{return JSON.parse(localStorage.getItem('twu_export_terms')||'{}')[sem]||null;}catch(e){return null;}})();
-  if(saved)return {...saved,start:saved.start||d.start,end:saved.end||d.end};
   const s=season==='Spring'?'SP':season==='Fall'?'FA':'SU';
-  // TWU's reporting year: a fall term reports under the next year (Fall 2027 → 2028)
+  // TWU's reporting year: a fall term reports under the next year (Fall 2027 → 2028).
+  // Always worked out here (no longer typed in); an uploaded report's own value wins.
   const rptYear=season==='Fall'?(+yr+1):+yr;
   const r=season==='Spring'?'SPR':season==='Fall'?'FAL':'SUM';
-  return {term:yr+s,rep:rptYear+r,start:d.start,end:d.end};
+  const rep=rptYear+r;
+  if(saved)return {term:saved.term||yr+s,rep,start:saved.start||d.start,end:saved.end||d.end};
+  return {term:yr+s,rep,start:d.start,end:d.end};
 }
 function openExcelExport(){
   if(!currentSem){alert('Please select a semester first.');return;}
   const t=xlTermDefaults(currentSem);
   document.getElementById('xlSem').textContent=currentSem;
   document.getElementById('xl_term').value=t.term;
-  document.getElementById('xl_rep').value=t.rep;
   document.getElementById('xl_start').value=t.start;
   document.getElementById('xl_end').value=t.end;
-  const fallNote=/^Fall/.test(currentSem)?'Fall codes are a best guess: the example only shows spring (2027SP / 2027SPR), and TWU reports fall under the next year (e.g. Fall 2027 → 2028). Please confirm them.':'';
+  const fallNote=/^Fall/.test(currentSem)?'The fall term code is a best guess (the example only shows spring, 2027SP). Please confirm it.':'';
   document.getElementById('xlNote').textContent=fallNote;
   document.getElementById('excelOverlay').classList.add('open');
 }
@@ -2146,13 +2146,13 @@ function loadSheetJS(){
 function downloadExcel(){
   const opts={
     term:document.getElementById('xl_term').value.trim(),
-    rep:document.getElementById('xl_rep').value.trim(),
+    rep:xlTermDefaults(currentSem).rep,
     startIso:document.getElementById('xl_start').value,
     endIso:document.getElementById('xl_end').value
   };
   try{
     const all=JSON.parse(localStorage.getItem('twu_export_terms')||'{}');
-    all[currentSem]={term:opts.term,rep:opts.rep,start:opts.startIso,end:opts.endIso};
+    all[currentSem]={term:opts.term,start:opts.startIso,end:opts.endIso};
     localStorage.setItem('twu_export_terms',JSON.stringify(all));
   }catch(e){}
   opts.start=xlExcelDate(opts.startIso);opts.end=xlExcelDate(opts.endIso);
@@ -2318,11 +2318,16 @@ function markupReport(aoa,appRows){
     if(PERMISSION.test(String(get(r.row,'SHORT TITLE')))&&!app.some(a=>a.code===r.code)){changes.push([label(r.row),'Left as is','permission section','not tracked in the schedule map']);return;}
     rowFill.set(r.row,MK_RED);dropped++;changes.push([label(r.row),'Dropped','in the report','not in the schedule map']);
   });
+  // The report's own reporting term (its most common value) is used for added rows
+  const repTerms={};
+  rep.forEach(r=>{const v=String(get(r.row,'REPORTING TERM')).trim();if(v)repTerms[v]=(repTerms[v]||0)+1;});
+  const reportRep=Object.keys(repTerms).sort((x,y)=>repTerms[y]-repTerms[x])[0]||'';
   // Added → blue rows, slotted in course order
   const added=app.filter(a=>!usedA.has(a)).map(a=>{
     const row=header.map(h=>{
       const k=mkNorm(h);
       if(k==='SEC TERM'||k==='SYN'||k==='ENR'||k==='WAIT'||k==='SCH')return '';
+      if(k==='REPORTING TERM'&&reportRep)return reportRep;
       return a.o[k]??'';
     });
     rowFill.set(row,MK_BLUE);
