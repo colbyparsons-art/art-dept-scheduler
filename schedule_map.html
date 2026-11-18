@@ -751,7 +751,7 @@ function discardLocalEdits(){
   if(!confirm('Discard the unpublished changes in this browser and load the published schedule? This cannot be undone. (Tip: download a backup first.)'))return;
   db=pendingPublished;pendingPublished=null;
   saveData(db);clearDirty();hideConflictBanner();
-  if(!currentSem||!db[currentSem])currentSem=sortedSemKeys(db)[0]||null;
+  if(!currentSem||!db[currentSem])currentSem=defaultSem();
   buildSemSelect();renderAll();
   showSaveNotice('✓ Showing the current published schedule.');
 }
@@ -788,7 +788,7 @@ try{
         db=payload;
         hideConflictBanner();
         if(!FACULTY_MODE)saveData(db);   // keep this browser's copy in step with what's published
-        if(!currentSem||!db[currentSem])currentSem=sortedSemKeys(db)[0]||null;
+        if(!currentSem||!db[currentSem])currentSem=defaultSem();
         if(typeof buildSemSelect==='function')buildSemSelect();
         if(typeof renderAll==='function')renderAll();
         if(typeof renderLoad==='function')renderLoad();
@@ -1006,7 +1006,11 @@ function applyUnivPassionPurpose(d){
   if(changed)saveData(db);
 })();
 
-let currentSem=sortedSemKeys(db)[0]||null;
+// Semester the map opens on, in both views, for everyone (the one being planned now).
+// Change this one line when planning moves on to the next semester.
+const DEFAULT_SEMESTER='Spring 2027';
+function defaultSem(){return db&&db[DEFAULT_SEMESTER]?DEFAULT_SEMESTER:(sortedSemKeys(db)[0]||null);}
+let currentSem=defaultSem();
 let editingId=null;
 
 // ── Semester management ────────────────────────────────────────────────────
@@ -1135,7 +1139,7 @@ function deleteSemester(){
   if(!confirm('Delete '+currentSem+' and all its courses?'))return;
   delete db[currentSem];
   saveEdit(db);
-  currentSem=sortedSemKeys(db)[0]||null;
+  currentSem=defaultSem();
   buildSemSelect();
   renderAll();
 }
@@ -1843,7 +1847,7 @@ function importData(e){
     try{
       const d=JSON.parse(ev.target.result);
       db=d;saveEdit(db);
-      currentSem=sortedSemKeys(db)[0]||null;
+      currentSem=defaultSem();
       buildSemSelect();renderAll();
       alert('Imported successfully.');
     }catch(err){alert('Error: '+err.message);}
