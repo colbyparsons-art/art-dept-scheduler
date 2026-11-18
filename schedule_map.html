@@ -499,7 +499,6 @@
       <div class="form-row"><div class="form-group"><label>Term code (SEC TERM)</label><input type="text" id="xl_term" placeholder="e.g. 2027SP"/></div></div>
       <div class="form-row"><div class="form-group"><label>Semester start date</label><input type="date" id="xl_start"/></div>
         <div class="form-group"><label>Semester end date</label><input type="date" id="xl_end"/></div></div>
-      <div id="xlNote" style="font-size:.76rem;color:#a35a00;"></div>
     </div>
     <div class="modal-footer"><div style="display:flex;gap:8px;margin-left:auto;">
       <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeExcelExport()">Cancel</button>
@@ -2014,8 +2013,6 @@ function openExcelExport(){
   document.getElementById('xl_term').value=t.term;
   document.getElementById('xl_start').value=t.start;
   document.getElementById('xl_end').value=t.end;
-  const fallNote=/^Fall/.test(currentSem)?'The fall term code is a best guess (the example only shows spring, 2027SP). Please confirm it.':'';
-  document.getElementById('xlNote').textContent=fallNote;
   document.getElementById('excelOverlay').classList.add('open');
 }
 function closeExcelExport(){document.getElementById('excelOverlay').classList.remove('open');}
