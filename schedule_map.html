@@ -874,7 +874,9 @@ function applyUnivPassionPurpose(d){
     if(season!=='Fall'||+yr<2027||!d[sem]||!d[sem].courses||d[sem].univ1333Added)return;
     if(!d[sem].courses.some(c=>c.code==='UNIV 1333')){
       d[sem].courses.push({code:'UNIV 1333',section:'.01',title:'PASSION AND PURPOSE',
-        faculty:+yr===2027?'CHRISTINE':'staff',room:'',pattern:'async',time:'',
+        // FA27: MW 11:00 with Christine; later falls wait in "Needs Placement"
+        faculty:+yr===2027?'CHRISTINE':'staff',room:'',
+        pattern:+yr===2027?'mw':'async',time:+yr===2027?'11:00–12:20 (lecture)':'',
         hidden:false,bracketed:false,hybrid:false,grad:false,bracketpair:'',
         notes:+yr===2027?'':'Instructor TBD',oncedday:''});
     }
