@@ -236,10 +236,9 @@
   </div>
   <div class="header-btns">
     <button class="btn btn-gold" onclick="generatePDF()">⬇ Download PDF</button>
-    <button class="btn btn-outline admin-only" onclick="exportData()">⬇ Export</button>
     <button class="btn btn-outline admin-only" onclick="openExcelExport()" title="Download this semester in the university Course Schedule format">⬇ Excel</button>
-    <button class="btn btn-outline admin-only" onclick="document.getElementById('importFile').click()">⬆ Import</button>
-    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
+    <button class="btn btn-outline admin-only" onclick="document.getElementById('importFile').click()" title="Upload the registrar's report (.xlsx or .csv) to get a marked-up copy, or restore a .json backup">⬆ Import</button>
+    <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.json" style="display:none" onchange="importData(event)"/>
     <button class="btn btn-gold admin-only" onclick="openAddModal(null,null)">+ Add Course</button>
     <button class="btn btn-gold admin-only" id="publishBtn" onclick="publishToShared()">☁ Publish for Everyone</button>
   </div>
@@ -2138,7 +2137,8 @@ function loadSheetJS(){
   if(window.XLSX)return Promise.resolve();
   return new Promise((res,rej)=>{
     const s=document.createElement('script');
-    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    // xlsx-js-style = SheetJS plus cell colors (needed for the blue/red/yellow markup)
+    s.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
     s.onload=()=>res();s.onerror=()=>rej(new Error('Could not load the spreadsheet library — check the internet connection.'));
     document.head.appendChild(s);
   });
@@ -2176,14 +2176,187 @@ function downloadExcel(){
   }).catch(err=>alert(err.message));
 }
 
-function exportData(){
-  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='twu_schedule_map.json';a.click();
+// ── Mark up the university's prediction report ─────────────────────────────
+// The registrar sends a report (SQL download, .xlsx or .csv) that assumes we
+// repeat last year's sections. Upload it here: it's compared with this
+// semester in the schedule map and comes back marked up the way the
+// university wants it:
+//   blue row   = section we're adding      red row = section we're dropping
+//   yellow cell = a value that changed (only that cell)
+// SYN numbers and faculty IDs are left for the department to fill in.
+const MK_BLUE='00B0F0',MK_RED='FF0000',MK_YELLOW='FFFF00',MK_HEAD='4682B4';
+const mkNorm=v=>String(v??'').trim().toUpperCase();
+// "ART 1203 01", "ART 1203.01", "ART-1203-01" → {code:'ART 1203',sec:'01'}
+function mkParseCourse(v){
+  const m=/^\s*([A-Z]{2,4})[\s-]*(\d{4})(?:[\s.\-]*(\d{1,3}))?\s*$/i.exec(String(v??''));
+  if(!m)return null;
+  return {code:m[1].toUpperCase()+' '+m[2],sec:m[3]?m[3].padStart(2,'0'):''};
 }
+// Online sections are 50, 51… in the final schedule but 01, 02… in the report
+const mkSecKey=s=>{const n=parseInt(s,10);return isNaN(n)?String(s||''):String(n>=50?n-49:n);};
+// Minutes after midnight from "02:30 pm", "2:30", or an Excel time number
+function mkMinutes(v){
+  if(v===''||v==null)return null;
+  let h,mm,ap='';
+  if(typeof v==='number'){const t=Math.round((v%1)*1440);h=Math.floor(t/60);mm=t%60;}
+  else{const m=/(\d{1,2}):(\d{2})\s*([ap])?/i.exec(String(v));if(!m)return null;h=+m[1];mm=+m[2];ap=(m[3]||'').toLowerCase();}
+  h=h%12;
+  if(ap==='p'||(!ap&&h<8))h+=12;   // no am/pm: 1–7 o'clock are afternoon/evening
+  return h*60+mm;
+}
+const mkDays=v=>mkNorm(v).replace(/\s+/g,'');
+const mkRoom=v=>{const s=mkNorm(v);return /^\d+$/.test(s)?String(+s):s;};
+const mkInstr=v=>{const s=String(v??'').trim().toLowerCase().replace(/,\s*$/,'');return s===''?'staff':s;};
+const mkYN=v=>mkNorm(v)==='Y'?'Y':'N';
+// Delivery mode + bracket partner, so reworded comments aren't flagged
+function mkCommentKey(v){
+  const s=mkNorm(v);
+  const mode=/100%\s*ONLINE/.test(s)?'online':/HYBRID/.test(s)?'hybrid':/PERMISSION/.test(s)&&!/FACE TO FACE/.test(s)?'perm':'f2f';
+  const b=(/BRACKETED WITH\s+(?:[A-Z]{2,4}\s*)?(\d{4})/.exec(s)||[])[1]||'';
+  return mode+'|'+b;
+}
+// Fields compared for a section that's in both the report and the schedule
+const MK_FIELDS=[
+  ['INSTRUCTOR',mkInstr],['DAYS',mkDays],['BLDG',mkNorm],['ROOM',mkRoom],
+  ['START',mkMinutes],['END',mkMinutes],['COMMENTS',mkCommentKey],
+  ['SEC STATUS',mkNorm],['CROSS LISTED',mkYN],['BRACKETED COURSE',mkYN]
+];
+
+// aoa: the report as rows of cells. appRows: rows from buildExcelRows (XL_HEADERS order).
+// Returns the marked-up rows, which cells/rows to color, and a list of changes.
+function markupReport(aoa,appRows){
+  const headerIdx=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
+  if(headerIdx<0)throw new Error('Couldn\'t find the column headings (a "COURSE" column) in that file.');
+  const rows=aoa.map(r=>(r||[]).slice());
+  let header=rows[headerIdx].map(v=>String(v??'').trim());
+  const H=()=>Object.fromEntries(header.map((h,i)=>[mkNorm(h),i]).reverse());
+  // Make sure there's a SYN column (right after SEC TERM, or first)
+  let col=H();
+  if(col['SYN']===undefined){
+    const at=col['SEC TERM']!==undefined?col['SEC TERM']+1:0;
+    rows.forEach((r,i)=>{if(i>=headerIdx||r.length>at)r.splice(at,0,i===headerIdx?'SYN':'');});
+    header=rows[headerIdx].map(v=>String(v??'').trim());
+    col=H();
+  }
+  const ncol=header.length;
+  const idCol=header.findIndex(h=>/\bID\b/i.test(h)&&!/SYN/i.test(h));
+  const get=(r,name)=>{const i=col[name];return i===undefined?'':(r[i]??'');};
+  const changes=[];
+
+  // Report sections (data rows only)
+  const rep=[];
+  rows.forEach((r,i)=>{
+    if(i<=headerIdx)return;
+    const p=mkParseCourse(get(r,'COURSE'));
+    if(p)rep.push({i,row:r,...p});
+  });
+  // Schedule sections, as objects keyed by heading
+  const app=appRows.map(a=>{
+    const o={};XL_HEADERS.forEach((h,k)=>o[mkNorm(h)]=a[k]);
+    const p=mkParseCourse(o['COURSE'])||{code:'',sec:''};
+    return {o,...p};
+  });
+
+  // Pair report and schedule sections of the same course: best fit first
+  const pairs=[],usedR=new Set(),usedA=new Set();
+  const codes=new Set([...rep.map(r=>r.code),...app.map(a=>a.code)]);
+  codes.forEach(code=>{
+    const R=rep.filter(r=>r.code===code),A=app.filter(a=>a.code===code);
+    const cand=[];
+    R.forEach(r=>A.forEach(a=>{
+      let s=1;
+      if(mkDays(get(r.row,'DAYS'))===mkDays(a.o['DAYS']))s+=3;
+      if(mkMinutes(get(r.row,'START'))===mkMinutes(a.o['START']))s+=3;
+      if(mkRoom(get(r.row,'ROOM'))===mkRoom(a.o['ROOM']))s+=1;
+      if(mkInstr(get(r.row,'INSTRUCTOR'))===mkInstr(a.o['INSTRUCTOR']))s+=1;
+      if(mkSecKey(r.sec)===mkSecKey(a.sec))s+=2;
+      cand.push([s,r,a]);
+    }));
+    cand.sort((x,y)=>y[0]-x[0]);
+    cand.forEach(([s,r,a])=>{if(usedR.has(r)||usedA.has(a))return;usedR.add(r);usedA.add(a);pairs.push([r,a]);});
+  });
+
+  const cellFill=new Map(),rowFill=new Map();   // keyed by the row arrays themselves
+  const mark=(row,c)=>{if(!cellFill.has(row))cellFill.set(row,new Set());cellFill.get(row).add(c);};
+  const label=r=>String(get(r,'COURSE')).trim();
+
+  // Changed values → yellow cells
+  pairs.forEach(([r,a])=>{
+    MK_FIELDS.forEach(([name,norm])=>{
+      const c=col[name];if(c===undefined)return;
+      const was=r.row[c],now=a.o[name]??'';
+      if(norm(was)===norm(now))return;
+      r.row[c]=now;mark(r.row,c);
+      changes.push([label(r.row),header[c],String(was??''),String(now)]);
+      if(name==='INSTRUCTOR'&&idCol>=0&&r.row[idCol]!==''){changes.push([label(r.row),header[idCol],String(r.row[idCol]),'(fill in)']);r.row[idCol]='';mark(r.row,idCol);}
+    });
+    // Special-topics sections: put the topic in the title
+    const tc=col['SHORT TITLE'];
+    if(tc!==undefined&&/^ST\b/i.test(String(r.row[tc]||'').trim())){
+      const topic=String(a.o['SHORT TITLE']||'').trim();
+      if(topic&&!/^ST\b/i.test(topic)&&!/SPECIAL TOPICS/i.test(topic)){
+        const now=('ST: '+topic).slice(0,30).trim();
+        if(mkNorm(now)!==mkNorm(r.row[tc])){changes.push([label(r.row),header[tc],String(r.row[tc]),now]);r.row[tc]=now;mark(r.row,tc);}
+      }
+    }
+  });
+  // Dropped → red rows. Left alone: other departments' courses, and permission
+  // sections (internships etc.) the schedule map doesn't list at all.
+  const subjects=new Set(app.map(a=>a.code.split(' ')[0]));
+  const PERMISSION=/INTERNSHIP|IND(EPENDENT)?s+STUDY|THESIS|RESEARCH WRITING|CAPSTONE/i;
+  let dropped=0;
+  rep.forEach(r=>{
+    if(usedR.has(r))return;
+    if(!subjects.has(r.code.split(' ')[0])){changes.push([label(r.row),'Left as is',"another department's course",'']);return;}
+    if(PERMISSION.test(String(get(r.row,'SHORT TITLE')))&&!app.some(a=>a.code===r.code)){changes.push([label(r.row),'Left as is','permission section','not tracked in the schedule map']);return;}
+    rowFill.set(r.row,MK_RED);dropped++;changes.push([label(r.row),'Dropped','in the report','not in the schedule map']);
+  });
+  // Added → blue rows, slotted in course order
+  const added=app.filter(a=>!usedA.has(a)).map(a=>{
+    const row=header.map(h=>{
+      const k=mkNorm(h);
+      if(k==='SEC TERM'||k==='SYN'||k==='ENR'||k==='WAIT'||k==='SCH'||/\bID\b/.test(k))return '';
+      return a.o[k]??'';
+    });
+    rowFill.set(row,MK_BLUE);
+    changes.push([a.o['COURSE'],'Added','not in the report','in the schedule map']);
+    return {row,code:a.code,sec:a.sec};
+  });
+  const order=(x,y)=>x.code.localeCompare(y.code)||(+x.sec||0)-(+y.sec||0);
+  added.sort(order);
+  const out=[];
+  let k=0;const lastRep=rep.length?rep[rep.length-1].i:headerIdx;
+  rows.forEach((r,i)=>{
+    const here=rep.find(x=>x.i===i);
+    if(here)while(k<added.length&&order(added[k],here)<0)out.push(added[k++].row);
+    out.push(r);
+    if(i===lastRep)while(k<added.length)out.push(added[k++].row);
+  });
+  // Pad every row to the full width
+  out.forEach(r=>{for(let c=r.length;c<ncol;c++)r[c]='';});
+  return {aoa:out,headerRow:out.indexOf(rows[headerIdx]),ncol,cellFill,rowFill,changes,
+    counts:{added:added.length,dropped,changedCells:[...cellFill.values()].reduce((n,s)=>n+s.size,0)}};
+}
+
+// Which semester a report is for, from a term code like 2027SP / 2027FA
+function mkDetectSemester(aoa){
+  for(const r of aoa.slice(0,15))for(const v of (r||[])){
+    const m=/^\s*(\d{4})\s*(SP|FA|SU)\b/i.exec(String(v??''));
+    if(m)return ({SP:'Spring',FA:'Fall',SU:'Summer'})[m[2].toUpperCase()]+' '+m[1];
+  }
+  return null;
+}
+// Import: .json = restore a backup; .xlsx/.xls/.csv = the registrar's report
 function importData(e){
-  const file=e.target.files[0];if(!file)return;
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  if(/\.json$/i.test(file.name)){importBackup(file);return;}
+  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){alert("Please choose the registrar's report (.xlsx or .csv) or a schedule backup (.json).");return;}
+  const reader=new FileReader();
+  reader.onload=ev=>loadSheetJS().then(()=>markupFromFile(ev.target.result)).catch(err=>alert("Couldn't read that report: "+err.message));
+  reader.readAsArrayBuffer(file);
+}
+function importBackup(file){
+  if(!confirm('Restore this backup file? It replaces every semester on this computer (nothing changes for anyone else until you click Publish for Everyone).'))return;
   const reader=new FileReader();
   reader.onload=function(ev){
     try{
@@ -2195,6 +2368,76 @@ function importData(e){
     }catch(err){alert('Error: '+err.message);}
   };
   reader.readAsText(file);
+}
+function markupFromFile(buf){
+  const wb=XLSX.read(buf,{type:'array',cellStyles:true});
+  const src=wb.Sheets[wb.SheetNames[0]];
+  const aoa=XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''});
+  // Which semester to compare with
+  const found=mkDetectSemester(aoa);
+  const sem=found&&db[found]?found:currentSem;
+  const msg=found
+    ?(db[found]?`This report is for ${found}. Compare it with the ${found} schedule?`
+      :`This report is for ${found}, but the schedule map has no ${found}. Compare it with ${currentSem} instead?`)
+    :`Couldn't tell which semester this report is for. Compare it with ${currentSem}?`;
+  if(!confirm(msg))return;
+  if(!sem||!db[sem]){alert('Please select a semester first.');return;}
+  const t=xlTermDefaults(sem);
+  const {rows,review}=buildExcelRows(sem,{start:xlExcelDate(t.start),end:xlExcelDate(t.end),rep:t.rep});
+  const res=markupReport(aoa,rows);
+  // Marked-up sheet
+  const ws=XLSX.utils.aoa_to_sheet(res.aoa);
+  const header=res.aoa[res.headerRow].map(h=>mkNorm(h));
+  const solid=rgb=>({fill:{patternType:'solid',fgColor:{rgb}}});
+  res.aoa.forEach((row,r)=>{
+    const rf=res.rowFill.get(row),cf=res.cellFill.get(row);
+    for(let c=0;c<res.ncol;c++){
+      const ref=XLSX.utils.encode_cell({r,c});
+      const cell=ws[ref];
+      // Keep times and dates readable
+      if(cell&&cell.t==='n'&&r>res.headerRow){
+        if(/^(START|END)$/.test(header[c])&&cell.v<1)cell.z='hh:mm AM/PM';
+        else if(/DATE/.test(header[c]))cell.z='m/d/yyyy';
+      }
+      const color=r===res.headerRow?MK_HEAD:rf||(cf&&cf.has(c)?MK_YELLOW:null);
+      if(!color)continue;
+      if(!ws[ref])ws[ref]={t:'s',v:''};
+      ws[ref].s=r===res.headerRow?{...solid(color),font:{bold:true,color:{rgb:'FFFFFF'}}}:solid(color);
+    }
+  });
+  // Column widths and hidden columns from the original report, matched by heading
+  const srcHead=(aoa.find(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'))||[]).map(mkNorm);
+  const srcCols=src['!cols']||[];
+  ws['!cols']=header.map(h=>{
+    const i=srcHead.indexOf(h),sc=i>=0?srcCols[i]:null;
+    const wch=h==='COMMENTS'?60:h==='SHORT TITLE'?30:h==='INSTRUCTOR'?26:Math.max(9,h.length+2);
+    return sc?{wch:sc.wch||wch,hidden:!!sc.hidden}:{wch};
+  });
+  ws['!autofilter']={ref:XLSX.utils.encode_range({s:{r:res.headerRow,c:0},e:{r:res.aoa.length-1,c:res.ncol-1}})};
+  const out=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(out,ws,'Course Schedule');
+  // What changed, for checking
+  const ch=XLSX.utils.aoa_to_sheet([
+    [`Changes from the report — ${sem}`],
+    ['Blue row = added · Red row = dropped · Yellow cell = changed. SYN numbers and faculty IDs are left blank to fill in.'],
+    [],['Course','What','Was (report)','Now (schedule map)'],
+    ...(res.changes.length?res.changes:[['—','No differences found.','','']])]);
+  ch['!cols']=[{wch:16},{wch:20},{wch:50},{wch:50}];
+  XLSX.utils.book_append_sheet(out,ch,'Changes');
+  const rv=XLSX.utils.aoa_to_sheet([['Check before sending — '+sem],[],['Course','What to check'],...(review.length?review:[['—','Nothing flagged.']])]);
+  rv['!cols']=[{wch:16},{wch:100}];
+  XLSX.utils.book_append_sheet(out,rv,'Check before sending');
+  const today=new Date();const stamp=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  XLSX.writeFile(out,`Course Schedule ${sem} marked up (${stamp}).xlsx`);
+  alert(`Done — downloaded the marked-up report for ${sem}.\n\n${res.counts.added} added (blue), ${res.counts.dropped} dropped (red), ${res.counts.changedCells} changed cells (yellow).\n\nThe "Changes" sheet lists each one; "Check before sending" lists guesses to double-check.`);
+}
+
+// Backup of every semester (used by the unpublished-edits warning)
+function exportData(){
+  const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='twu_schedule_map.json';a.click();
 }
 
 // Close on overlay click
