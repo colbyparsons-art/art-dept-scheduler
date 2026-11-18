@@ -236,9 +236,9 @@
   </div>
   <div class="header-btns">
     <button class="btn btn-gold" onclick="generatePDF()">⬇ Download PDF</button>
-    <button class="btn btn-outline admin-only" onclick="openExcelExport()" title="Download this semester in the university Course Schedule format">⬇ Excel</button>
-    <button class="btn btn-outline admin-only" onclick="document.getElementById('importFile').click()" title="Upload the registrar's report (.xlsx or .csv) to get a marked-up copy, or restore a .json backup">⬆ Import</button>
+    <button class="btn btn-outline admin-only" onclick="document.getElementById('importFile').click()" title="Upload the registrar's SQL report (.xlsx or .csv) to get a marked-up copy, or restore a .json backup">⬆ SQL Report Upload</button>
     <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.json" style="display:none" onchange="importData(event)"/>
+    <button class="btn btn-outline admin-only" onclick="openExcelExport()" title="Download this semester in the university Course Schedule format">⬇ Excel</button>
     <button class="btn btn-gold admin-only" onclick="openAddModal(null,null)">+ Add Course</button>
     <button class="btn btn-gold admin-only" id="publishBtn" onclick="publishToShared()">☁ Publish for Everyone</button>
   </div>
