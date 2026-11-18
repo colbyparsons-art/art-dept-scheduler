@@ -1455,7 +1455,8 @@ function renderLoad(){
   const courses=getSemCourses();
 
   // Get unique faculty
-  const faculty=new Set(courses.map(c=>c.faculty).filter(f=>f&&f!=='staff'));
+  // Staff-taught sections aren't a person's load — skip "staff" however it's capitalized
+  const faculty=new Set(courses.map(c=>c.faculty).filter(f=>f&&f.trim().toLowerCase()!=='staff'));
   if(!faculty.size){grid.innerHTML='<p style="color:#bbb;font-size:.83rem;">No courses with assigned faculty yet.</p>';return;}
 
   grid.innerHTML=[...faculty].sort().map(f=>{
@@ -1672,6 +1673,7 @@ function saveCourse(){
     bracketpair:document.getElementById('c_bracketpair').value.trim(),
     notes:document.getElementById('c_notes').value.trim(),
   };
+  if(record.faculty.toLowerCase()==='staff')record.faculty='staff';   // one spelling for staff
   // Adjunct/GTA first name only applies to staff-taught sections
   const adjName=cleanAdjunctName(document.getElementById('c_adjunct').value);
   if(adjName&&record.faculty.toLowerCase()==='staff')record.adjunct=adjName;
