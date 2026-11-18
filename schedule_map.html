@@ -175,6 +175,24 @@
   body.faculty .admin-only{display:none!important;}
   .adj-name{font-style:italic;font-weight:600;}
 
+  /* Comments */
+  .comments-toggle{margin-left:auto;color:var(--ink);border-color:var(--mist);background:white;}
+  .comments-toggle.on{background:var(--clay);color:white;border-color:var(--clay);}
+  .comments-notice{background:#eef4f7;border-bottom:1px solid #c9dbe4;padding:9px 40px;font-size:.8rem;line-height:1.5;color:var(--ink);}
+  .cmt-btn{display:none;position:absolute;bottom:4px;right:4px;border:1px solid var(--mist);background:rgba(255,255,255,.95);border-radius:10px;font-size:.62rem;line-height:1;padding:2px 6px;cursor:pointer;color:var(--ink);font-family:inherit;}
+  .cmt-btn.has{background:var(--clay);color:white;border-color:var(--clay);font-weight:600;}
+  body.comments-on .cmt-btn{display:inline-block;}
+  body.comments-on .course-chip,body.comments-on .once-chip{padding-bottom:20px;}
+  .cmt-list{max-height:320px;overflow-y:auto;margin-bottom:14px;}
+  .cmt-item{border-bottom:1px solid var(--mist);padding:8px 0;font-size:.84rem;line-height:1.45;}
+  .cmt-item:last-child{border-bottom:none;}
+  .cmt-text{white-space:pre-wrap;word-wrap:break-word;}
+  .cmt-meta{font-size:.72rem;opacity:.55;margin-top:2px;display:flex;gap:8px;align-items:center;}
+  .cmt-del{background:none;border:none;color:#a33;cursor:pointer;font-size:.72rem;padding:0;margin-left:auto;}
+  .cmt-empty{font-size:.82rem;opacity:.5;padding:6px 0 12px;}
+  .cmt-warn{font-size:.74rem;background:#fff4e3;border-left:3px solid #e0a040;padding:6px 10px;margin-bottom:10px;line-height:1.45;}
+  #c_cmt_text{width:100%;min-height:80px;font-family:inherit;font-size:.85rem;padding:8px;border:1px solid var(--mist);border-radius:3px;resize:vertical;}
+
   /* Faculty highlight bar */
   .faculty-bar{background:#fdf5ed;border-bottom:1px solid rgba(158,133,109,.2);padding:8px 40px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .faculty-bar-label{font-size:.74rem;font-weight:500;opacity:.55;white-space:nowrap;margin-right:4px;}
@@ -227,6 +245,11 @@
     <button class="view-tab admin-only" onclick="showView('load',this)">Faculty Load</button>
     <button class="view-tab admin-only" onclick="showView('rotation',this)">Rotation Check</button>
   </div>
+  <button class="btn btn-outline btn-sm comments-toggle" id="commentsToggle" onclick="toggleComments()">💬 Comments: Off</button>
+</div>
+<div id="commentsNotice" class="comments-notice" style="display:none;">
+  <strong>💬 Comments are on.</strong> Click the 💬 on any class to read or leave a comment.
+  <strong>Please don't include private information</strong> (student names or grades, health, personnel or salary matters) — this page is not secure, and anyone with the link can read comments.
 </div>
 
 <div class="faculty-bar">
@@ -397,6 +420,35 @@
       <div style="display:flex;gap:8px;margin-left:auto;">
         <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeModal()">Cancel</button>
         <button class="btn btn-gold btn-sm" onclick="saveCourse()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMMENTS MODAL -->
+<div class="modal-overlay" id="commentOverlay">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h2 id="cmtTitle">Comments</h2>
+      <button class="modal-close" onclick="closeComments()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="cmtList" class="cmt-list"></div>
+      <div class="cmt-warn">Visible to anyone with the link. Please don't include private information.</div>
+      <div class="form-group" style="margin-bottom:8px;">
+        <label>Your comment</label>
+        <textarea id="c_cmt_text" maxlength="1000" placeholder="e.g. Could this move to TTh? It conflicts with…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Your name <span style="opacity:.6;font-weight:400;">(optional)</span></label>
+        <input type="text" id="c_cmt_name" maxlength="40" placeholder="e.g. Meg"/>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span id="cmtStatus" style="font-size:.78rem;opacity:.7;"></span>
+      <div style="display:flex;gap:8px;margin-left:auto;">
+        <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeComments()">Close</button>
+        <button class="btn btn-gold btn-sm" id="cmtPostBtn" onclick="postComment()">Post comment</button>
       </div>
     </div>
   </div>
@@ -629,6 +681,7 @@ let fsSchedDoc=null, firestoreLive=false;
 // Every edit is saved to this browser right away and marked "unpublished".
 // A newly published version never silently replaces unpublished edits
 // (that is how a failed publish used to wipe out a session's work).
+let sharedComments={};
 const DIRTY_KEY='twu_schedule_dirty';
 const HAD_LOCAL_COPY=(function(){try{return !!localStorage.getItem('twu_schedule');}catch(e){return false;}})();
 let firstSnapshotSeen=false, pendingPublished=null;
@@ -691,6 +744,8 @@ try{
   let firestoreSeeded=false;
   fsSchedDoc.onSnapshot(function(doc){
     if(doc.exists){
+      sharedComments=(doc.data()&&doc.data().comments)||{};
+      if(typeof refreshCommentsUI==='function')refreshCommentsUI();
       const payload=doc.data()&&doc.data().payload;
       if(payload&&Object.keys(payload).length){
         const fixed=applyFourYearElectives(payload);
@@ -744,7 +799,8 @@ function publishToShared(){
   // Snapshot what we're publishing, so a reply from the server can't swap it out mid-publish
   const toPublish=JSON.parse(JSON.stringify(db));
   saveEdit(db);   // make sure this version is safely in the browser before sending
-  fsSchedDoc.set({passcode:pass,payload:toPublish,updatedAt:new Date().toISOString()})
+  // mergeFields: replace only the schedule itself — leave faculty comments untouched
+  fsSchedDoc.set({passcode:pass,payload:toPublish,updatedAt:new Date().toISOString()},{mergeFields:['passcode','payload','updatedAt']})
     .then(function(){
       clearDirty();pendingPublished=null;hideConflictBanner();
       showSaveNotice('✓ Published — everyone will now see this version.');
@@ -1085,7 +1141,94 @@ function chipHtml(c,idx,extra=''){
     <div class="chip-title">${dispCode} ${c.title||''}</div>
     <div class="chip-meta">${meta}</div>
     ${notesLine}
+    ${commentBtn(c)}
   </div>`;
+}
+
+// ── Comments (shared by faculty and admin views) ───────────────────────────
+// Stored in the same shared document as the schedule, under "comments",
+// keyed by id: {sem, course, label, text, name, ts}. Posting needs no
+// password prompt — it uses the page's built-in passcode and writes only
+// that one comment, so it never touches the published schedule.
+let commentsOn=(function(){try{return localStorage.getItem('twu_comments_on')==='1';}catch(e){return false;}})();
+let commentTarget=null;
+function courseKey(c){return (c.code||'')+(c.section||'');}
+function commentsFor(sem,key){
+  return Object.entries(sharedComments||{})
+    .filter(([id,m])=>m&&m.sem===sem&&m.course===key)
+    .map(([id,m])=>({id,...m}))
+    .sort((a,b)=>(a.ts||'').localeCompare(b.ts||''));
+}
+function commentBtn(c){
+  if(!currentSem)return '';
+  const n=commentsFor(currentSem,courseKey(c)).length;
+  const k=escapeHtml(courseKey(c)).replace(/'/g,'&#39;');
+  return `<button class="cmt-btn${n?' has':''}" title="Comments" onclick="event.stopPropagation();openComments('${k}')">💬${n?' '+n:''}</button>`;
+}
+function applyCommentsMode(){
+  document.body.classList.toggle('comments-on',commentsOn);
+  const b=document.getElementById('commentsToggle');
+  if(b){b.textContent='💬 Comments: '+(commentsOn?'On':'Off');b.classList.toggle('on',commentsOn);}
+  const n=document.getElementById('commentsNotice');
+  if(n)n.style.display=commentsOn?'block':'none';
+}
+function toggleComments(){
+  commentsOn=!commentsOn;
+  try{localStorage.setItem('twu_comments_on',commentsOn?'1':'0');}catch(e){}
+  applyCommentsMode();
+}
+function refreshCommentsUI(){
+  if(typeof renderGrid==='function'&&currentSem)renderGrid();
+  if(commentTarget)renderCommentList();
+}
+function openComments(key){
+  const c=getSemCourses().find(x=>courseKey(x)===key);
+  commentTarget={sem:currentSem,key,label:c?`${key} ${c.title||''}`.trim():key};
+  document.getElementById('cmtTitle').textContent=commentTarget.label;
+  document.getElementById('c_cmt_text').value='';
+  try{document.getElementById('c_cmt_name').value=localStorage.getItem('twu_comment_name')||'';}catch(e){}
+  document.getElementById('cmtStatus').textContent='';
+  renderCommentList();
+  document.getElementById('commentOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('c_cmt_text').focus(),40);
+}
+function closeComments(){commentTarget=null;document.getElementById('commentOverlay').classList.remove('open');}
+function renderCommentList(){
+  if(!commentTarget)return;
+  const list=commentsFor(commentTarget.sem,commentTarget.key);
+  document.getElementById('cmtList').innerHTML=list.length?list.map(m=>{
+    // When it was left: admin view only
+    const when=(!FACULTY_MODE&&m.ts)?`<span>${escapeHtml(new Date(m.ts).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}))}</span>`:'';
+    const who=m.name?`<span>— ${escapeHtml(m.name)}</span>`:'';
+    const del=FACULTY_MODE?'':`<button class="cmt-del" onclick="deleteComment('${m.id}')">Delete</button>`;
+    return `<div class="cmt-item"><div class="cmt-text">${escapeHtml(m.text||'')}</div>${(who||when||del)?`<div class="cmt-meta">${who}${when}${del}</div>`:''}</div>`;
+  }).join(''):'<div class="cmt-empty">No comments yet.</div>';
+}
+function postComment(){
+  if(!commentTarget)return;
+  const text=document.getElementById('c_cmt_text').value.trim();
+  if(!text){document.getElementById('c_cmt_text').focus();return;}
+  if(!fsSchedDoc){alert('Not connected to the shared schedule yet — try again in a moment.');return;}
+  const name=document.getElementById('c_cmt_name').value.trim().slice(0,40);
+  try{localStorage.setItem('twu_comment_name',name);}catch(e){}
+  const id='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const btn=document.getElementById('cmtPostBtn');btn.disabled=true;
+  document.getElementById('cmtStatus').textContent='Posting…';
+  fsSchedDoc.update({
+    passcode:EDIT_PASSCODE,
+    ['comments.'+id]:{sem:commentTarget.sem,course:commentTarget.key,label:commentTarget.label,text:text.slice(0,1000),name,ts:new Date().toISOString()}
+  }).then(()=>{
+    document.getElementById('c_cmt_text').value='';
+    document.getElementById('cmtStatus').textContent='✓ Posted';
+  }).catch(err=>{
+    document.getElementById('cmtStatus').textContent='';
+    alert('Could not post the comment — there may be a connection problem.\n\n'+err.message);
+  }).finally(()=>{btn.disabled=false;});
+}
+function deleteComment(id){
+  if(FACULTY_MODE||!confirm('Delete this comment for everyone?'))return;
+  fsSchedDoc.update({passcode:EDIT_PASSCODE,['comments.'+id]:firebase.firestore.FieldValue.delete()})
+    .catch(err=>alert('Could not delete the comment.\n\n'+err.message));
 }
 
 // Adjunct/GTA first name — admin view only, and only for staff-taught sections
@@ -1258,7 +1401,7 @@ function renderGrid(){
         const meta=[fac,rm,c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
         const eb=FACULTY_MODE?'':
           `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
-        return `<div class="once-chip${c.hidden?' hidden':''}" data-idx="${idx}" data-faculty="${(c.faculty||'').toUpperCase()}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div></div>`;
+        return `<div class="once-chip${c.hidden?' hidden':''}" data-idx="${idx}" data-faculty="${(c.faculty||'').toUpperCase()}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div>${commentBtn(c)}</div>`;
       }).join('');
       return `<div class="once-day-column"><div class="once-day-header">${day}</div><div class="once-day-courses">${coursesHtml||'<div style="padding:8px;font-size:.7rem;color:#999;text-align:center;">—</div>'}</div></div>`;
     }).join('');
@@ -1959,6 +2102,8 @@ if(FACULTY_MODE){
 updateTimeOptions();
 buildSemSelect();
 renderAll();
+applyCommentsMode();
+document.getElementById('commentOverlay').addEventListener('click',function(e){if(e.target===this)closeComments();});
 </script>
 </body>
 </html>
