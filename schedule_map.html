@@ -508,7 +508,7 @@
   <div class="modal" style="max-width:480px;">
     <div class="modal-header"><h2>SQL Report Upload</h2><button class="modal-close" onclick="closeSqlUpload()">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:.82rem;line-height:1.5;margin-bottom:10px;">Upload the registrar's report for the semester you're preparing. It's compared with that semester in the schedule map and you get back a marked-up copy to submit.</p>
+      <p style="font-size:.82rem;line-height:1.5;margin-bottom:10px;">Upload the registrar's report for the semester you're preparing. You only need to do this once per semester: after that, every <strong>⬇ Excel</strong> download is that report marked up with the schedule map's current changes.</p>
       <div style="font-size:.78rem;line-height:1.55;background:#f7f3ee;border:1px solid var(--mist);border-radius:3px;padding:8px 10px;margin-bottom:12px;">
         <strong>File format:</strong> the SQL report as an Excel (.xlsx) or .csv file, one semester per file, with its row of column headings (COURSE, SHORT TITLE, INSTRUCTOR, DAYS…) left in.<br>
         <strong>Remove before uploading:</strong> the SYN numbers. Clear the numbers but keep the SYN column. (Any SYN numbers left in are blanked automatically, and faculty ID columns are dropped.)
@@ -521,17 +521,13 @@
         <input type="file" id="sqlFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="sqlFileChosen(event)"/>
       </div></div>
       <div id="sqlInfo" style="font-size:.8rem;line-height:1.5;margin:4px 0 10px;"></div>
-      <div class="form-row"><div class="form-group"><label>Compare with this semester</label><select id="sqlSem"></select></div></div>
-      <div style="font-size:.78rem;line-height:1.7;margin-top:6px;">
-        <span style="display:inline-block;width:12px;height:12px;background:#00B0F0;vertical-align:middle;margin-right:4px;"></span>Blue row: section added
-        <span style="display:inline-block;width:12px;height:12px;background:#FF0000;vertical-align:middle;margin:0 4px 0 12px;"></span>Red row: dropped<br>
-        <span style="display:inline-block;width:12px;height:12px;background:#FFFF00;border:1px solid #ddd;vertical-align:middle;margin-right:4px;"></span>Yellow cell: changed. SYN is left blank to fill in.
-      </div>
+      <div class="form-row"><div class="form-group"><label>Semester this report is for</label><select id="sqlSem" onchange="sqlShowExisting()"></select></div></div>
+      <div id="sqlExisting" style="font-size:.76rem;opacity:.75;"></div>
       <div style="font-size:.74rem;margin-top:14px;opacity:.65;">Need to restore a schedule backup instead? <a href="#" onclick="document.getElementById('importFile').click();return false;">Choose a .json backup</a></div>
     </div>
     <div class="modal-footer"><div style="display:flex;gap:8px;margin-left:auto;">
       <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeSqlUpload()">Cancel</button>
-      <button class="btn btn-gold btn-sm" id="sqlGo" onclick="downloadMarkup()" disabled>⬇ Download marked-up report</button></div></div>
+      <button class="btn btn-gold btn-sm" id="sqlGo" onclick="saveSqlUpload()" disabled>⬆ Upload report</button></div></div>
   </div>
 </div>
 
@@ -2054,7 +2050,12 @@ function renderExcelStatus(){
   if(r){
     const when=new Date(r.when).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
     el.innerHTML=`<div style="background:#eef7ec;border:1px solid #b9d8b3;border-radius:3px;padding:8px 10px;">✓ <strong>SQL report uploaded</strong> for ${escapeHtml(currentSem)}: ${escapeHtml(r.name||'report')} (${when}).</div>
-      <p style="margin-top:10px;">The download is that report marked up with this semester's changes (blue = added, red = dropped, yellow = changed), ready to submit. It also has a <strong>Changes</strong> sheet and a <strong>Check before sending</strong> sheet.</p>
+      <p style="margin-top:10px;">The download is that report marked up with this semester's current changes, ready to submit. It also has a <strong>Changes</strong> sheet and a <strong>Check before sending</strong> sheet.</p>
+      <div style="font-size:.78rem;line-height:1.7;margin-top:6px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#00B0F0;vertical-align:middle;margin-right:4px;"></span>Blue row: section added
+        <span style="display:inline-block;width:12px;height:12px;background:#FF0000;vertical-align:middle;margin:0 4px 0 12px;"></span>Red row: dropped<br>
+        <span style="display:inline-block;width:12px;height:12px;background:#FFFF00;border:1px solid #ddd;vertical-align:middle;margin-right:4px;"></span>Yellow cell: changed. SYN is left blank to fill in.
+      </div>
       <p style="font-size:.74rem;opacity:.65;margin-top:8px;">Wrong report? Use ⬆ SQL Report Upload to replace it, or <a href="#" onclick="sqlSave(currentSem,null);renderExcelStatus();return false;">forget this upload</a>.</p>`;
   } else {
     el.innerHTML=`<div style="background:#fff4e3;border:1px solid #e0c58a;border-radius:3px;padding:8px 10px;">No SQL report has been uploaded for <strong>${escapeHtml(currentSem)}</strong>.</div>
@@ -2417,7 +2418,13 @@ function openSqlUpload(){
   const sel=document.getElementById('sqlSem');
   sel.innerHTML=sortedSemKeys(db).map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
   sel.value=currentSem||defaultSem()||'';
+  sqlShowExisting();
   document.getElementById('sqlOverlay').classList.add('open');
+}
+function sqlShowExisting(){
+  const sem=document.getElementById('sqlSem').value,r=sem?sqlSaved(sem):null;
+  document.getElementById('sqlExisting').textContent=r
+    ?`A report for ${sem} is already uploaded (${r.name||'report'}, ${new Date(r.when).toLocaleDateString(undefined,{month:'short',day:'numeric'})}). Uploading replaces it.`:'';
 }
 function closeSqlUpload(){document.getElementById('sqlOverlay').classList.remove('open');sqlReport=null;}
 function sqlFileChosen(e){
@@ -2440,19 +2447,22 @@ function sqlFileChosen(e){
     const n=aoa.slice(hi+1).filter(r=>mkParseCourse((r||[])[aoa[hi].findIndex(v=>mkNorm(v)==='COURSE')])).length;
     sqlReport={aoa,cols,name:file.name};
     const found=mkDetectSemester(aoa),sel=document.getElementById('sqlSem');
-    if(found&&db[found]){sel.value=found;info.innerHTML=`✓ Report for <strong>${found}</strong> · ${n} sections.`;}
+    if(found&&db[found]){sel.value=found;sqlShowExisting();info.innerHTML=`✓ Report for <strong>${found}</strong> · ${n} sections.`;}
     else if(found){info.innerHTML=`Report for <strong>${found}</strong> · ${n} sections. <span style="color:#a35a00;">The schedule map has no ${found}. Pick the semester to compare with below.</span>`;}
     else info.innerHTML=`${n} sections. <span style="color:#a35a00;">Couldn't tell which semester it's for. Pick it below.</span>`;
     document.getElementById('sqlGo').disabled=false;
   }).catch(err=>{info.innerHTML='<span style="color:#b00020;">Couldn\'t read that report: '+escapeHtml(err.message)+'</span>';});
   reader.readAsArrayBuffer(file);
 }
-function downloadMarkup(){
+// Save the report for its semester; downloads happen from ⬇ Excel
+function saveSqlUpload(){
   if(!sqlReport)return;
   const sem=document.getElementById('sqlSem').value;
-  if(!sem||!db[sem]){alert('Please pick a semester to compare with.');return;}
-  try{sqlSave(sem,sqlReport);markupFromReport(sqlReport,sem);closeSqlUpload();}
-  catch(err){alert('Something went wrong: '+err.message);}
+  if(!sem||!db[sem]){alert('Please pick the semester this report is for.');return;}
+  sqlSave(sem,sqlReport);
+  if(!sqlSaved(sem)){alert("Couldn't save the report in this browser (storage may be full or blocked).");return;}
+  closeSqlUpload();
+  alert(`Report uploaded for ${sem}.\n\nUse ⬇ Excel (with ${sem} selected) to download it marked up. You can download again any time after making changes.`);
 }
 // Restore a .json backup of the whole schedule
 function importData(e){
