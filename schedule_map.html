@@ -237,6 +237,7 @@
   <div class="header-btns">
     <button class="btn btn-gold" onclick="generatePDF()">⬇ Download PDF</button>
     <button class="btn btn-outline admin-only" onclick="exportData()">⬇ Export</button>
+    <button class="btn btn-outline admin-only" onclick="openExcelExport()" title="Download this semester in the university Course Schedule format">⬇ Excel</button>
     <button class="btn btn-outline admin-only" onclick="document.getElementById('importFile').click()">⬆ Import</button>
     <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
     <button class="btn btn-gold admin-only" onclick="openAddModal(null,null)">+ Add Course</button>
@@ -477,6 +478,24 @@
         <button class="btn btn-gold btn-sm" id="cmtPostBtn" onclick="postComment()">Post comment</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- EXCEL EXPORT MODAL -->
+<div class="modal-overlay" id="excelOverlay">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header"><h2>Excel — <span id="xlSem"></span></h2><button class="modal-close" onclick="closeExcelExport()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;line-height:1.5;margin-bottom:12px;">Downloads this semester in the university's Course Schedule format. A second sheet, <strong>Check before sending</strong>, lists anything that was guessed or is missing.</p>
+      <div class="form-row"><div class="form-group"><label>Term code (SEC TERM)</label><input type="text" id="xl_term" placeholder="e.g. 2027SP"/></div>
+        <div class="form-group"><label>Reporting term</label><input type="text" id="xl_rep" placeholder="e.g. 2027SPR"/></div></div>
+      <div class="form-row"><div class="form-group"><label>Semester start date</label><input type="date" id="xl_start"/></div>
+        <div class="form-group"><label>Semester end date</label><input type="date" id="xl_end"/></div></div>
+      <div id="xlNote" style="font-size:.76rem;color:#a35a00;"></div>
+    </div>
+    <div class="modal-footer"><div style="display:flex;gap:8px;margin-left:auto;">
+      <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeExcelExport()">Cancel</button>
+      <button class="btn btn-gold btn-sm" onclick="downloadExcel()">⬇ Download .xlsx</button></div></div>
   </div>
 </div>
 
@@ -1872,6 +1891,202 @@ function deleteCourse(){
 }
 
 // ── Export / Import ────────────────────────────────────────────────────────
+// ── Excel export in the university's Course Schedule format ────────────────
+// One semester per file. Columns match "Course Schedule SP27-example.xlsx".
+// Course details the schedule map doesn't track (CIP, METH, caps, fees,
+// official short titles) come from that example; anything missing or guessed
+// is listed on a second sheet, "Check before sending".
+const XL_CATALOG={"byCode":{"ART 1203":{"title":"2D FOUNDATIONS","level":"100","cip":"50070100","meth":"LEC1L","cap":20,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1213":{"title":"3D FOUNDATIONS","level":"100","cip":"50070100","meth":"LEC1B","cap":15,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1303":{"title":"DRAWING FOUNDATIONS","level":"100","cip":"50070500","meth":"LEC1L","cap":20,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1503":{"title":"INTRO TO PAINTING","level":"100","cip":"50070800","meth":"LAB2B","cap":20,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1603":{"title":"INTRO TO PHOTOGRAPHY","level":"100","cip":"50060500","meth":"LAB2L","cap":18,"prog":24,"lab":30,"extra":"DSLR CAMERA REQUIRED","comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. DSLR CAMERA REQUIRED"},"ART 2223":{"title":"DIGITAL ART FOUNDATIONS","level":"200","cip":"50070100","meth":"LAB2B","cap":20,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2243":{"title":"INTRO TO TYPE & IMAGE","level":"200","cip":"50040900","meth":"LEC1B","cap":20,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2303":{"title":"FIGURE DRAWING","level":"200","cip":"50070100","meth":"LAB2L","cap":20,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2433":{"title":"WORLD ART HISTORY II","level":"200","cip":"50070300","meth":"WEB1L","cap":45,"prog":24,"lab":null,"comment":"100% ONLINE"},"ART 2613":{"title":"INTRODUCTION TO PRINTMAKING","level":"200","cip":"50070100","meth":"LEC1L","cap":20,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2713":{"title":"UNDERSTANDING ARTS-VISUAL ART","level":"200","cip":"50070100","meth":"WEB1L","cap":50,"prog":24,"lab":null,"comment":"100% ONLINE"},"ART 2823":{"title":"INTRODUCTION TO CERAMICS","level":"200","cip":"50071100","meth":"LEC1B","cap":18,"prog":24,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3053":{"title":"GLOBAL PERSPECTIVES IN ART","level":"300","cip":"50070100","meth":"MIX2B","cap":20,"prog":45,"lab":30,"comment":"HYBRID CLASS MEETS ON THURSDAYS. ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3173":{"title":"CONTEMPORARY ART","level":"300","cip":"50070300","meth":"MIX1L","cap":24,"prog":45,"lab":null,"comment":"HYBRID CLASS MEETS ON MONDAYS; REMAINDER ONLINE ASYNCHRONOUS."},"ART 3253":{"title":"MOTION GRAPHICS","level":"300","cip":"50040200","meth":"LEC1L","cap":18,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3343":{"title":"WOMEN IN THE VISUAL ARTS","level":"300","cip":"50070300","meth":"LEC1L","cap":20,"prog":45,"lab":null,"extra":"CROSS-LISTED WITH WS 3343.01","comment":"ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. CROSS-LISTED WITH WS 3343.01"},"ART 3393":{"title":"PROF PRACTICES VISUAL ARTS","level":"300","cip":"50070100","meth":"MIX1B","cap":20,"prog":45,"lab":30,"comment":"HYBRID CLASS. ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3683":{"title":"SCULPT PROCESS/POSSIBILITIES","level":"300","cip":"50070900","meth":"LEC1L","cap":15,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3693":{"title":"ALTERNATIVE PHOTO PROCESSES","level":"300","cip":"50060500","meth":"LEC1B","cap":15,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3703":{"title":"INTERMEDIATE PAINTING","level":"300","cip":"50070800","meth":"LEC1L","cap":9,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 4703."},"ART 4043":{"title":"LATINX ART","level":"400","cip":"50070100","meth":"LEC1L","cap":24,"prog":45,"lab":null,"comment":"HYBRID CLASS MEETS ON WEDNESDAYS; REMAINDER ONLINE ASYNCHRONOUS."},"ART 4083":{"title":"FIBERS POSSIBILITIES","level":"400","cip":"50070100","meth":"LEC1L","cap":7,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. Bracketed with 5903.02."},"ART 4133":{"title":"APPROACHES TO ART EDUCATION","level":"400","cip":"13130200","meth":"LEC1B","cap":20,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 4283":{"title":"WEB & APP DESIGN","level":"400","cip":"50040900","meth":"LEC1L","cap":20,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 4483":{"title":"NARRATIVE ILLUSTRATION","level":"400","cip":"50070100","meth":"LEC1B","cap":18,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 4703":{"title":"ADVANCED PAINTING","level":"400","cip":"50070800","meth":"LEC1L","cap":9,"prog":45,"lab":30,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 3703."},"ART 4903":{"title":"ST: DIGITAL AND HANDMADE","level":"400","cip":"50070100","meth":"LEC1L","cap":8,"prog":45,"lab":null,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 5903.01."},"ART 4913":{"title":"INDEPENDENT STUDY","level":"400","cip":"50070100","meth":"INS5B","cap":4,"prog":45,"lab":null,"comment":"DEPARTMENT PERMISSION REQUIRED."},"ART 4953":{"title":"INTERNSHIP","level":"400","cip":"50070100","meth":"PCT8B","cap":3,"prog":45,"lab":null,"comment":"DEPARTMENT PERMISSION REQUIRED."},"ART 4993":{"title":"BFA EXHIBITION","level":"400","cip":"50070200","meth":"MIX2L","cap":20,"prog":45,"lab":30,"comment":"HYBRID COURSE: DAYS VARY DEPENDING UPON INSTALLATION TIMING. ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. DEPARTMENT PERMISSION REQUIRED."},"ART 5003":{"title":"CRITIQUE SEMINAR","level":"500","cip":"50070100","meth":"SEM1L","cap":15,"prog":75,"lab":null,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 5063":{"title":"THEORIES OF ART","level":"600","cip":"50070300","meth":"LEC1L","cap":15,"prog":75,"lab":null,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 5843":{"title":"ART-BASED RESEARCH WRITING","level":"500","cip":"50070100","meth":"INS5B","cap":1,"prog":75,"lab":10,"comment":"DEPARTMENT PERMISSION REQUIRED"},"ART 5883":{"title":"MFA THESIS EXHIBITION","level":"500","cip":"50070100","meth":"INS5B","cap":3,"prog":75,"lab":30,"comment":"DEPARTMENT PERMISSION REQUIRED."},"ART 5903":{"title":"ST: FIBERS POSSIBILITIES","level":"600","cip":"50070100","meth":"LEC1L","cap":7,"prog":75,"lab":null,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 4083.01."}},"bySec":{"ART 1203 01":{"meth":"LEC1L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1203 02":{"meth":"LEC1L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1213 01":{"meth":"LEC1B","cap":15,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1213 02":{"meth":"LEC1L","cap":15,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1303 01":{"meth":"LEC1L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1303 02":{"meth":"LEC1L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1503 01":{"meth":"LAB2B","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1503 02":{"meth":"LAB2L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 1603 01":{"meth":"LAB2L","cap":18,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. DSLR CAMERA REQUIRED"},"ART 2223 01":{"meth":"LAB2B","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2223 02":{"meth":"LAB2L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2243 01":{"meth":"LEC1B","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2303 01":{"meth":"LAB2L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2303 02":{"meth":"LAB2L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2433 50":{"meth":"WEB1L","cap":45,"comment":"100% ONLINE"},"ART 2433 51":{"meth":"WEB1L","cap":45,"comment":"100% ONLINE"},"ART 2613 01":{"meth":"LEC1L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 2713 50":{"meth":"WEB1L","cap":50,"comment":"100% ONLINE"},"ART 2713 51":{"meth":"WEB1L","cap":50,"comment":"100% ONLINE"},"ART 2823 01":{"meth":"LEC1B","cap":18,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3053 01":{"meth":"MIX2B","cap":20,"comment":"HYBRID CLASS MEETS ON THURSDAYS. ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3053 50":{"meth":"WEB2L","cap":30,"comment":"HYBRID CLASS MEETS ON WEDNESDAY. ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3173 01":{"meth":"MIX1L","cap":24,"comment":"HYBRID CLASS MEETS ON MONDAYS; REMAINDER ONLINE ASYNCHRONOUS."},"ART 3253 01":{"meth":"LEC1L","cap":18,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3343 01":{"meth":"LEC1L","cap":20,"comment":"ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. CROSS-LISTED WITH WS 3343.01"},"ART 3393 01":{"meth":"MIX1B","cap":20,"comment":"HYBRID CLASS. ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3683 01":{"meth":"LEC1L","cap":15,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3693 01":{"meth":"LEC1B","cap":15,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 3703 01":{"meth":"LEC1L","cap":9,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 4703."},"ART 4043 01":{"meth":"LEC1L","cap":24,"comment":"HYBRID CLASS MEETS ON WEDNESDAYS; REMAINDER ONLINE ASYNCHRONOUS."},"ART 4083 01":{"meth":"LEC1L","cap":7,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. Bracketed with 5903.02."},"ART 4133 01":{"meth":"LEC1B","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 4283 01":{"meth":"LEC1L","cap":20,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 4483 01":{"meth":"LEC1B","cap":18,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 4703 01":{"meth":"LEC1L","cap":9,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 3703."},"ART 4903 01":{"meth":"LEC1L","cap":8,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 5903.01."},"ART 4913 01":{"meth":"INS5B","cap":4,"comment":"DEPARTMENT PERMISSION REQUIRED."},"ART 4953 01":{"meth":"PCT8B","cap":3,"comment":"DEPARTMENT PERMISSION REQUIRED."},"ART 4953 02":{"meth":"PCT8B","cap":3,"comment":"DEPARTMENT PERMISSION REQUIRED"},"ART 4953 03":{"meth":"PCT8B","cap":3,"comment":"DEPARTMENT PERMISSION REQUIRED"},"ART 4953 04":{"meth":"PCT8B","cap":3,"comment":"DEPARTMENT PERMISSION REQUIRED"},"ART 4993 01":{"meth":"MIX2L","cap":20,"comment":"HYBRID COURSE: DAYS VARY DEPENDING UPON INSTALLATION TIMING. ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. DEPARTMENT PERMISSION REQUIRED."},"ART 5003 01":{"meth":"SEM1L","cap":15,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 5063 01":{"meth":"LEC1L","cap":15,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT."},"ART 5843 01":{"meth":"INS5B","cap":1,"comment":"DEPARTMENT PERMISSION REQUIRED"},"ART 5883 01":{"meth":"INS5B","cap":3,"comment":"DEPARTMENT PERMISSION REQUIRED."},"ART 5903 02":{"meth":"LEC1L","cap":7,"comment":"FACE TO FACE COURSE, ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT. BRACKETED WITH ART 4083.01."}},"roomCap":{"101":24,"106":20,"110":20,"201":22,"202":20,"204":20,"206":20,"301":18,"302":15,"306":27,"002":15,"011":25}};
+// studio (S) / lecture (L), from "course designation.csv"
+const XL_DESIG={"ART 1203":"S","ART 1213":"S","ART 1303":"S","ART 1503":"S","ART 1603":"S","ART 2223":"S","ART 2243":"S","ART 2293":"S","ART 2303":"S","ART 2423":"L","ART 2433":"L","ART 2653":"S","ART 2713":"L","ART 2753":"S","ART 2823":"S","ART 3013":"S","ART 3053":"S","ART 3153":"S","ART 3173":"L","ART 3213":"S","ART 3223":"S","ART 3233":"S","ART 3253":"S","ART 3263":"S","ART 3323":"S","ART 3333":"S","ART 3343":"L","ART 3363":"S","ART 3383":"S","ART 3393":"L","ART 3613":"S","ART 3663":"S","ART 3673":"S","ART 3683":"S","ART 3693":"S","ART 3703":"S","ART 3723":"S","ART 3783":"S","ART 3793":"S","ART 3893":"S","ART 3903":"L","ART 3913":"S","ART 4013":"S","ART 4033":"S","ART 4043":"L","ART 4053":"L","ART 4063":"S","ART 4083":"S","ART 4133":"S","ART 4253":"S","ART 4283":"S","ART 4313":"S","ART 4363":"S","ART 4483":"S","ART 4543":"L","ART 4653":"S","ART 4683":"S","ART 4693":"S","ART 4703":"S","ART 4903":"","ART 4993":"S","ART 5003":"L","ART 5053":"S","ART 5063":"L","ART 5123":"S","ART 5503":"","ART 5533":"L","ART 5543":"L","ART 5573":"L","ART 5613":"S","ART 5653":"S","ART 5663":"S","ART 5693":"L","ART 5703":"S","ART 5733":"S","ART 5743":"S","ART 5753":"S","ART 5793":"L","ART 5903":"","ART 5943":"L"};
+const XL_INSTRUCTORS={
+  'GIOVANNI':'Valderas, Michael Giovanni','GIO':'Valderas, Michael Giovanni',
+  'SARA':'Ishii-Bear, Sara','SHELI':'Petersen, Michele','MEG':'Griffiths, Megan',
+  'JULIE':'Libersat, Julie','TANYA':'Synar, Tanya','LAURA LEE':'McCartney, Laura',
+  'CHRISTINE':'Adame, Christine','COLBY':'Parsons, Matthew'
+};
+const XL_HEADERS=['SEC TERM','COURSE','COURSE TYPES','COURSE TYPE DESC','SEC START DATE','SEC END DATE','SHORT TITLE','COLLEGE','SUBJECT','COURSE LEVEL','CIP CODE','ENR','Wait','Section Cap','SCH','UGL SCH (FR/SO)','UGU SCH (JR/SR)','PB SCH','GM SCH','GD SCH','INSTRUCTOR','TWU ID','METH','DAYS','BLDG','ROOM','ROOM CAPACITY','LOCATION','START ','END','COMMENTS','SEC STATUS','PROG FEE','LAB FEE','DIS FEE','DL FEE','SYLLABUS','VITAE','REPORTING TERM','DUAL CREDIT','CROSS LISTED','CROSS LISTING ENROLLMENT','SMALL CLASS','BRACKETED COURSE','INSTRUCTOR CAMPUS'];
+const XL_EXPENSES='ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT.';
+const XL_KNOWN_DATES={'Spring 2027':{start:'2027-01-11',end:'2027-05-07'}};
+
+function xlTermDefaults(sem){
+  const [season,yr]=sem.split(' ');
+  const saved=(()=>{try{return JSON.parse(localStorage.getItem('twu_export_terms')||'{}')[sem]||null;}catch(e){return null;}})();
+  if(saved)return saved;
+  const s=season==='Spring'?'SP':season==='Fall'?'FA':'SU';
+  const r=season==='Spring'?'SPR':season==='Fall'?'FAL':'SUM';
+  const d=XL_KNOWN_DATES[sem]||{start:'',end:''};
+  return {term:yr+s,rep:yr+r,start:d.start,end:d.end};
+}
+function openExcelExport(){
+  if(!currentSem){alert('Please select a semester first.');return;}
+  const t=xlTermDefaults(currentSem);
+  document.getElementById('xlSem').textContent=currentSem;
+  document.getElementById('xl_term').value=t.term;
+  document.getElementById('xl_rep').value=t.rep;
+  document.getElementById('xl_start').value=t.start;
+  document.getElementById('xl_end').value=t.end;
+  const fallNote=/^Fall/.test(currentSem)?'Fall term codes are a guess (the example only shows spring: 2027SP / 2027SPR). Please confirm them.':'';
+  document.getElementById('xlNote').textContent=fallNote;
+  document.getElementById('excelOverlay').classList.add('open');
+}
+function closeExcelExport(){document.getElementById('excelOverlay').classList.remove('open');}
+
+// "8:00–10:50" → ["08:00 am","10:50 am"]; afternoon/evening hours are inferred
+function xlTimes(t){
+  const m=/(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})/.exec(t||'');
+  if(!m)return ['',''];
+  const toMin=(h,mm)=>((h>=8&&h<=11)?h:(h===12?12:h+12))*60+mm;
+  let s=toMin(+m[1],+m[2]),e=toMin(+m[3],+m[4]);
+  if(e<=s)e+=12*60;
+  const fmt=x=>{const h=Math.floor(x/60)%24,mm=x%60;return String(h%12||12).padStart(2,'0')+':'+String(mm).padStart(2,'0')+' '+(h>=12?'pm':'am');};
+  return [fmt(s),fmt(e)];
+}
+const XL_DAY={Monday:'M',Tuesday:'T',Wednesday:'W',Thursday:'Th',MW:'M W',TTh:'T Th'};
+const XL_DAYNAME={M:'MONDAYS',T:'TUESDAYS',W:'WEDNESDAYS',Th:'THURSDAYS'};
+function xlDays(c){
+  if(c.pattern==='async')return '';
+  if(c.hybrid){const d=extractHybridDay(c.notes||'');if(d&&XL_DAY[d])return XL_DAY[d]+' ';}
+  if(c.pattern==='mw')return 'M W ';
+  if(c.pattern==='tth')return 'T Th ';
+  if(c.pattern==='once')return XL_DAY[c.oncedday]?XL_DAY[c.oncedday]+' ':'';
+  return '';
+}
+function xlExcelDate(iso){
+  if(!iso)return null;
+  const [y,m,d]=iso.split('-').map(Number);
+  return (Date.UTC(y,m-1,d)-Date.UTC(1899,11,30))/864e5;
+}
+
+// Build the rows (and the list of things to double-check) for one semester
+function buildExcelRows(sem,opts){
+  const courses=(db[sem]&&db[sem].courses)||[];
+  const rows=[],review=[],excluded=[];
+  const flag=(course,what)=>review.push([course,what]);
+  const list=courses.filter(c=>{
+    if(!/^ART\s/.test(c.code||'')){excluded.push(c);return false;}
+    return true;
+  }).slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'')||(a.section||'').localeCompare(b.section||''));
+  // Online sections use the university's 50-series numbers (.01 → 50, .02 → 51)
+  list.forEach(c=>{
+    const code=c.code.trim(), [subj,num]=code.split(/\s+/);
+    const titleUpper=String(c.title||'').toUpperCase();
+    // Independent study, internship, thesis etc. sit in the map's online area but
+    // are permission-only sections (INS5B / PCT8B), not online classes
+    const permission=/IND(EPENDENT)?\s+STUDY|INTERNSHIP|THESIS|RESEARCH WRITING|CAPSTONE|MFA THESIS EXHIBITION/.test(titleUpper);
+    const isOnline=c.pattern==='async'&&!!c.time&&!permission;
+    const unplaced=c.pattern==='async'&&!c.time;
+    let sec=(c.section||'').replace(/^\./,'').trim()||'01';
+    if(isOnline&&/^\d+$/.test(sec)&&+sec<50)sec=String(49+(+sec));
+    const label=`${code} ${sec}`;
+    const cat=XL_CATALOG.byCode[code]||null;
+    const catSec=XL_CATALOG.bySec[label]||XL_CATALOG.bySec[`${code} ${(c.section||'').replace(/^\./,'')}`]||null;
+    if(!cat)flag(label,'Not in the SP27 example — CIP code, METH and section cap need checking.');
+    if(unplaced&&!permission)flag(label,'Not placed in a time slot yet — days, times and room are blank.');
+    const studio=XL_DESIG[code]==='S';
+    // METH
+    let meth=(catSec&&catSec.meth)||(cat&&cat.meth)||'';
+    if(!meth){
+      meth=isOnline?'WEB1L':/INTERNSHIP/.test(titleUpper)?'PCT8B':permission?'INS5B':c.hybrid?'MIX1L':/SEMINAR/.test(titleUpper)?'SEM1L':'LEC1L';
+      flag(label,`METH code guessed as ${meth}.`);
+    } else if(isOnline&&!/^WEB/.test(meth)){meth='WEB1L';}
+    // Level, fees
+    const lvl=(cat&&cat.level)||String(Math.floor((+num||0)/1000)*100);
+    const progFee=(cat&&cat.prog)||(+lvl>=500?75:+lvl>=300?45:24);
+    let labFee=cat?cat.lab:null;
+    if(!cat&&studio&&!isOnline&&!permission){labFee=30;flag(label,'Lab fee assumed $30 (studio course).');}
+    if(isOnline)labFee=null;
+    // Room
+    const roomRaw=String(c.room||'').trim();
+    const offsite=/off.?site/i.test(roomRaw);
+    const room=offsite?'':roomRaw.split('/')[0].trim();
+    const roomCap=room?(XL_CATALOG.roomCap[room]??(ROOMS[room]?+(String(ROOMS[room]).match(/\d+/)||[])[0]||'':'')):'';
+    // Cap
+    let cap=(catSec&&catSec.cap)||(cat&&cat.cap)||null;
+    if(!cap){cap=roomCap||'';flag(label,cap?`Section cap set to the room capacity (${cap}).`:'Section cap is blank.');}
+    // Days / times
+    const days=xlDays(c);
+    const [start,end]=(c.pattern==='async'||c.time==='Other')?['','']:xlTimes(c.time);
+    if(!unplaced&&!isOnline&&!permission&&!days)flag(label,'Meeting days are blank.');
+    if(!unplaced&&!isOnline&&!permission&&!start&&c.time!=='Other')flag(label,'Meeting times are blank.');
+    if(!unplaced&&!isOnline&&!room&&!permission&&!offsite)flag(label,'Room is blank.');
+    // Title (university short titles are max 30 characters)
+    let title=(cat&&cat.title)||titleUpper;
+    if(title.length>30){flag(label,`Title shortened to 30 characters (was "${title}").`);title=title.slice(0,30).trim();}
+    // Comments
+    const mode=isOnline?'online':c.hybrid?'hybrid':'f2f';
+    const exMode=catSec&&catSec.meth?(/^WEB/.test(catSec.meth)?'online':/^MIX/.test(catSec.meth)?'hybrid':'f2f'):null;
+    let comment;
+    if(catSec&&catSec.comment&&exMode===mode&&mode!=='hybrid'&&!c.bracketed){
+      comment=catSec.comment;   // same as the example — reuse its wording exactly
+    } else {
+      if(isOnline)comment='100% ONLINE';
+      else if(permission)comment='DEPARTMENT PERMISSION REQUIRED.';
+      else if(c.hybrid){
+        const ds=days.trim().split(/\s+/).filter(Boolean).map(d=>XL_DAYNAME[d]).filter(Boolean);
+        comment=(ds.length?`HYBRID CLASS MEETS ON ${ds.join(' AND ')}; REMAINDER ONLINE.`:'HYBRID CLASS.')+(studio?' '+XL_EXPENSES:'');
+      }
+      else comment='FACE TO FACE COURSE, '+XL_EXPENSES;
+      if(cat&&cat.extra)comment+=' '+cat.extra;
+      if(c.bracketed&&c.bracketpair)comment+=` BRACKETED WITH ${c.bracketpair}.`;
+    }
+    const crossListed=c.bracketed||/CROSS-LISTED/i.test(comment);
+    const instr=(c.faculty||'').trim().toLowerCase()==='staff'||!c.faculty?'Staff, ':(XL_INSTRUCTORS[(c.faculty||'').trim().toUpperCase()]||c.faculty);
+    if(instr!=='Staff, '&&!XL_INSTRUCTORS[(c.faculty||'').trim().toUpperCase()])flag(label,`Instructor "${c.faculty}" isn't in the name list — check the spelling.`);
+    rows.push([
+      '',label,'LONG','Long Term',opts.start,opts.end,title,'ARTS AND SCIENCES',subj,lvl,(cat&&cat.cip)||'',
+      '','',cap,'','','','','','',instr,'',meth,days,room?'ART':'',room,roomCap,'DEN',start,end,comment,
+      c.hidden?'P':'A',progFee,labFee??'','','','','',opts.rep,'N',crossListed?'Y':'N','','',c.bracketed?'Y':'','']);
+  });
+  excluded.forEach(c=>flag(`${c.code}${c.section||''}`,'Left out — not an ART course (taught or submitted by another department?). Add it by hand if needed.'));
+  // One line per course on the check sheet
+  const grouped=new Map();
+  review.forEach(([course,what])=>{if(!grouped.has(course))grouped.set(course,[]);grouped.get(course).push(what);});
+  return {rows,review:[...grouped].map(([course,list])=>[course,list.join(' ')])};
+}
+
+function loadSheetJS(){
+  if(window.XLSX)return Promise.resolve();
+  return new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=()=>res();s.onerror=()=>rej(new Error('Could not load the spreadsheet library — check the internet connection.'));
+    document.head.appendChild(s);
+  });
+}
+function downloadExcel(){
+  const opts={
+    term:document.getElementById('xl_term').value.trim(),
+    rep:document.getElementById('xl_rep').value.trim(),
+    startIso:document.getElementById('xl_start').value,
+    endIso:document.getElementById('xl_end').value
+  };
+  try{
+    const all=JSON.parse(localStorage.getItem('twu_export_terms')||'{}');
+    all[currentSem]={term:opts.term,rep:opts.rep,start:opts.startIso,end:opts.endIso};
+    localStorage.setItem('twu_export_terms',JSON.stringify(all));
+  }catch(e){}
+  opts.start=xlExcelDate(opts.startIso);opts.end=xlExcelDate(opts.endIso);
+  const {rows,review}=buildExcelRows(currentSem,opts);
+  if(!opts.startIso||!opts.endIso)review.unshift(['(all)','Semester start/end dates were left blank.']);
+  loadSheetJS().then(()=>{
+    const aoa=[['Course Schedule '],XL_HEADERS,[],[opts.term,...Array(XL_HEADERS.length-1).fill('')],...rows];
+    const ws=XLSX.utils.aoa_to_sheet(aoa);
+    // Dates as real Excel dates
+    rows.forEach((r,i)=>{['E','F'].forEach(col=>{const ref=col+(5+i);if(ws[ref]&&typeof ws[ref].v==='number'){ws[ref].t='n';ws[ref].z='m/d/yyyy';}});});
+    ws['!merges']=[{s:{r:3,c:0},e:{r:3+rows.length,c:0}}];   // term label runs down column A, like the example
+    ws['!cols']=XL_HEADERS.map(h=>({wch:h==='COMMENTS'?60:h==='SHORT TITLE'?30:h==='INSTRUCTOR'?26:Math.max(9,h.length+2)}));
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Course Schedule');
+    const rv=XLSX.utils.aoa_to_sheet([['Check before sending — '+currentSem],[],['Course','What to check'],...(review.length?review:[['—','Nothing flagged.']])]);
+    rv['!cols']=[{wch:16},{wch:100}];
+    XLSX.utils.book_append_sheet(wb,rv,'Check before sending');
+    const today=new Date();const stamp=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+    XLSX.writeFile(wb,`Course Schedule ${currentSem} (${stamp}).xlsx`);
+    closeExcelExport();
+  }).catch(err=>alert(err.message));
+}
+
 function exportData(){
   const blob=new Blob([JSON.stringify(db,null,2)],{type:'application/json'});
   const a=document.createElement('a');
