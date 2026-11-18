@@ -191,7 +191,12 @@
   .cmt-del{background:none;border:none;color:#a33;cursor:pointer;font-size:.72rem;padding:0;margin-left:auto;}
   .cmt-empty{font-size:.82rem;opacity:.5;padding:6px 0 12px;}
   .cmt-warn{font-size:.74rem;background:#fff4e3;border-left:3px solid #e0a040;padding:6px 10px;margin-bottom:10px;line-height:1.45;}
-  #c_cmt_text{width:100%;min-height:80px;font-family:inherit;font-size:.85rem;padding:8px;border:1px solid var(--mist);border-radius:3px;resize:vertical;}
+  .sem-comments{background:#fbf8f3;border-bottom:1px solid rgba(158,133,109,.2);padding:10px 40px;}
+  .sem-cmt-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .sem-cmt-title{font-family:'Bahnschrift',sans-serif;font-size:.85rem;font-weight:600;}
+  #semCmtList .cmt-item{padding:6px 0;}
+  #semCmtList .cmt-empty{padding:4px 0 0;}
+  #c_semcmt_text,#c_cmt_text{width:100%;min-height:80px;font-family:inherit;font-size:.85rem;padding:8px;border:1px solid var(--mist);border-radius:3px;resize:vertical;}
 
   /* Faculty highlight bar */
   .faculty-bar{background:#fdf5ed;border-bottom:1px solid rgba(158,133,109,.2);padding:8px 40px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
@@ -265,6 +270,24 @@
   <button class="fac-btn" onclick="toggleFacultyHighlight('COLBY',this)">Colby</button>
   <button class="fac-btn" style="margin-left:10px;" onclick="toggleFacultyHighlight('STAFF',this)">Staff-taught</button>
   <button class="fac-btn fac-btn-clear" id="facClearBtn" style="display:none" onclick="clearFacultyHighlight()">✕ Clear</button>
+</div>
+
+<!-- Semester-wide comments: posted from the admin view, visible in both -->
+<div id="semComments" class="sem-comments" style="display:none;">
+  <div class="sem-cmt-head">
+    <span class="sem-cmt-title">💬 Notes on <span id="semCmtSem"></span></span>
+    <button class="btn btn-outline btn-sm admin-only" id="semCmtAddBtn" style="color:var(--ink);border-color:var(--mist);background:white;" onclick="toggleSemCommentForm()">+ Add semester comment</button>
+  </div>
+  <div id="semCmtList"></div>
+  <div id="semCmtForm" class="admin-only" style="display:none;margin-top:8px;">
+    <div class="cmt-warn">Visible to everyone with the link, including the faculty view. Please don't include private information.</div>
+    <textarea id="c_semcmt_text" maxlength="1000" placeholder="e.g. Draft 2 — still waiting on room for EDUC 4946"></textarea>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+      <span id="semCmtStatus" style="font-size:.78rem;opacity:.7;"></span>
+      <button class="btn btn-outline btn-sm" style="margin-left:auto;color:var(--ink);border-color:var(--mist);background:white;" onclick="toggleSemCommentForm(false)">Cancel</button>
+      <button class="btn btn-gold btn-sm" id="semCmtPostBtn" onclick="postSemesterComment()">Post</button>
+    </div>
+  </div>
 </div>
 
 <main>
@@ -1112,6 +1135,7 @@ function renderAll(){
   renderGrid();
   renderLoad();
   renderRotation();
+  renderSemesterComments();
 }
 
 function chipHtml(c,idx,extra=''){
@@ -1180,6 +1204,53 @@ function toggleComments(){
 function refreshCommentsUI(){
   if(typeof renderGrid==='function'&&currentSem)renderGrid();
   if(commentTarget)renderCommentList();
+  renderSemesterComments();
+}
+// Shared markup for one comment (time + Delete only in the admin view)
+function commentItemHtml(m){
+  const when=(!FACULTY_MODE&&m.ts)?`<span>${escapeHtml(new Date(m.ts).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}))}</span>`:'';
+  const who=m.name?`<span>— ${escapeHtml(m.name)}</span>`:'';
+  const del=FACULTY_MODE?'':`<button class="cmt-del" onclick="deleteComment('${m.id}')">Delete</button>`;
+  return `<div class="cmt-item"><div class="cmt-text">${escapeHtml(m.text||'')}</div>${(who||when||del)?`<div class="cmt-meta">${who}${when}${del}</div>`:''}</div>`;
+}
+
+// ── Semester-wide comments: admin posts, everyone reads ────────────────────
+const SEM_KEY='__SEMESTER__';
+function renderSemesterComments(){
+  const box=document.getElementById('semComments');if(!box)return;
+  if(!currentSem){box.style.display='none';return;}
+  const list=commentsFor(currentSem,SEM_KEY);
+  // Faculty view: only show the panel when there's something to read
+  box.style.display=(FACULTY_MODE&&!list.length)?'none':'block';
+  document.getElementById('semCmtSem').textContent=currentSem;
+  document.getElementById('semCmtList').innerHTML=list.length
+    ?list.map(commentItemHtml).join('')
+    :'<div class="cmt-empty">No semester comments yet.</div>';
+}
+function toggleSemCommentForm(show){
+  if(FACULTY_MODE)return;
+  const f=document.getElementById('semCmtForm');
+  const open=show===undefined?f.style.display==='none':show;
+  f.style.display=open?'block':'none';
+  document.getElementById('semCmtAddBtn').style.display=open?'none':'';
+  if(open){document.getElementById('semCmtStatus').textContent='';setTimeout(()=>document.getElementById('c_semcmt_text').focus(),40);}
+}
+function postSemesterComment(){
+  if(FACULTY_MODE||!currentSem)return;
+  const ta=document.getElementById('c_semcmt_text');
+  const text=ta.value.trim();
+  if(!text){ta.focus();return;}
+  if(!fsSchedDoc){alert('Not connected to the shared schedule yet — try again in a moment.');return;}
+  let name='';try{name=localStorage.getItem('twu_comment_name')||'';}catch(e){}
+  const id='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  const btn=document.getElementById('semCmtPostBtn');btn.disabled=true;
+  document.getElementById('semCmtStatus').textContent='Posting…';
+  fsSchedDoc.update({
+    passcode:EDIT_PASSCODE,
+    ['comments.'+id]:{sem:currentSem,course:SEM_KEY,label:currentSem+' (semester)',text:text.slice(0,1000),name,ts:new Date().toISOString()}
+  }).then(()=>{ta.value='';toggleSemCommentForm(false);})
+    .catch(err=>{document.getElementById('semCmtStatus').textContent='';alert('Could not post the comment — there may be a connection problem.\n\n'+err.message);})
+    .finally(()=>{btn.disabled=false;});
 }
 function openComments(key){
   const c=getSemCourses().find(x=>courseKey(x)===key);
@@ -1196,13 +1267,9 @@ function closeComments(){commentTarget=null;document.getElementById('commentOver
 function renderCommentList(){
   if(!commentTarget)return;
   const list=commentsFor(commentTarget.sem,commentTarget.key);
-  document.getElementById('cmtList').innerHTML=list.length?list.map(m=>{
-    // When it was left: admin view only
-    const when=(!FACULTY_MODE&&m.ts)?`<span>${escapeHtml(new Date(m.ts).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}))}</span>`:'';
-    const who=m.name?`<span>— ${escapeHtml(m.name)}</span>`:'';
-    const del=FACULTY_MODE?'':`<button class="cmt-del" onclick="deleteComment('${m.id}')">Delete</button>`;
-    return `<div class="cmt-item"><div class="cmt-text">${escapeHtml(m.text||'')}</div>${(who||when||del)?`<div class="cmt-meta">${who}${when}${del}</div>`:''}</div>`;
-  }).join(''):'<div class="cmt-empty">No comments yet.</div>';
+  document.getElementById('cmtList').innerHTML=list.length
+    ?list.map(commentItemHtml).join('')
+    :'<div class="cmt-empty">No comments yet.</div>';
 }
 function postComment(){
   if(!commentTarget)return;
