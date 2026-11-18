@@ -495,10 +495,7 @@
   <div class="modal" style="max-width:460px;">
     <div class="modal-header"><h2>Excel — <span id="xlSem"></span></h2><button class="modal-close" onclick="closeExcelExport()">✕</button></div>
     <div class="modal-body">
-      <p style="font-size:.82rem;line-height:1.5;margin-bottom:12px;">Downloads this semester in the university's Course Schedule format. A second sheet, <strong>Check before sending</strong>, lists anything that was guessed or is missing.</p>
-      <div class="form-row"><div class="form-group"><label>Term code (SEC TERM)</label><input type="text" id="xl_term" placeholder="e.g. 2027SP"/></div></div>
-      <div class="form-row"><div class="form-group"><label>Semester start date</label><input type="date" id="xl_start"/></div>
-        <div class="form-group"><label>Semester end date</label><input type="date" id="xl_end"/></div></div>
+      <div id="xlStatus" style="font-size:.82rem;line-height:1.55;"></div>
     </div>
     <div class="modal-footer"><div style="display:flex;gap:8px;margin-left:auto;">
       <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeExcelExport()">Cancel</button>
@@ -2028,24 +2025,41 @@ const XL_KNOWN_DATES={
 function xlTermDefaults(sem){
   const [season,yr]=sem.split(' ');
   const d=XL_KNOWN_DATES[sem]||{start:'',end:''};
-  const saved=(()=>{try{return JSON.parse(localStorage.getItem('twu_export_terms')||'{}')[sem]||null;}catch(e){return null;}})();
   const s=season==='Spring'?'SP':season==='Fall'?'FA':'SU';
   // TWU's reporting year: a fall term reports under the next year (Fall 2027 → 2028).
   // Always worked out here (no longer typed in); an uploaded report's own value wins.
   const rptYear=season==='Fall'?(+yr+1):+yr;
   const r=season==='Spring'?'SPR':season==='Fall'?'FAL':'SUM';
   const rep=rptYear+r;
-  if(saved)return {term:saved.term||yr+s,rep,start:saved.start||d.start,end:saved.end||d.end};
   return {term:yr+s,rep,start:d.start,end:d.end};
+}
+// Uploaded SQL reports, remembered per semester in this browser
+// (SYN numbers and faculty IDs are already removed before saving)
+function sqlSaved(sem){try{return JSON.parse(localStorage.getItem('twu_sql_reports')||'{}')[sem]||null;}catch(e){return null;}}
+function sqlSave(sem,report){
+  try{
+    const all=JSON.parse(localStorage.getItem('twu_sql_reports')||'{}');
+    if(report)all[sem]={...report,when:new Date().toISOString()};else delete all[sem];
+    localStorage.setItem('twu_sql_reports',JSON.stringify(all));
+  }catch(e){}
 }
 function openExcelExport(){
   if(!currentSem){alert('Please select a semester first.');return;}
-  const t=xlTermDefaults(currentSem);
   document.getElementById('xlSem').textContent=currentSem;
-  document.getElementById('xl_term').value=t.term;
-  document.getElementById('xl_start').value=t.start;
-  document.getElementById('xl_end').value=t.end;
+  renderExcelStatus();
   document.getElementById('excelOverlay').classList.add('open');
+}
+function renderExcelStatus(){
+  const r=sqlSaved(currentSem),el=document.getElementById('xlStatus');
+  if(r){
+    const when=new Date(r.when).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+    el.innerHTML=`<div style="background:#eef7ec;border:1px solid #b9d8b3;border-radius:3px;padding:8px 10px;">✓ <strong>SQL report uploaded</strong> for ${escapeHtml(currentSem)}: ${escapeHtml(r.name||'report')} (${when}).</div>
+      <p style="margin-top:10px;">The download is that report marked up with this semester's changes (blue = added, red = dropped, yellow = changed), ready to submit. It also has a <strong>Changes</strong> sheet and a <strong>Check before sending</strong> sheet.</p>
+      <p style="font-size:.74rem;opacity:.65;margin-top:8px;">Wrong report? Use ⬆ SQL Report Upload to replace it, or <a href="#" onclick="sqlSave(currentSem,null);renderExcelStatus();return false;">forget this upload</a>.</p>`;
+  } else {
+    el.innerHTML=`<div style="background:#fff4e3;border:1px solid #e0c58a;border-radius:3px;padding:8px 10px;">No SQL report has been uploaded for <strong>${escapeHtml(currentSem)}</strong>.</div>
+      <p style="margin-top:10px;">The download is built from the schedule map alone, in the university's full format, with no color marking. For the version to submit, use <strong>⬆ SQL Report Upload</strong> first.</p>`;
+  }
 }
 function closeExcelExport(){document.getElementById('excelOverlay').classList.remove('open');}
 
@@ -2173,17 +2187,15 @@ function loadSheetJS(){
   });
 }
 function downloadExcel(){
-  const opts={
-    term:document.getElementById('xl_term').value.trim(),
-    rep:xlTermDefaults(currentSem).rep,
-    startIso:document.getElementById('xl_start').value,
-    endIso:document.getElementById('xl_end').value
-  };
-  try{
-    const all=JSON.parse(localStorage.getItem('twu_export_terms')||'{}');
-    all[currentSem]={term:opts.term,start:opts.startIso,end:opts.endIso};
-    localStorage.setItem('twu_export_terms',JSON.stringify(all));
-  }catch(e){}
+  // With an uploaded SQL report: the marked-up report. Without: built from the map alone.
+  const saved=sqlSaved(currentSem);
+  if(saved){
+    loadSheetJS().then(()=>{markupFromReport(saved,currentSem);closeExcelExport();})
+      .catch(err=>alert('Something went wrong: '+err.message));
+    return;
+  }
+  const t=xlTermDefaults(currentSem);
+  const opts={term:t.term,rep:t.rep,startIso:t.start,endIso:t.end};
   opts.start=xlExcelDate(opts.startIso);opts.end=xlExcelDate(opts.endIso);
   const {rows,review}=buildExcelRows(currentSem,opts);
   if(!opts.startIso||!opts.endIso)review.unshift(['(all)','Semester start/end dates were left blank.']);
@@ -2439,7 +2451,7 @@ function downloadMarkup(){
   if(!sqlReport)return;
   const sem=document.getElementById('sqlSem').value;
   if(!sem||!db[sem]){alert('Please pick a semester to compare with.');return;}
-  try{markupFromReport(sqlReport,sem);closeSqlUpload();}
+  try{sqlSave(sem,sqlReport);markupFromReport(sqlReport,sem);closeSqlUpload();}
   catch(err){alert('Something went wrong: '+err.message);}
 }
 // Restore a .json backup of the whole schedule
