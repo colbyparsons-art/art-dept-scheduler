@@ -189,6 +189,8 @@
   .cmt-text{white-space:pre-wrap;word-wrap:break-word;}
   .cmt-meta{font-size:.72rem;opacity:.55;margin-top:2px;display:flex;gap:8px;align-items:center;}
   .cmt-del{background:none;border:none;color:#a33;cursor:pointer;font-size:.72rem;padding:0;margin-left:auto;}
+  .cmt-edit-btn{background:none;border:none;color:var(--clay);cursor:pointer;font-size:.72rem;padding:0;}
+  .cmt-edit-box{width:100%;min-height:60px;font-family:inherit;font-size:.85rem;padding:6px 8px;border:1px solid var(--mist);border-radius:3px;resize:vertical;}
   .cmt-empty{font-size:.82rem;opacity:.5;padding:6px 0 12px;}
   .cmt-warn{font-size:.74rem;background:#fff4e3;border-left:3px solid #e0a040;padding:6px 10px;margin-bottom:10px;line-height:1.45;}
   .sem-comments{background:#fff;border-bottom:1px solid rgba(158,133,109,.2);padding:10px 40px;}
@@ -1234,12 +1236,44 @@ function refreshCommentsUI(){
   if(commentTarget)renderCommentList();
   renderSemesterComments();
 }
-// Shared markup for one comment (time + Delete only in the admin view)
+// "Your own" comments = ones posted from this browser (there are no accounts),
+// remembered by id so their author can edit them later, in either view.
+function myCommentIds(){try{return new Set(JSON.parse(localStorage.getItem('twu_my_comments')||'[]'));}catch(e){return new Set();}}
+function rememberMyComment(id){try{const s=myCommentIds();s.add(id);localStorage.setItem('twu_my_comments',JSON.stringify([...s]));}catch(e){}}
+let editingCommentId=null, editDraft='';
+const fmtWhen=ts=>new Date(ts).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+// Shared markup for one comment (times + Delete only in the admin view; Edit on your own)
 function commentItemHtml(m){
-  const when=(!FACULTY_MODE&&m.ts)?`<span>${escapeHtml(new Date(m.ts).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}))}</span>`:'';
+  if(m.id===editingCommentId){
+    return `<div class="cmt-item">
+      <textarea class="cmt-edit-box" id="cmt_edit_${m.id}" maxlength="1000" oninput="editDraft=this.value">${escapeHtml(editDraft)}</textarea>
+      <div class="cmt-meta"><span id="cmt_edit_status_${m.id}"></span>
+        <button class="cmt-edit-btn" style="margin-left:auto;" onclick="cancelEditComment()">Cancel</button>
+        <button class="btn btn-gold btn-sm" onclick="saveCommentEdit('${m.id}')">Save</button></div>
+    </div>`;
+  }
+  const when=(!FACULTY_MODE&&m.ts)?`<span>${escapeHtml(fmtWhen(m.ts))}</span>`:'';
+  const edited=(!FACULTY_MODE&&m.edited)?`<span>(edited ${escapeHtml(fmtWhen(m.edited))})</span>`:'';
   const who=m.name?`<span>— ${escapeHtml(m.name)}</span>`:'';
-  const del=FACULTY_MODE?'':`<button class="cmt-del" onclick="deleteComment('${m.id}')">Delete</button>`;
-  return `<div class="cmt-item"><div class="cmt-text">${escapeHtml(m.text||'')}</div>${(who||when||del)?`<div class="cmt-meta">${who}${when}${del}</div>`:''}</div>`;
+  const mine=myCommentIds().has(m.id);
+  const edit=mine?`<button class="cmt-edit-btn" style="margin-left:auto;" onclick="startEditComment('${m.id}')">Edit</button>`:'';
+  const del=FACULTY_MODE?'':`<button class="cmt-del"${mine?' style="margin-left:0;"':''} onclick="deleteComment('${m.id}')">Delete</button>`;
+  return `<div class="cmt-item"><div class="cmt-text">${escapeHtml(m.text||'')}</div>${(who||when||edited||edit||del)?`<div class="cmt-meta">${who}${when}${edited}${edit}${del}</div>`:''}</div>`;
+}
+function rerenderCommentLists(){if(commentTarget)renderCommentList();renderSemesterComments();}
+function startEditComment(id){
+  const m=(sharedComments||{})[id];if(!m||!myCommentIds().has(id))return;
+  editingCommentId=id;editDraft=m.text||'';rerenderCommentLists();
+  setTimeout(()=>{const t=document.getElementById('cmt_edit_'+id);if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length);}},30);
+}
+function cancelEditComment(){editingCommentId=null;editDraft='';rerenderCommentLists();}
+function saveCommentEdit(id){
+  const text=editDraft.trim();
+  if(!text){alert('A comment can\'t be empty. (To remove it, ask the department head to delete it.)');return;}
+  const st=document.getElementById('cmt_edit_status_'+id);if(st)st.textContent='Saving…';
+  fsSchedDoc.update({passcode:EDIT_PASSCODE,['comments.'+id+'.text']:text.slice(0,1000),['comments.'+id+'.edited']:new Date().toISOString()})
+    .then(()=>{editingCommentId=null;editDraft='';rerenderCommentLists();})
+    .catch(err=>{if(st)st.textContent='';alert('Could not save the edit — there may be a connection problem.\n\n'+err.message);});
 }
 
 // ── Semester-wide comments: admin posts, everyone reads ────────────────────
@@ -1277,7 +1311,7 @@ function postSemesterComment(){
   fsSchedDoc.update({
     passcode:EDIT_PASSCODE,
     ['comments.'+id]:{sem:currentSem,course:SEM_KEY,label:currentSem+' (semester)',text:text.slice(0,1000),name,ts:new Date().toISOString()}
-  }).then(()=>{ta.value='';toggleSemCommentForm(false);})
+  }).then(()=>{rememberMyComment(id);ta.value='';toggleSemCommentForm(false);renderSemesterComments();})
     .catch(err=>{document.getElementById('semCmtStatus').textContent='';alert('Could not post the comment — there may be a connection problem.\n\n'+err.message);})
     .finally(()=>{btn.disabled=false;});
 }
@@ -1292,7 +1326,7 @@ function openComments(key){
   document.getElementById('commentOverlay').classList.add('open');
   setTimeout(()=>document.getElementById('c_cmt_text').focus(),40);
 }
-function closeComments(){commentTarget=null;document.getElementById('commentOverlay').classList.remove('open');}
+function closeComments(){commentTarget=null;editingCommentId=null;editDraft='';document.getElementById('commentOverlay').classList.remove('open');}
 function renderCommentList(){
   if(!commentTarget)return;
   const list=commentsFor(commentTarget.sem,commentTarget.key);
@@ -1314,6 +1348,7 @@ function postComment(){
     passcode:EDIT_PASSCODE,
     ['comments.'+id]:{sem:commentTarget.sem,course:commentTarget.key,label:commentTarget.label,text:text.slice(0,1000),name,ts:new Date().toISOString()}
   }).then(()=>{
+    rememberMyComment(id);renderCommentList();
     document.getElementById('c_cmt_text').value='';
     document.getElementById('cmtStatus').textContent='✓ Posted';
   }).catch(err=>{
