@@ -236,8 +236,8 @@
   </div>
   <div class="header-btns">
     <button class="btn btn-gold" onclick="generatePDF()">⬇ Download PDF</button>
-    <button class="btn btn-outline admin-only" onclick="document.getElementById('importFile').click()" title="Upload the registrar's SQL report (.xlsx or .csv) to get a marked-up copy, or restore a .json backup">⬆ SQL Report Upload</button>
-    <input type="file" id="importFile" accept=".xlsx,.xls,.csv,.json" style="display:none" onchange="importData(event)"/>
+    <button class="btn btn-outline admin-only" onclick="openSqlUpload()" title="Upload the registrar's SQL report to get a marked-up copy to submit">⬆ SQL Report Upload</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)"/>
     <button class="btn btn-outline admin-only" onclick="openExcelExport()" title="Download this semester in the university Course Schedule format">⬇ Excel</button>
     <button class="btn btn-gold admin-only" onclick="openAddModal(null,null)">+ Add Course</button>
     <button class="btn btn-gold admin-only" id="publishBtn" onclick="publishToShared()">☁ Publish for Everyone</button>
@@ -503,6 +503,34 @@
     <div class="modal-footer"><div style="display:flex;gap:8px;margin-left:auto;">
       <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeExcelExport()">Cancel</button>
       <button class="btn btn-gold btn-sm" onclick="downloadExcel()">⬇ Download .xlsx</button></div></div>
+  </div>
+</div>
+
+<!-- SQL REPORT UPLOAD MODAL -->
+<div class="modal-overlay" id="sqlOverlay">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-header"><h2>SQL Report Upload</h2><button class="modal-close" onclick="closeSqlUpload()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-size:.82rem;line-height:1.5;margin-bottom:12px;">Upload the registrar's report for the semester you're preparing (.xlsx or .csv). It's compared with that semester in the schedule map and you get back a marked-up copy to submit.</p>
+      <div class="form-row"><div class="form-group"><label>Report file</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="document.getElementById('sqlFile').click()">Choose file…</button>
+          <span id="sqlFileName" style="font-size:.8rem;opacity:.7;">No file chosen</span>
+        </div>
+        <input type="file" id="sqlFile" accept=".xlsx,.xls,.csv" style="display:none" onchange="sqlFileChosen(event)"/>
+      </div></div>
+      <div id="sqlInfo" style="font-size:.8rem;line-height:1.5;margin:4px 0 10px;"></div>
+      <div class="form-row"><div class="form-group"><label>Compare with this semester</label><select id="sqlSem"></select></div></div>
+      <div style="font-size:.78rem;line-height:1.7;margin-top:6px;">
+        <span style="display:inline-block;width:12px;height:12px;background:#00B0F0;vertical-align:middle;margin-right:4px;"></span>Blue row: section added
+        <span style="display:inline-block;width:12px;height:12px;background:#FF0000;vertical-align:middle;margin:0 4px 0 12px;"></span>Red row: dropped<br>
+        <span style="display:inline-block;width:12px;height:12px;background:#FFFF00;border:1px solid #ddd;vertical-align:middle;margin-right:4px;"></span>Yellow cell: changed. SYN is left blank to fill in.
+      </div>
+      <div style="font-size:.74rem;margin-top:14px;opacity:.65;">Need to restore a schedule backup instead? <a href="#" onclick="document.getElementById('importFile').click();return false;">Choose a .json backup</a></div>
+    </div>
+    <div class="modal-footer"><div style="display:flex;gap:8px;margin-left:auto;">
+      <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeSqlUpload()">Cancel</button>
+      <button class="btn btn-gold btn-sm" id="sqlGo" onclick="downloadMarkup()" disabled>⬇ Download marked-up report</button></div></div>
   </div>
 </div>
 
@@ -2355,14 +2383,59 @@ function mkDetectSemester(aoa){
   }
   return null;
 }
-// Import: .json = restore a backup; .xlsx/.xls/.csv = the registrar's report
+// ── SQL Report Upload popup ──
+let sqlReport=null;   // {aoa, cols, name} — the uploaded report (faculty IDs already removed)
+function openSqlUpload(){
+  sqlReport=null;
+  document.getElementById('sqlFileName').textContent='No file chosen';
+  document.getElementById('sqlInfo').textContent='';
+  document.getElementById('sqlGo').disabled=true;
+  const sel=document.getElementById('sqlSem');
+  sel.innerHTML=sortedSemKeys(db).map(s=>`<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
+  sel.value=currentSem||defaultSem()||'';
+  document.getElementById('sqlOverlay').classList.add('open');
+}
+function closeSqlUpload(){document.getElementById('sqlOverlay').classList.remove('open');sqlReport=null;}
+function sqlFileChosen(e){
+  const file=e.target.files[0];e.target.value='';if(!file)return;
+  const info=document.getElementById('sqlInfo');
+  document.getElementById('sqlFileName').textContent=file.name;
+  document.getElementById('sqlGo').disabled=true;
+  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){info.innerHTML='<span style="color:#b00020;">Please choose the report as an .xlsx or .csv file.</span>';return;}
+  info.textContent='Reading…';
+  const reader=new FileReader();
+  reader.onload=ev=>loadSheetJS().then(()=>{
+    const wb=XLSX.read(ev.target.result,{type:'array',cellStyles:true});
+    const src=wb.Sheets[wb.SheetNames[0]];
+    const aoa=mkStripIds(XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''}));
+    const hi=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
+    if(hi<0){info.innerHTML='<span style="color:#b00020;">Couldn\'t find the column headings (a "COURSE" column) in that file.</span>';return;}
+    // Column widths/hidden columns, by heading (IDs removed to match)
+    const rawHead=(XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''})[hi]||[]);
+    const cols={};rawHead.forEach((h,i)=>{const c=(src['!cols']||[])[i];if(c)cols[mkNorm(h)]=c;});
+    const n=aoa.slice(hi+1).filter(r=>mkParseCourse((r||[])[aoa[hi].findIndex(v=>mkNorm(v)==='COURSE')])).length;
+    sqlReport={aoa,cols,name:file.name};
+    const found=mkDetectSemester(aoa),sel=document.getElementById('sqlSem');
+    if(found&&db[found]){sel.value=found;info.innerHTML=`✓ Report for <strong>${found}</strong> · ${n} sections.`;}
+    else if(found){info.innerHTML=`Report for <strong>${found}</strong> · ${n} sections. <span style="color:#a35a00;">The schedule map has no ${found}. Pick the semester to compare with below.</span>`;}
+    else info.innerHTML=`${n} sections. <span style="color:#a35a00;">Couldn't tell which semester it's for. Pick it below.</span>`;
+    document.getElementById('sqlGo').disabled=false;
+  }).catch(err=>{info.innerHTML='<span style="color:#b00020;">Couldn\'t read that report: '+escapeHtml(err.message)+'</span>';});
+  reader.readAsArrayBuffer(file);
+}
+function downloadMarkup(){
+  if(!sqlReport)return;
+  const sem=document.getElementById('sqlSem').value;
+  if(!sem||!db[sem]){alert('Please pick a semester to compare with.');return;}
+  try{markupFromReport(sqlReport,sem);closeSqlUpload();}
+  catch(err){alert('Something went wrong: '+err.message);}
+}
+// Restore a .json backup of the whole schedule
 function importData(e){
   const file=e.target.files[0];e.target.value='';if(!file)return;
-  if(/\.json$/i.test(file.name)){importBackup(file);return;}
-  if(!/\.(xlsx|xls|csv)$/i.test(file.name)){alert("Please choose the registrar's report (.xlsx or .csv) or a schedule backup (.json).");return;}
-  const reader=new FileReader();
-  reader.onload=ev=>loadSheetJS().then(()=>markupFromFile(ev.target.result)).catch(err=>alert("Couldn't read that report: "+err.message));
-  reader.readAsArrayBuffer(file);
+  if(!/\.json$/i.test(file.name)){alert('Please choose a schedule backup (.json).');return;}
+  closeSqlUpload();
+  importBackup(file);
 }
 function importBackup(file){
   if(!confirm('Restore this backup file? It replaces every semester on this computer (nothing changes for anyone else until you click Publish for Everyone).'))return;
@@ -2378,19 +2451,8 @@ function importBackup(file){
   };
   reader.readAsText(file);
 }
-function markupFromFile(buf){
-  const wb=XLSX.read(buf,{type:'array',cellStyles:true});
-  const src=wb.Sheets[wb.SheetNames[0]];
-  const aoa=mkStripIds(XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''}));
-  // Which semester to compare with
-  const found=mkDetectSemester(aoa);
-  const sem=found&&db[found]?found:currentSem;
-  const msg=found
-    ?(db[found]?`This report is for ${found}. Compare it with the ${found} schedule?`
-      :`This report is for ${found}, but the schedule map has no ${found}. Compare it with ${currentSem} instead?`)
-    :`Couldn't tell which semester this report is for. Compare it with ${currentSem}?`;
-  if(!confirm(msg))return;
-  if(!sem||!db[sem]){alert('Please select a semester first.');return;}
+function markupFromReport(report,sem){
+  const aoa=report.aoa;
   const t=xlTermDefaults(sem);
   const {rows,review}=buildExcelRows(sem,{start:xlExcelDate(t.start),end:xlExcelDate(t.end),rep:t.rep});
   const res=markupReport(aoa,rows);
@@ -2415,10 +2477,8 @@ function markupFromFile(buf){
     }
   });
   // Column widths and hidden columns from the original report, matched by heading
-  const srcHead=(aoa.find(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'))||[]).map(mkNorm);
-  const srcCols=src['!cols']||[];
   ws['!cols']=header.map(h=>{
-    const i=srcHead.indexOf(h),sc=i>=0?srcCols[i]:null;
+    const sc=(report.cols||{})[h]||null;
     const wch=h==='COMMENTS'?60:h==='SHORT TITLE'?30:h==='INSTRUCTOR'?26:Math.max(9,h.length+2);
     return sc?{wch:sc.wch||wch,hidden:!!sc.hidden}:{wch};
   });
