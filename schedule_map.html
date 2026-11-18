@@ -1008,7 +1008,7 @@ function applyUnivPassionPurpose(d){
 
 // Semester the map opens on, in both views, for everyone (the one being planned now).
 // Change this one line when planning moves on to the next semester.
-const DEFAULT_SEMESTER='Spring 2027';
+const DEFAULT_SEMESTER='Fall 2027';
 function defaultSem(){return db&&db[DEFAULT_SEMESTER]?DEFAULT_SEMESTER:(sortedSemKeys(db)[0]||null);}
 let currentSem=defaultSem();
 let editingId=null;
