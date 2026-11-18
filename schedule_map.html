@@ -1240,6 +1240,8 @@ function refreshCommentsUI(){
 // remembered by id so their author can edit them later, in either view.
 function myCommentIds(){try{return new Set(JSON.parse(localStorage.getItem('twu_my_comments')||'[]'));}catch(e){return new Set();}}
 function rememberMyComment(id){try{const s=myCommentIds();s.add(id);localStorage.setItem('twu_my_comments',JSON.stringify([...s]));}catch(e){}}
+// Admin view can edit any comment; faculty view only their own
+function canEditComment(id){return !FACULTY_MODE||myCommentIds().has(id);}
 let editingCommentId=null, editDraft='';
 const fmtWhen=ts=>new Date(ts).toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
 // Shared markup for one comment (times + Delete only in the admin view; Edit on your own)
@@ -1255,14 +1257,14 @@ function commentItemHtml(m){
   const when=(!FACULTY_MODE&&m.ts)?`<span>${escapeHtml(fmtWhen(m.ts))}</span>`:'';
   const edited=(!FACULTY_MODE&&m.edited)?`<span>(edited ${escapeHtml(fmtWhen(m.edited))})</span>`:'';
   const who=m.name?`<span>— ${escapeHtml(m.name)}</span>`:'';
-  const mine=myCommentIds().has(m.id);
+  const mine=canEditComment(m.id);
   const edit=mine?`<button class="cmt-edit-btn" style="margin-left:auto;" onclick="startEditComment('${m.id}')">Edit</button>`:'';
   const del=FACULTY_MODE?'':`<button class="cmt-del"${mine?' style="margin-left:0;"':''} onclick="deleteComment('${m.id}')">Delete</button>`;
   return `<div class="cmt-item"><div class="cmt-text">${escapeHtml(m.text||'')}</div>${(who||when||edited||edit||del)?`<div class="cmt-meta">${who}${when}${edited}${edit}${del}</div>`:''}</div>`;
 }
 function rerenderCommentLists(){if(commentTarget)renderCommentList();renderSemesterComments();}
 function startEditComment(id){
-  const m=(sharedComments||{})[id];if(!m||!myCommentIds().has(id))return;
+  const m=(sharedComments||{})[id];if(!m||!canEditComment(id))return;
   editingCommentId=id;editDraft=m.text||'';rerenderCommentLists();
   setTimeout(()=>{const t=document.getElementById('cmt_edit_'+id);if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length);}},30);
 }
