@@ -199,7 +199,8 @@
   <span class="sep">/</span>
   <a href="schedule_map.html" class="current">Schedule Map</a>
 </nav>
-<div id="saveNotice" style="background:var(--light-clay);border-bottom:2px solid var(--gold);padding:10px 40px;font-size:.85rem;color:var(--ink);">
+<div id="conflictBanner" class="admin-only" style="display:none;background:#fff4e3;border-bottom:2px solid #e0a040;padding:12px 40px;font-size:.85rem;color:var(--ink);line-height:1.5;"></div>
+<div id="saveNotice"style="background:var(--light-clay);border-bottom:2px solid var(--gold);padding:10px 40px;font-size:.85rem;color:var(--ink);">
   ⚠ Edits auto-save only to <strong>this device's browser</strong> as you make them. When you're ready for everyone to see your changes, click <strong>☁ Publish for Everyone</strong> and enter the department passcode.
 </div>
 <header>
@@ -623,6 +624,60 @@ let db=loadData();
 // ── Shared publish (Firestore) ──────────────────────────────────────────────
 const EDIT_PASSCODE='TWUart';
 let fsSchedDoc=null, firestoreLive=false;
+
+// ── Unpublished-edit protection ────────────────────────────────────────────
+// Every edit is saved to this browser right away and marked "unpublished".
+// A newly published version never silently replaces unpublished edits
+// (that is how a failed publish used to wipe out a session's work).
+const DIRTY_KEY='twu_schedule_dirty';
+const HAD_LOCAL_COPY=(function(){try{return !!localStorage.getItem('twu_schedule');}catch(e){return false;}})();
+let firstSnapshotSeen=false, pendingPublished=null;
+function getDirty(){try{return localStorage.getItem(DIRTY_KEY);}catch(e){return null;}}
+function clearDirty(){try{localStorage.removeItem(DIRTY_KEY);}catch(e){}}
+function saveEdit(d){saveData(d);try{localStorage.setItem(DIRTY_KEY,new Date().toISOString());}catch(e){}}
+function scheduleDiff(local,pub){
+  const norm=c=>JSON.stringify(Object.keys(c).sort().map(k=>[k,c[k]]));
+  const key=c=>(c.code||'')+(c.section||'');
+  const out=[];
+  sortedSemKeys({...(pub||{}),...(local||{})}).forEach(s=>{
+    if(!local||!local[s]){out.push(`${s}: only in the published version`);return;}
+    if(!pub||!pub[s]){out.push(`${s}: new semester, not yet published`);return;}
+    const L=new Map((local[s].courses||[]).map(c=>[key(c),c]));
+    const P=new Map((pub[s].courses||[]).map(c=>[key(c),c]));
+    let add=0,rem=0,chg=0;
+    L.forEach((c,k)=>{if(!P.has(k))add++;else if(norm(c)!==norm(P.get(k)))chg++;});
+    P.forEach((c,k)=>{if(!L.has(k))rem++;});
+    const parts=[];
+    if(chg)parts.push(chg+' changed');if(add)parts.push(add+' added');if(rem)parts.push(rem+' removed');
+    if(parts.length)out.push(`${s}: ${parts.join(', ')}`);
+  });
+  return out;
+}
+function showConflictBanner(diffs){
+  const el=document.getElementById('conflictBanner');if(!el)return;
+  const since=getDirty();
+  el.innerHTML=`<strong>⚠ This browser has schedule changes that are not published.</strong>
+    ${since?` Last edited ${new Date(since).toLocaleString()}.`:''}
+    The published version is different in:<ul style="margin:6px 0 8px 18px;">${diffs.map(d=>`<li>${d}</li>`).join('')}</ul>
+    You're seeing <em>your</em> version below. To share it, click <strong>Publish for Everyone</strong>.
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-gold btn-sm" onclick="publishToShared()">☁ Publish my version</button>
+      <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);background:white;" onclick="exportData()">⬇ Download a backup of my version</button>
+      <button class="btn btn-outline btn-sm" style="color:#a33;border-color:#e3b5b5;background:white;" onclick="discardLocalEdits()">Discard my version, load published</button>
+    </div>`;
+  el.style.display='block';
+  showSaveNotice('Showing your unpublished version — see the note below.');
+}
+function hideConflictBanner(){const el=document.getElementById('conflictBanner');if(el)el.style.display='none';}
+function discardLocalEdits(){
+  if(!pendingPublished)return;
+  if(!confirm('Discard the unpublished changes in this browser and load the published schedule? This cannot be undone. (Tip: download a backup first.)'))return;
+  db=pendingPublished;pendingPublished=null;
+  saveData(db);clearDirty();hideConflictBanner();
+  if(!currentSem||!db[currentSem])currentSem=sortedSemKeys(db)[0]||null;
+  buildSemSelect();renderAll();
+  showSaveNotice('✓ Showing the current published schedule.');
+}
 try{
   firebase.initializeApp({
     apiKey:"AIzaSyAStmkctkE8r7g4_4_0BFYcpSzN5zXbzUc",
@@ -638,8 +693,22 @@ try{
     if(doc.exists){
       const payload=doc.data()&&doc.data().payload;
       if(payload&&Object.keys(payload).length){
+        const fixed=applyFourYearElectives(payload);
+        const first=!firstSnapshotSeen; firstSnapshotSeen=true;
+        // Admin view: never throw away edits that haven't been published.
+        // Keep the local copy and let the user choose, if this browser has
+        // unpublished edits, or (first load only) a saved copy that differs.
+        if(!FACULTY_MODE){
+          const diffs=scheduleDiff(db,payload);
+          if(diffs.length&&(getDirty()||(first&&HAD_LOCAL_COPY))){
+            pendingPublished=payload;
+            showConflictBanner(diffs);
+            return;
+          }
+        }
         db=payload;
-        const fixed=applyFourYearElectives(db);
+        hideConflictBanner();
+        if(!FACULTY_MODE)saveData(db);   // keep this browser's copy in step with what's published
         if(!currentSem||!db[currentSem])currentSem=sortedSemKeys(db)[0]||null;
         if(typeof buildSemSelect==='function')buildSemSelect();
         if(typeof renderAll==='function')renderAll();
@@ -672,12 +741,17 @@ function publishToShared(){
   if(!fsSchedDoc){alert('Not connected to the shared database yet — try again in a moment.');return;}
   const pass=window.prompt('Enter the department edit passcode to publish this schedule for everyone:');
   if(pass===null)return;
-  fsSchedDoc.set({passcode:pass,payload:db,updatedAt:new Date().toISOString()})
+  // Snapshot what we're publishing, so a reply from the server can't swap it out mid-publish
+  const toPublish=JSON.parse(JSON.stringify(db));
+  saveEdit(db);   // make sure this version is safely in the browser before sending
+  fsSchedDoc.set({passcode:pass,payload:toPublish,updatedAt:new Date().toISOString()})
     .then(function(){
+      clearDirty();pendingPublished=null;hideConflictBanner();
       showSaveNotice('✓ Published — everyone will now see this version.');
     })
     .catch(function(err){
-      alert('Could not publish — the passcode may be wrong, or there was a connection problem.\n\n'+err.message);
+      // Edits stay in this browser (still marked unpublished) — nothing is lost.
+      alert('Could not publish — the passcode may be wrong, or there was a connection problem.\n\nYour changes are still saved in this browser. Try Publish again.\n\n'+err.message);
     });
 }
 
@@ -870,7 +944,7 @@ function confirmNewSem(){
   if(db[key]&&db[key].courses&&db[key].courses.length){alert('That semester already exists and has courses. Select it from the dropdown to edit it.');return;}
   const auto=document.getElementById('ns_auto').checked;
   db[key]={courses:auto?autoGenerateSemester(season,year):[],notes:'Draft'};
-  saveData(db);
+  saveEdit(db);
   currentSem=key;
   closeNewSemModal();
   buildSemSelect();
@@ -958,7 +1032,7 @@ function deleteSemester(){
   if(!currentSem)return;
   if(!confirm('Delete '+currentSem+' and all its courses?'))return;
   delete db[currentSem];
-  saveData(db);
+  saveEdit(db);
   currentSem=sortedSemKeys(db)[0]||null;
   buildSemSelect();
   renderAll();
@@ -1097,7 +1171,7 @@ function dropOnCell(e,pattern,block){
     const partner=db[currentSem].courses.find(p=>isBracketPair(c,p));
     if(partner){partner.pattern=pattern;partner.time=block;if(pattern!=='once')partner.oncedday='';}
   }
-  saveData(db);
+  saveEdit(db);
   dragIdx=null;
   renderAll();
 }
@@ -1466,12 +1540,44 @@ function saveCourse(){
     }
   }
   if(!record.code){alert('Please enter a course code.');return;}
-  if(editingId===null){
-    db[currentSem].courses.push(record);
-  } else {
-    db[currentSem].courses[editingId]=record;
+  const cs=db[currentSem].courses;
+  const old=editingId===null?null:cs[editingId];
+  const myKey=record.code+record.section;
+  const keyOf=c=>(c.code||'')+(c.section||'');
+  // Bracket partner: tidy up what was typed ("5903.01", "art 5903 .01" → "ART 5903.01")
+  if(record.bracketed&&record.bracketpair){
+    let bp=record.bracketpair.toUpperCase().replace(/\s+/g,' ').replace(/\s+\./,'.').trim();
+    if(/^\d/.test(bp))bp=(record.code.split(' ')[0]||'ART')+' '+bp;
+    record.bracketpair=bp;
   }
-  saveData(db);
+  if(!record.bracketed)record.bracketpair='';
+  let partner=null;
+  if(record.bracketed&&record.bracketpair){
+    partner=cs.find(x=>x!==old&&keyOf(x)===record.bracketpair)||null;
+    if(!partner){
+      alert(`Couldn't find ${record.bracketpair} in ${currentSem}. Check the code and section — this course is saved, but it won't show as bracketed until that course exists and points back to it.`);
+    } else if(partner.bracketed&&partner.bracketpair&&partner.bracketpair!==myKey&&partner.bracketpair!==(old&&keyOf(old))){
+      if(!confirm(`${record.bracketpair} is currently bracketed with ${partner.bracketpair}.\n\nBracket it with ${myKey} instead? (${partner.bracketpair} will be un-bracketed.)`))return;
+    }
+  }
+  if(editingId===null){
+    cs.push(record);
+  } else {
+    cs[editingId]=record;
+  }
+  // Un-bracket anything left pointing at this course or its new partner
+  const oldKey=old?keyOf(old):null, partnerKey=partner?keyOf(partner):null;
+  cs.forEach(x=>{
+    if(x===record||x===partner||!x.bracketed)return;
+    if(x.bracketpair===myKey||(oldKey&&x.bracketpair===oldKey)||(partnerKey&&x.bracketpair===partnerKey)){x.bracketed=false;x.bracketpair='';}
+  });
+  // Point the partner back at this course and put it in the same time slot,
+  // so the pair draws as one outlined block
+  if(partner){
+    partner.bracketed=true;partner.bracketpair=myKey;
+    partner.pattern=record.pattern;partner.time=record.time;partner.oncedday=record.oncedday;
+  }
+  saveEdit(db);
   closeModal();
   renderAll();
 }
@@ -1481,7 +1587,7 @@ function deleteCourse(){
   const c=db[currentSem].courses[editingId];
   if(!confirm('Delete '+c.code+' '+c.title+'?'))return;
   db[currentSem].courses.splice(editingId,1);
-  saveData(db);
+  saveEdit(db);
   closeModal();
   renderAll();
 }
@@ -1499,7 +1605,7 @@ function importData(e){
   reader.onload=function(ev){
     try{
       const d=JSON.parse(ev.target.result);
-      db=d;saveData(db);
+      db=d;saveEdit(db);
       currentSem=sortedSemKeys(db)[0]||null;
       buildSemSelect();renderAll();
       alert('Imported successfully.');
