@@ -1974,7 +1974,7 @@ const XL_INSTRUCTORS={
   'JULIE':'Libersat, Julie','TANYA':'Synar, Tanya','LAURA LEE':'McCartney, Laura',
   'CHRISTINE':'Adame, Christine','COLBY':'Parsons, Matthew'
 };
-const XL_HEADERS=['SEC TERM','COURSE','COURSE TYPES','COURSE TYPE DESC','SEC START DATE','SEC END DATE','SHORT TITLE','COLLEGE','SUBJECT','COURSE LEVEL','CIP CODE','ENR','Wait','Section Cap','SCH','UGL SCH (FR/SO)','UGU SCH (JR/SR)','PB SCH','GM SCH','GD SCH','INSTRUCTOR','TWU ID','METH','DAYS','BLDG','ROOM','ROOM CAPACITY','LOCATION','START ','END','COMMENTS','SEC STATUS','PROG FEE','LAB FEE','DIS FEE','DL FEE','SYLLABUS','VITAE','REPORTING TERM','DUAL CREDIT','CROSS LISTED','CROSS LISTING ENROLLMENT','SMALL CLASS','BRACKETED COURSE','INSTRUCTOR CAMPUS'];
+const XL_HEADERS=['SEC TERM','COURSE','COURSE TYPES','COURSE TYPE DESC','SEC START DATE','SEC END DATE','SHORT TITLE','COLLEGE','SUBJECT','COURSE LEVEL','CIP CODE','ENR','Wait','Section Cap','SCH','UGL SCH (FR/SO)','UGU SCH (JR/SR)','PB SCH','GM SCH','GD SCH','INSTRUCTOR','METH','DAYS','BLDG','ROOM','ROOM CAPACITY','LOCATION','START ','END','COMMENTS','SEC STATUS','PROG FEE','LAB FEE','DIS FEE','DL FEE','SYLLABUS','VITAE','REPORTING TERM','DUAL CREDIT','CROSS LISTED','CROSS LISTING ENROLLMENT','SMALL CLASS','BRACKETED COURSE','INSTRUCTOR CAMPUS'];
 const XL_EXPENSES='ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT.';
 // Full-term start/end dates from "TWU Skeletal Term Dates 2024–2033"
 // (all future dates subject to change). Add new years here as they're published.
@@ -2123,7 +2123,7 @@ function buildExcelRows(sem,opts){
     if(instr!=='Staff, '&&!XL_INSTRUCTORS[(c.faculty||'').trim().toUpperCase()])flag(label,`Instructor "${c.faculty}" isn't in the name list — check the spelling.`);
     rows.push([
       '',label,'LONG','Long Term',opts.start,opts.end,title,'ARTS AND SCIENCES',subj,lvl,(cat&&cat.cip)||'',
-      '','',cap,'','','','','','',instr,'',meth,days,room?'ART':'',room,roomCap,'DEN',start,end,comment,
+      '','',cap,'','','','','','',instr,meth,days,room?'ART':'',room,roomCap,'DEN',start,end,comment,
       c.hidden?'P':'A',progFee,labFee??'','','','','',opts.rep,'N',crossListed?'Y':'N','','',c.bracketed?'Y':'','']);
   });
   excluded.forEach(c=>flag(`${c.code}${c.section||''}`,'Left out — not an ART course (taught or submitted by another department?). Add it by hand if needed.'));
@@ -2183,7 +2183,8 @@ function downloadExcel(){
 // university wants it:
 //   blue row   = section we're adding      red row = section we're dropping
 //   yellow cell = a value that changed (only that cell)
-// SYN numbers and faculty IDs are left for the department to fill in.
+// SYN numbers are left for the department to fill in. Faculty IDs are never
+// processed: any ID column is dropped the moment a report is read.
 const MK_BLUE='00B0F0',MK_RED='FF0000',MK_YELLOW='FFFF00',MK_HEAD='4682B4';
 const mkNorm=v=>String(v??'').trim().toUpperCase();
 // "ART 1203 01", "ART 1203.01", "ART-1203-01" → {code:'ART 1203',sec:'01'}
@@ -2224,7 +2225,15 @@ const MK_FIELDS=[
 
 // aoa: the report as rows of cells. appRows: rows from buildExcelRows (XL_HEADERS order).
 // Returns the marked-up rows, which cells/rows to color, and a list of changes.
+function mkStripIds(aoa){
+  const hi=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
+  if(hi<0)return aoa;
+  const ids=(aoa[hi]||[]).map((h,i)=>/\bID\b/i.test(String(h??''))&&!/SYN/i.test(String(h??''))?i:-1).filter(i=>i>=0).reverse();
+  if(!ids.length)return aoa;
+  return aoa.map(r=>{const x=(r||[]).slice();ids.forEach(i=>{if(x.length>i)x.splice(i,1);});return x;});
+}
 function markupReport(aoa,appRows){
+  aoa=mkStripIds(aoa);
   const headerIdx=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
   if(headerIdx<0)throw new Error('Couldn\'t find the column headings (a "COURSE" column) in that file.');
   const rows=aoa.map(r=>(r||[]).slice());
@@ -2239,7 +2248,6 @@ function markupReport(aoa,appRows){
     col=H();
   }
   const ncol=header.length;
-  const idCol=header.findIndex(h=>/\bID\b/i.test(h)&&!/SYN/i.test(h));
   const get=(r,name)=>{const i=col[name];return i===undefined?'':(r[i]??'');};
   const changes=[];
 
@@ -2288,7 +2296,6 @@ function markupReport(aoa,appRows){
       if(norm(was)===norm(now))return;
       r.row[c]=now;mark(r.row,c);
       changes.push([label(r.row),header[c],String(was??''),String(now)]);
-      if(name==='INSTRUCTOR'&&idCol>=0&&r.row[idCol]!==''){changes.push([label(r.row),header[idCol],String(r.row[idCol]),'(fill in)']);r.row[idCol]='';mark(r.row,idCol);}
     });
     // Special-topics sections: put the topic in the title
     const tc=col['SHORT TITLE'];
@@ -2315,7 +2322,7 @@ function markupReport(aoa,appRows){
   const added=app.filter(a=>!usedA.has(a)).map(a=>{
     const row=header.map(h=>{
       const k=mkNorm(h);
-      if(k==='SEC TERM'||k==='SYN'||k==='ENR'||k==='WAIT'||k==='SCH'||/\bID\b/.test(k))return '';
+      if(k==='SEC TERM'||k==='SYN'||k==='ENR'||k==='WAIT'||k==='SCH')return '';
       return a.o[k]??'';
     });
     rowFill.set(row,MK_BLUE);
@@ -2372,7 +2379,7 @@ function importBackup(file){
 function markupFromFile(buf){
   const wb=XLSX.read(buf,{type:'array',cellStyles:true});
   const src=wb.Sheets[wb.SheetNames[0]];
-  const aoa=XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''});
+  const aoa=mkStripIds(XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''}));
   // Which semester to compare with
   const found=mkDetectSemester(aoa);
   const sem=found&&db[found]?found:currentSem;
@@ -2419,7 +2426,7 @@ function markupFromFile(buf){
   // What changed, for checking
   const ch=XLSX.utils.aoa_to_sheet([
     [`Changes from the report — ${sem}`],
-    ['Blue row = added · Red row = dropped · Yellow cell = changed. SYN numbers and faculty IDs are left blank to fill in.'],
+    ['Blue row = added · Red row = dropped · Yellow cell = changed. SYN numbers are left blank to fill in.'],
     [],['Course','What','Was (report)','Now (schedule map)'],
     ...(res.changes.length?res.changes:[['—','No differences found.','','']])]);
   ch['!cols']=[{wch:16},{wch:20},{wch:50},{wch:50}];
