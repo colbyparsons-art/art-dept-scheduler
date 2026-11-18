@@ -1195,6 +1195,7 @@ function applyCommentsMode(){
   if(b){b.textContent='💬 Comments: '+(commentsOn?'On':'Off');b.classList.toggle('on',commentsOn);}
   const n=document.getElementById('commentsNotice');
   if(n)n.style.display=commentsOn?'block':'none';
+  renderSemesterComments();
 }
 function toggleComments(){
   commentsOn=!commentsOn;
@@ -1218,7 +1219,8 @@ function commentItemHtml(m){
 const SEM_KEY='__SEMESTER__';
 function renderSemesterComments(){
   const box=document.getElementById('semComments');if(!box)return;
-  if(!currentSem){box.style.display='none';return;}
+  // Follows the 💬 Comments On/Off toggle, like class comments
+  if(!currentSem||!commentsOn){box.style.display='none';return;}
   const list=commentsFor(currentSem,SEM_KEY);
   // Faculty view: only show the panel when there's something to read
   box.style.display=(FACULTY_MODE&&!list.length)?'none':'block';
