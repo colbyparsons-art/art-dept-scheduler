@@ -511,7 +511,7 @@
       <p style="font-size:.82rem;line-height:1.5;margin-bottom:10px;">Upload the registrar's report for the semester you're preparing. You only need to do this once per semester: after that, every <strong>⬇ Excel</strong> download is that report marked up with the schedule map's current changes.</p>
       <div style="font-size:.78rem;line-height:1.55;background:#f7f3ee;border:1px solid var(--mist);border-radius:3px;padding:8px 10px;margin-bottom:12px;">
         <strong>File format:</strong> the SQL report as an Excel (.xlsx) or .csv file, one semester per file, with its row of column headings (COURSE, SHORT TITLE, INSTRUCTOR, DAYS…) left in.<br>
-        <strong>Remove before uploading:</strong> the SYN numbers. Clear the numbers but keep the SYN column. (Any SYN numbers left in are blanked automatically, and faculty ID columns are dropped.)
+        <strong>Remove before uploading:</strong> the SYN numbers. Clear the numbers but keep the SYN column. (Any SYN numbers left in are blanked automatically, as are the ENR, WAIT and SCH counts, and faculty ID columns are dropped.)
       </div>
       <div class="form-row"><div class="form-group"><label>Report file</label>
         <div style="display:flex;gap:8px;align-items:center;">
@@ -2060,7 +2060,8 @@ function sqlMoveLocalReports(){
   let local;try{local=JSON.parse(localStorage.getItem('twu_sql_reports')||'{}');}catch(e){return;}
   Object.keys(local).forEach(sem=>{
     if(sqlSaved(sem)){delete local[sem];return;}
-    fsSchedDoc.update({passcode:EDIT_PASSCODE,[sqlField(sem)]:JSON.stringify(local[sem])})
+    const rep={...local[sem],aoa:mkClearSyn(mkStripIds(local[sem].aoa||[]))};
+    fsSchedDoc.update({passcode:EDIT_PASSCODE,[sqlField(sem)]:JSON.stringify(rep)})
       .then(()=>{try{const l=JSON.parse(localStorage.getItem('twu_sql_reports')||'{}');delete l[sem];localStorage.setItem('twu_sql_reports',JSON.stringify(l));}catch(e){}})
       .catch(err=>console.error('Moving SQL report online failed',err));
   });
@@ -2301,13 +2302,16 @@ function mkStripIds(aoa){
   if(!ids.length)return aoa;
   return aoa.map(r=>{const x=(r||[]).slice();ids.forEach(i=>{if(x.length>i)x.splice(i,1);});return x;});
 }
-// SYN numbers aren't kept either: the column stays (empty) for the department to fill in
+// Values that aren't kept either; the columns stay, empty:
+//   SYN for the department to fill in; ENR, WAIT and SCH (credit hours =
+//   enrollment × credits) because enrollment isn't needed at the planning stage
+const MK_BLANK=['SYN','ENR','WAIT','SCH'];
 function mkClearSyn(aoa){
   const hi=aoa.findIndex(r=>(r||[]).some(v=>mkNorm(v)==='COURSE'));
   if(hi<0)return aoa;
-  const c=(aoa[hi]||[]).findIndex(v=>mkNorm(v)==='SYN');
-  if(c<0)return aoa;
-  return aoa.map((r,i)=>{if(i<=hi||!r||r.length<=c)return r;const x=r.slice();x[c]='';return x;});
+  const cs=(aoa[hi]||[]).map((v,i)=>MK_BLANK.includes(mkNorm(v))?i:-1).filter(i=>i>=0);
+  if(!cs.length)return aoa;
+  return aoa.map((r,i)=>{if(i<=hi||!r)return r;const x=r.slice();cs.forEach(c=>{if(x.length>c)x[c]='';});return x;});
 }
 function markupReport(aoa,appRows){
   aoa=mkClearSyn(mkStripIds(aoa));
@@ -2568,7 +2572,7 @@ function markupFromReport(report,sem){
   // What changed, for checking
   const ch=XLSX.utils.aoa_to_sheet([
     [`Changes from the report — ${sem}`],
-    ['Blue row = added · Red row = dropped · Yellow cell = changed. SYN numbers are left blank to fill in.'],
+    ['Blue row = added · Red row = dropped · Yellow cell = changed. SYN numbers are left blank to fill in; ENR, WAIT and SCH are left blank on purpose.'],
     [],['Course','What','Was (report)','Now (schedule map)'],
     ...(res.changes.length?res.changes:[['—','No differences found.','','']])]);
   ch['!cols']=[{wch:16},{wch:20},{wch:50},{wch:50}];
