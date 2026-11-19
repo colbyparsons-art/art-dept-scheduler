@@ -824,6 +824,10 @@ try{
     if(doc.exists){
       sharedComments=(doc.data()&&doc.data().comments)||{};
       if(typeof refreshCommentsUI==='function')refreshCommentsUI();
+      sharedSqlReports=(doc.data()&&doc.data().sqlReports)||{};
+      if(!FACULTY_MODE&&!firstSnapshotSeen)sqlMoveLocalReports();
+      const xo=document.getElementById('excelOverlay');
+      if(xo&&xo.classList.contains('open'))renderExcelStatus();
       const payload=doc.data()&&doc.data().payload;
       if(payload&&Object.keys(payload).length){
         const fixed=applyFourYearElectives(payload)|applyUnivPassionPurpose(payload);
@@ -2029,15 +2033,38 @@ function xlTermDefaults(sem){
   const rep=rptYear+r;
   return {term:yr+s,rep,start:d.start,end:d.end};
 }
-// Uploaded SQL reports, remembered per semester in this browser
-// (SYN numbers and faculty IDs are already removed before saving)
-function sqlSaved(sem){try{return JSON.parse(localStorage.getItem('twu_sql_reports')||'{}')[sem]||null;}catch(e){return null;}}
+// Uploaded SQL reports, one per semester, shared online (field sqlReports of
+// the shared schedule doc) so one upload works on every admin computer.
+// SYN numbers and faculty IDs are already removed before saving. Stored as
+// JSON text because Firestore can't hold rows-of-cells arrays directly.
+let sharedSqlReports={};
+const sqlField=sem=>'sqlReports.'+String(sem).replace(/\s+/g,'_');
+function sqlSaved(sem){
+  const s=sharedSqlReports[String(sem).replace(/\s+/g,'_')];
+  if(!s)return null;
+  try{return JSON.parse(s);}catch(e){return null;}
+}
+// Returns a promise; report=null removes the upload for that semester
 function sqlSave(sem,report){
-  try{
-    const all=JSON.parse(localStorage.getItem('twu_sql_reports')||'{}');
-    if(report)all[sem]={...report,when:new Date().toISOString()};else delete all[sem];
-    localStorage.setItem('twu_sql_reports',JSON.stringify(all));
-  }catch(e){}
+  if(!fsSchedDoc)return Promise.reject(new Error('Not connected to the shared database yet. Try again in a moment.'));
+  const val=report?JSON.stringify({...report,when:new Date().toISOString()}):firebase.firestore.FieldValue.delete();
+  return fsSchedDoc.update({passcode:EDIT_PASSCODE,[sqlField(sem)]:val});
+}
+function sqlForget(){
+  if(!confirm(`Remove the uploaded SQL report for ${currentSem}? This removes it for everyone.`))return;
+  sqlSave(currentSem,null).then(renderExcelStatus).catch(err=>alert("Couldn't remove it: "+err.message));
+}
+// Reports uploaded before they were shared live only in that browser:
+// move them online the first time that browser opens the admin view.
+function sqlMoveLocalReports(){
+  let local;try{local=JSON.parse(localStorage.getItem('twu_sql_reports')||'{}');}catch(e){return;}
+  Object.keys(local).forEach(sem=>{
+    if(sqlSaved(sem)){delete local[sem];return;}
+    fsSchedDoc.update({passcode:EDIT_PASSCODE,[sqlField(sem)]:JSON.stringify(local[sem])})
+      .then(()=>{try{const l=JSON.parse(localStorage.getItem('twu_sql_reports')||'{}');delete l[sem];localStorage.setItem('twu_sql_reports',JSON.stringify(l));}catch(e){}})
+      .catch(err=>console.error('Moving SQL report online failed',err));
+  });
+  try{localStorage.setItem('twu_sql_reports',JSON.stringify(local));}catch(e){}
 }
 function openExcelExport(){
   if(!currentSem){alert('Please select a semester first.');return;}
@@ -2056,7 +2083,7 @@ function renderExcelStatus(){
         <span style="display:inline-block;width:12px;height:12px;background:#FF0000;vertical-align:middle;margin:0 4px 0 12px;"></span>Red row: dropped<br>
         <span style="display:inline-block;width:12px;height:12px;background:#FFFF00;border:1px solid #ddd;vertical-align:middle;margin-right:4px;"></span>Yellow cell: changed. SYN is left blank to fill in.
       </div>
-      <p style="font-size:.74rem;opacity:.65;margin-top:8px;">Wrong report? Use ⬆ SQL Report Upload to replace it, or <a href="#" onclick="sqlSave(currentSem,null);renderExcelStatus();return false;">forget this upload</a>.</p>`;
+      <p style="font-size:.74rem;opacity:.65;margin-top:8px;">Wrong report? Use ⬆ SQL Report Upload to replace it, or <a href="#" onclick="sqlForget();return false;">remove this upload</a>.</p>`;
   } else {
     el.innerHTML=`<div style="background:#fff4e3;border:1px solid #e0c58a;border-radius:3px;padding:8px 10px;">No SQL report has been uploaded for <strong>${escapeHtml(currentSem)}</strong>.</div>
       <p style="margin-top:10px;">The download is built from the schedule map alone, in the university's full format, with no color marking. For the version to submit, use <strong>⬆ SQL Report Upload</strong> first.</p>`;
@@ -2474,10 +2501,14 @@ function saveSqlUpload(){
   if(!sqlReport)return;
   const sem=document.getElementById('sqlSem').value;
   if(!sem||!db[sem]){alert('Please pick the semester this report is for.');return;}
-  sqlSave(sem,sqlReport);
-  if(!sqlSaved(sem)){alert("Couldn't save the report in this browser (storage may be full or blocked).");return;}
-  closeSqlUpload();
-  alert(`Report uploaded for ${sem}.\n\nUse ⬇ Excel (with ${sem} selected) to download it marked up. You can download again any time after making changes.`);
+  const go=document.getElementById('sqlGo');go.disabled=true;
+  sqlSave(sem,sqlReport).then(()=>{
+    closeSqlUpload();
+    alert(`Report uploaded for ${sem}. It's saved online, so it works on any admin computer.\n\nUse ⬇ Excel (with ${sem} selected) to download it marked up. You can download again any time after making changes.`);
+  }).catch(err=>{
+    go.disabled=false;
+    alert("Couldn't upload the report (connection problem?). Please try again.\n\n"+err.message);
+  });
 }
 // Restore a .json backup of the whole schedule
 function importData(e){
