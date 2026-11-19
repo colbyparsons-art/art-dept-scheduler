@@ -2301,6 +2301,20 @@ function markupReport(aoa,appRows){
   const get=(r,name)=>{const i=col[name];return i===undefined?'':(r[i]??'');};
   const changes=[];
 
+  // The report lists some sections more than once (a lecture line and a lab
+  // line, or one line per room). Keep the first line of each section only.
+  const seen=new Set();let dupes=0;
+  for(let i=headerIdx+1;i<rows.length;i++){
+    const p=mkParseCourse(get(rows[i],'COURSE'));
+    if(!p||!p.sec)continue;
+    const k=p.code+' '+p.sec;
+    if(!seen.has(k)){seen.add(k);continue;}
+    const r=rows[i],bits=[['METH','METH'],['DAYS','days'],['ROOM','room'],['INSTRUCTOR','instructor']]
+      .map(([h,w])=>{const v=String(get(r,h)).trim().replace(/,$/,'');return v?w+' '+v:'';}).filter(Boolean).join(', ');
+    changes.push([String(get(r,'COURSE')).trim(),'Duplicate line removed',bits||'repeat of the line above','']);
+    rows.splice(i--,1);dupes++;
+  }
+
   // Report sections (data rows only)
   const rep=[];
   rows.forEach((r,i)=>{
@@ -2397,7 +2411,7 @@ function markupReport(aoa,appRows){
   // Pad every row to the full width
   out.forEach(r=>{for(let c=r.length;c<ncol;c++)r[c]='';});
   return {aoa:out,headerRow:out.indexOf(rows[headerIdx]),ncol,cellFill,rowFill,changes,
-    counts:{added:added.length,dropped,changedCells:[...cellFill.values()].reduce((n,s)=>n+s.size,0)}};
+    counts:{added:added.length,dropped,dupes,changedCells:[...cellFill.values()].reduce((n,s)=>n+s.size,0)}};
 }
 
 // Which semester a report is for, from a term code like 2027SP / 2027FA
@@ -2444,7 +2458,8 @@ function sqlFileChosen(e){
     // Column widths/hidden columns, by heading (IDs removed to match)
     const rawHead=(XLSX.utils.sheet_to_json(src,{header:1,raw:true,defval:''})[hi]||[]);
     const cols={};rawHead.forEach((h,i)=>{const c=(src['!cols']||[])[i];if(c)cols[mkNorm(h)]=c;});
-    const n=aoa.slice(hi+1).filter(r=>mkParseCourse((r||[])[aoa[hi].findIndex(v=>mkNorm(v)==='COURSE')])).length;
+    const cc=aoa[hi].findIndex(v=>mkNorm(v)==='COURSE');
+    const n=new Set(aoa.slice(hi+1).map(r=>mkParseCourse((r||[])[cc])).filter(Boolean).map(p=>p.code+' '+p.sec)).size;
     sqlReport={aoa,cols,name:file.name};
     const found=mkDetectSemester(aoa),sel=document.getElementById('sqlSem');
     if(found&&db[found]){sel.value=found;sqlShowExisting();info.innerHTML=`✓ Report for <strong>${found}</strong> · ${n} sections.`;}
@@ -2532,7 +2547,7 @@ function markupFromReport(report,sem){
   XLSX.utils.book_append_sheet(out,rv,'Check before sending');
   const today=new Date();const stamp=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
   XLSX.writeFile(out,`Course Schedule ${sem} marked up (${stamp}).xlsx`);
-  alert(`Done — downloaded the marked-up report for ${sem}.\n\n${res.counts.added} added (blue), ${res.counts.dropped} dropped (red), ${res.counts.changedCells} changed cells (yellow).\n\nThe "Changes" sheet lists each one; "Check before sending" lists guesses to double-check.`);
+  alert(`Done — downloaded the marked-up report for ${sem}.\n\n${res.counts.added} added (blue), ${res.counts.dropped} dropped (red), ${res.counts.changedCells} changed cells (yellow).${res.counts.dupes?`\n${res.counts.dupes} duplicate line${res.counts.dupes===1?'':'s'} removed (one line per class).`:''}\n\nThe "Changes" sheet lists each one; "Check before sending" lists guesses to double-check.`);
 }
 
 // Backup of every semester (used by the unpublished-edits warning)
