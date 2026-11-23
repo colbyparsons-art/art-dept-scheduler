@@ -1607,9 +1607,7 @@ function renderGrid(){
   if(once.length){
     const days=['Monday','Tuesday','Wednesday','Thursday'];
     const coursesByDay=days.map(day=>once.filter(c=>c.oncedday===day));
-    const dayColumnsHtml=days.map((day,dayIdx)=>{
-      const dayCourses=coursesByDay[dayIdx];
-      const coursesHtml=dayCourses.map(c=>{
+    const onceChip=c=>{
         const idx=courses.indexOf(c);
         const dispCode=(c.code||'').replace(/^[A-Z]+\s+/,'')+(c.section||'');
         const adj=adjunctLabel(c);
@@ -1619,10 +1617,15 @@ function renderGrid(){
         const eb=FACULTY_MODE?'':
           `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
         return `<div class="once-chip${c.hidden?' hidden':''}" data-idx="${idx}" data-faculty="${(c.faculty||'').toUpperCase()}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div>${commentBtn(c)}</div>`;
-      }).join('');
+    };
+    const dayColumnsHtml=days.map((day,dayIdx)=>{
+      const coursesHtml=coursesByDay[dayIdx].map(onceChip).join('');
       return `<div class="once-day-column"><div class="once-day-header">${day}</div><div class="once-day-courses">${coursesHtml||'<div style="padding:8px;font-size:.7rem;color:#999;text-align:center;">—</div>'}</div></div>`;
     }).join('');
-    onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div class="once-day-grid">${dayColumnsHtml}</div></div>`;
+    // Once/week classes with no day chosen used to show nowhere: list them here
+    const noDay=once.filter(c=>!days.includes(c.oncedday));
+    const noDayHtml=noDay.length?`<div style="padding:10px 12px;border-top:1px solid var(--mist);"><div class="once-day-header" style="margin-bottom:6px;">Day not set${FACULTY_MODE?'':' — click ✏ to pick a day, or change to Async/Online'}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">${noDay.map(onceChip).join('')}</div></div>`:'';
+    onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div class="once-day-grid">${dayColumnsHtml}</div>${noDayHtml}</div>`;
   } else {
     onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div style="padding:20px;text-align:center;color:#999;font-size:.8rem;">No once/week courses scheduled.</div></div>`;
   }
