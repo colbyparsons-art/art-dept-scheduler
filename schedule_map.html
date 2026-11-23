@@ -450,6 +450,15 @@
           <input type="text" id="c_notes" placeholder="e.g. Hybrid Wednesday, Monday only, etc."/>
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Section cap <span style="opacity:.6;font-weight:400;">(only to override)</span></label>
+          <input type="number" id="c_cap" min="1" max="200" placeholder="blank = report's cap"/>
+        </div>
+        <div class="form-group" style="font-size:.72rem;opacity:.65;align-self:end;padding-bottom:6px;">
+          Leave blank normally. Fill in only when this semester needs a different cap (e.g. MFA exhibition: 2).
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteCourse()" style="display:none">Delete</button>
@@ -830,7 +839,7 @@ try{
       if(xo&&xo.classList.contains('open'))renderExcelStatus();
       const payload=doc.data()&&doc.data().payload;
       if(payload&&Object.keys(payload).length){
-        const fixed=applyFourYearElectives(payload)|applyUnivPassionPurpose(payload);
+        const fixed=applyFourYearElectives(payload)|applyUnivPassionPurpose(payload)|applySectionPeriods(payload);
         const first=!firstSnapshotSeen; firstSnapshotSeen=true;
         // Admin view: never throw away edits that haven't been published.
         // Keep the local copy and let the user choose, if this browser has
@@ -925,6 +934,22 @@ function applyFourYearElectives(d){
 // Nov 2026: new course UNIV 1333 Passion and Purpose, every fall from 2027.
 // Christine teaches FA27; later falls are TBD (staff). Added once per semester
 // (flagged) so deleting or editing it later sticks. Returns true if changed.
+// Sections are written with a period: "01" or "1" → ".01"
+function normSection(s){
+  s=String(s??'').trim();
+  const m=/^\.?\s*(\d{1,3})$/.exec(s);
+  return m?'.'+m[1].padStart(2,'0'):s;
+}
+// Fix sections saved without the period. Returns true if anything changed.
+function applySectionPeriods(d){
+  let changed=false;
+  Object.values(d||{}).forEach(s=>(s&&s.courses||[]).forEach(c=>{
+    if(!c.section)return;
+    const n=normSection(c.section);
+    if(n!==c.section){c.section=n;changed=true;}
+  }));
+  return changed;
+}
 function applyUnivPassionPurpose(d){
   let changed=false;
   Object.keys(d||{}).forEach(sem=>{
@@ -1061,6 +1086,7 @@ function applyUnivPassionPurpose(d){
   });
   if(applyFourYearElectives(db))changed=true;
   if(applyUnivPassionPurpose(db))changed=true;
+  if(applySectionPeriods(db))changed=true;
   if(changed)saveData(db);
 })();
 
@@ -1239,7 +1265,8 @@ function chipHtml(c,idx,extra=''){
   const FULL_BLOCKS=['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','No set time','Other',''];
   const timeNote=c.time&&!FULL_BLOCKS.includes(c.time)?c.time:'';
   const hybridNote=c.hybrid?formatHybridLabel(c):'';
-  const rmDetail=[rm,timeNote,hybridNote].filter(Boolean).join(' · ');
+  const capNote=(!FACULTY_MODE&&c.cap)?'cap '+c.cap:'';
+  const rmDetail=[rm,timeNote,hybridNote,capNote].filter(Boolean).join(' · ');
   const meta=[fac,rmDetail].filter(Boolean).join(' · ');
   const notesLine=(!FACULTY_MODE&&c.notes&&!c.hybrid)?`<div class="chip-notes-line admin-only">${c.notes}</div>`:'';
   const editBtn=FACULTY_MODE?'':
@@ -1604,10 +1631,11 @@ function renderGrid(){
   const async_=courses.filter(c=>c.pattern==='async'&&c.time);
   const asyncContainer=document.getElementById('asyncPanelContainer');
   let asyncHtml='';
+  const addAsync=FACULTY_MODE?'':`<button class="add-chip" onclick="openAddModal('async')">+ add</button>`;
   if(async_.length){
-    asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid">${async_.map(c=>chipHtml(c,courses.indexOf(c))).join('')}</div></div>`;
+    asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid">${async_.map(c=>chipHtml(c,courses.indexOf(c))).join('')}${addAsync}</div></div>`;
   } else {
-    asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid"><div class="course-chip placeholder-chip">No async/online courses scheduled.</div></div></div>`;
+    asyncHtml+=`<div class="async-section"><div class="section-header">Async / Online</div><div class="async-grid"><div class="course-chip placeholder-chip">No async/online courses scheduled.</div>${addAsync}</div></div>`;
   }
   if(unscheduled.length){
     const dragHint=FACULTY_MODE?'':'Drag each course into a time block above to schedule it.';
@@ -1822,7 +1850,7 @@ function openAddModal(pattern,block){
   editingId=null;
   document.getElementById('modalTitle').textContent='Add Course';
   document.getElementById('deleteBtn').style.display='none';
-  ['c_code','c_section','c_title','c_faculty','c_adjunct','c_notes','c_bracketpair'].forEach(id=>document.getElementById(id).value='');
+  ['c_code','c_section','c_title','c_faculty','c_adjunct','c_notes','c_bracketpair','c_cap'].forEach(id=>document.getElementById(id).value='');
   toggleAdjunctRow();
   document.getElementById('c_room').value='';
   document.getElementById('c_hidden').checked=false;
@@ -1877,6 +1905,7 @@ function openEditModal(idx){
   document.getElementById('bracketPair_row').style.display=c.bracketed?'grid':'none';
   document.getElementById('onceDay_row').style.display=c.pattern==='once'?'grid':'none';
   document.getElementById('c_notes').value=c.notes||'';
+  document.getElementById('c_cap').value=c.cap||'';
   document.getElementById('hybridDay_row').style.display=c.hybrid?'grid':'none';
   document.getElementById('c_hybridday').value=c.hybrid?extractHybridDay(c.notes||''):'';
   document.getElementById('modalOverlay').classList.add('open');
@@ -1908,7 +1937,7 @@ function saveCourse(){
   if(chosenTime===null)return;
   const record={
     code:document.getElementById('c_code').value.trim().toUpperCase(),
-    section:document.getElementById('c_section').value.trim(),
+    section:normSection(document.getElementById('c_section').value),
     title:document.getElementById('c_title').value.trim().toUpperCase(),
     faculty:document.getElementById('c_faculty').value.trim(),
     room:document.getElementById('c_room').value,
@@ -1923,6 +1952,9 @@ function saveCourse(){
     notes:document.getElementById('c_notes').value.trim(),
   };
   if(record.faculty.toLowerCase()==='staff')record.faculty='staff';   // one spelling for staff
+  // Section cap: only stored when it overrides the report's cap
+  const capN=parseInt(document.getElementById('c_cap').value,10);
+  if(capN>0)record.cap=capN;
   // Adjunct/GTA first name only applies to staff-taught sections
   const adjName=cleanAdjunctName(document.getElementById('c_adjunct').value);
   if(adjName&&record.faculty.toLowerCase()==='staff')record.adjunct=adjName;
@@ -2162,7 +2194,7 @@ function buildExcelRows(sem,opts){
     const room=offsite?'':roomRaw.split('/')[0].trim();
     const roomCap=room?(XL_CATALOG.roomCap[room]??(ROOMS[room]?+(String(ROOMS[room]).match(/\d+/)||[])[0]||'':'')):'';
     // Cap
-    let cap=(catSec&&catSec.cap)||(cat&&cat.cap)||null;
+    let cap=c.cap||(catSec&&catSec.cap)||(cat&&cat.cap)||null;
     if(!cap){cap=roomCap||'';flag(label,cap?`Section cap set to the room capacity (${cap}).`:'Section cap is blank.');}
     // Days / times
     const days=xlDays(c);
@@ -2197,6 +2229,7 @@ function buildExcelRows(sem,opts){
       '',label,'LONG','Long Term',opts.start,opts.end,title,'ARTS AND SCIENCES',subj,lvl,(cat&&cat.cip)||'',
       '','',cap,'','','','','','',instr,meth,days,room?'ART':'',room,roomCap,'DEN',start,end,comment,
       c.hidden?'P':'A',progFee,labFee??'','','','','',opts.rep,'N',crossListed?'Y':'N','','',c.bracketed?'Y':'','']);
+    if(c.cap)rows[rows.length-1].capOverride=true;   // markup changes the report's cap only for these
   });
   excluded.forEach(c=>flag(`${c.code}${c.section||''}`,'Left out — not an ART course (taught or submitted by another department?). Add it by hand if needed.'));
   // One line per course on the check sheet
@@ -2357,7 +2390,7 @@ function markupReport(aoa,appRows){
   const app=appRows.map(a=>{
     const o={};XL_HEADERS.forEach((h,k)=>o[mkNorm(h)]=a[k]);
     const p=mkParseCourse(o['COURSE'])||{code:'',sec:''};
-    return {o,...p};
+    return {o,...p,capSet:!!a.capOverride};
   });
 
   // Pair report and schedule sections of the same course: best fit first
@@ -2392,6 +2425,12 @@ function markupReport(aoa,appRows){
       r.row[c]=now;mark(r.row,c);
       changes.push([label(r.row),header[c],String(was??''),String(now)]);
     });
+    // Section cap: the report's cap stands unless the schedule map overrides it
+    const capC=col['SECTION CAP'];
+    if(a.capSet&&capC!==undefined&&String(r.row[capC]??'').trim()!==String(a.o['SECTION CAP']).trim()){
+      changes.push([label(r.row),header[capC],String(r.row[capC]??''),String(a.o['SECTION CAP'])]);
+      r.row[capC]=a.o['SECTION CAP'];mark(r.row,capC);
+    }
     // Special-topics sections: put the topic in the title
     const tc=col['SHORT TITLE'];
     if(tc!==undefined&&/^ST\b/i.test(String(r.row[tc]||'').trim())){
@@ -2405,7 +2444,7 @@ function markupReport(aoa,appRows){
   // Dropped → red rows. Left alone: other departments' courses, and permission
   // sections (internships etc.) the schedule map doesn't list at all.
   const subjects=new Set(app.map(a=>a.code.split(' ')[0]));
-  const PERMISSION=/INTERNSHIP|IND(EPENDENT)?s+STUDY|THESIS|RESEARCH WRITING|CAPSTONE/i;
+  const PERMISSION=/INTERNSHIP|IND(EPENDENT)?\s+STUDY|THESIS|RESEARCH WRITING|CAPSTONE/i;
   let dropped=0;
   rep.forEach(r=>{
     if(usedR.has(r))return;
