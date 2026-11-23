@@ -306,7 +306,7 @@
 
   <!-- LOAD VIEW -->
   <div class="view-panel" id="view-load">
-    <div class="notice"><strong>Load rules:</strong> Standard load is 3 courses. One faculty member teaches 4 (lecture/seminar). Bracketed co-listed pairs count as 1 course. Student teaching observation (4+ students) counts as 1 course. Independent study / internship sections do not count toward load. Department head has 2-course work release.</div>
+    <div class="notice"><strong>Load rules:</strong> Standard load is 3 courses. One faculty member teaches 4 (lecture/seminar). Bracketed co-listed pairs count as 1 course. Student teaching observation (4+ students) counts as 1 course. Independent study, internship, art-based research writing and MFA thesis exhibition sections do not count toward load. Department head has 2-course work release.</div>
     <div class="load-grid" id="loadGrid"></div>
   </div>
 
@@ -1695,42 +1695,42 @@ function parseTime(t){
 }
 
 // ── Faculty Load ───────────────────────────────────────────────────────────
+// Sections that never count toward faculty load (per-student / supervised)
+const LOAD_EXEMPT_CODES=['ART 4913','ART 4953','ART 5843','ART 5883'];
+const loadExempt=c=>LOAD_EXEMPT_CODES.includes(String(c.code||'').trim().toUpperCase())||
+  /IND(EPENDENT)?.?s+STUDY|INTERNSHIP|RESEARCH WRITING|THESIS EXHIBITION/i.test(c.title||'');
 function renderLoad(){
   const grid=document.getElementById('loadGrid');
   if(!currentSem){grid.innerHTML='';return;}
   const courses=getSemCourses();
-
-  // Get unique faculty
-  // Staff-taught sections aren't a person's load — skip "staff" however it's capitalized
-  const faculty=new Set(courses.map(c=>c.faculty).filter(f=>f&&f.trim().toLowerCase()!=='staff'));
+  // One card per person, however the name is capitalized; staff sections aren't anyone's load
+  const who=c=>String(c.faculty||'').trim().toUpperCase();
+  const faculty=new Set(courses.map(who).filter(f=>f&&f!=='STAFF'));
   if(!faculty.size){grid.innerHTML='<p style="color:#bbb;font-size:.83rem;">No courses with assigned faculty yet.</p>';return;}
 
   grid.innerHTML=[...faculty].sort().map(f=>{
-    const mine=courses.filter(c=>c.faculty===f);
-    // Bracketed pairs count as 1; ind study / internship excluded
+    const mine=courses.filter(c=>who(c)===f);
+    const counted=mine.filter(c=>!loadExempt(c)),exempt=mine.filter(loadExempt);
+    // Bracketed pairs count as 1
     const bracketGroups=new Set();
     let load=0;
-    mine.forEach(c=>{
-      if(/IND\s+STUDY|INTERNSHIP/i.test(c.title||'')) return;
+    counted.forEach(c=>{
       if(c.bracketed&&c.bracketpair){
         const key=[c.code+c.section,c.bracketpair].sort().join('|');
         if(!bracketGroups.has(key)){bracketGroups.add(key);load++;}
-      } else {
-        load++;
-      }
+      } else load++;
     });
     const target=FACULTY_LOADS[f]||3;
     const pct=Math.min(100,Math.round(load/target*100));
     const barClass=load===target?'ok':load>target?'over':'under';
-    const courseList=mine.map(c=>{
-      const exempt=/IND\s+STUDY|INTERNSHIP/i.test(c.title||'');
-      return `${c.code||''} ${c.title||''}${c.bracketed?' ⟦⟧':''}${exempt?' (not counted)':''}`;
-    }).join(', ');
+    const courseList=counted.map(c=>`${c.code||''} ${c.title||''}${c.bracketed?' ⟦⟧':''}`).join(', ');
+    const exemptList=exempt.map(c=>`${c.code||''}${c.section||''} ${c.title||''}`).join(', ');
     return `<div class="load-card">
       <div class="load-name">${f}</div>
       <div class="load-bar-wrap"><div class="load-bar ${barClass}" style="width:${pct}%"></div></div>
       <div class="load-details">${load} of ${target} courses${load>target?' — ⚠ OVER LOAD':load<target?' — under load':' — ✓ full load'}</div>
-      <div class="load-courses">${courseList||'No courses assigned'}</div>
+      <div class="load-courses">${courseList||'No courses counted'}</div>
+      ${exemptList?`<div class="load-courses" style="opacity:.6;margin-top:4px;">Not counted: ${exemptList}</div>`:''}
     </div>`;
   }).join('');
 }
