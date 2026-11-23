@@ -2226,6 +2226,11 @@ function buildExcelRows(sem,opts){
     if(!unplaced&&!isOnline&&!room&&!permission&&!offsite)flag(label,'Room is blank.');
     // Title (university short titles are max 30 characters)
     let title=(cat&&cat.title)||titleUpper;
+    // Special topics: the topic changes each time, so use the schedule map's ("ST: TOPIC")
+    if(/^ST\b/.test(title)||/^ST\b/.test(titleUpper)){
+      const topic=titleUpper.replace(/^ST\b\s*:?\s*/,'').replace(/^SPECIAL TOPICS\s*:?\s*/,'').trim();
+      if(topic)title='ST: '+topic;
+    }
     if(title.length>30){flag(label,`Title shortened to 30 characters (was "${title}").`);title=title.slice(0,30).trim();}
     // Comments
     const mode=isOnline?'online':c.hybrid?'hybrid':'f2f';
@@ -2457,9 +2462,8 @@ function markupReport(aoa,appRows){
     // Special-topics sections: put the topic in the title
     const tc=col['SHORT TITLE'];
     if(tc!==undefined&&/^ST\b/i.test(String(r.row[tc]||'').trim())){
-      const topic=String(a.o['SHORT TITLE']||'').trim();
-      if(topic&&!/^ST\b/i.test(topic)&&!/SPECIAL TOPICS/i.test(topic)){
-        const now=('ST: '+topic).slice(0,30).trim();
+      const now=String(a.o['SHORT TITLE']||'').trim();   // already "ST: TOPIC"
+      if(/^ST:\s*\S/i.test(now)){
         if(mkNorm(now)!==mkNorm(r.row[tc])){changes.push([label(r.row),header[tc],String(r.row[tc]),now]);r.row[tc]=now;mark(r.row,tc);}
       }
     }
