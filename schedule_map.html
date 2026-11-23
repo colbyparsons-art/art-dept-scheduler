@@ -462,6 +462,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger btn-sm" id="deleteBtn" onclick="deleteCourse()" style="display:none">Delete</button>
+      <button class="btn btn-outline btn-sm" id="duplicateBtn" onclick="duplicateCourse()" style="display:none;color:var(--ink);border-color:var(--mist);margin-left:8px;" title="Add another section of this course (taught by staff)">⧉ Duplicate</button>
       <div style="display:flex;gap:8px;margin-left:auto;">
         <button class="btn btn-outline btn-sm" style="color:var(--ink);border-color:var(--mist);" onclick="closeModal()">Cancel</button>
         <button class="btn btn-gold btn-sm" onclick="saveCourse()">Save</button>
@@ -1850,6 +1851,7 @@ function openAddModal(pattern,block){
   editingId=null;
   document.getElementById('modalTitle').textContent='Add Course';
   document.getElementById('deleteBtn').style.display='none';
+  document.getElementById('duplicateBtn').style.display='none';
   ['c_code','c_section','c_title','c_faculty','c_adjunct','c_notes','c_bracketpair','c_cap'].forEach(id=>document.getElementById(id).value='');
   toggleAdjunctRow();
   document.getElementById('c_room').value='';
@@ -1886,6 +1888,7 @@ function openEditModal(idx){
   const c=db[currentSem].courses[idx];
   document.getElementById('modalTitle').textContent='Edit Course';
   document.getElementById('deleteBtn').style.display='block';
+  document.getElementById('duplicateBtn').style.display='block';
   document.getElementById('c_code').value=c.code||'';
   document.getElementById('c_section').value=c.section||'';
   document.getElementById('c_title').value=c.title||'';
@@ -2016,6 +2019,25 @@ function deleteCourse(){
   saveEdit(db);
   closeModal();
   renderAll();
+}
+
+// Another section of the course being edited: same everything, taught by
+// staff, next free section number, not bracketed. Opens it for editing.
+function duplicateCourse(){
+  if(editingId===null||!currentSem)return;
+  const cs=db[currentSem].courses,c=cs[editingId];
+  const copy=JSON.parse(JSON.stringify(c));
+  copy.faculty='staff';delete copy.adjunct;
+  copy.bracketed=false;copy.bracketpair='';
+  // Next number in the same range (01, 02… or online 50, 51…)
+  const online=+String(c.section||'').replace('.','')>=50;
+  const used=cs.filter(x=>x.code===c.code).map(x=>+String(x.section||'').replace('.','')).filter(n=>n>0&&(n>=50)===online);
+  copy.section=normSection(String((used.length?Math.max(...used):online?49:0)+1));
+  cs.splice(editingId+1,0,copy);
+  saveEdit(db);
+  renderAll();
+  openEditModal(editingId+1);
+  showSaveNotice(`✓ Added ${copy.code}${copy.section} (staff). Change its time or room, then Save.`);
 }
 
 // ── Export / Import ────────────────────────────────────────────────────────
