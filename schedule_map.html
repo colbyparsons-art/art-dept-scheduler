@@ -840,7 +840,7 @@ try{
       if(xo&&xo.classList.contains('open'))renderExcelStatus();
       const payload=doc.data()&&doc.data().payload;
       if(payload&&Object.keys(payload).length){
-        const fixed=applyFourYearElectives(payload)|applyUnivPassionPurpose(payload)|applySectionPeriods(payload);
+        const fixed=applyFourYearElectives(payload)|applyUnivPassionPurpose(payload)|applySectionPeriods(payload)|applyInternshipsAsync(payload);
         const first=!firstSnapshotSeen; firstSnapshotSeen=true;
         // Admin view: never throw away edits that haven't been published.
         // Keep the local copy and let the user choose, if this browser has
@@ -949,6 +949,20 @@ function applySectionPeriods(d){
     const n=normSection(c.section);
     if(n!==c.section){c.section=n;changed=true;}
   }));
+  return changed;
+}
+// Nov 2026: internships in the starting data were "once a week" with no day
+// (so they showed nowhere). Fall 2028/2029: make them Async/Online, cap 3.
+function applyInternshipsAsync(d){
+  let changed=false;
+  ['Fall 2028','Fall 2029'].forEach(sem=>{
+    ((d&&d[sem]&&d[sem].courses)||[]).forEach(c=>{
+      if(c.code!=='ART 4953'||c.pattern!=='once'||['Monday','Tuesday','Wednesday','Thursday'].includes(c.oncedday))return;
+      c.pattern='async';c.time='No set time';c.oncedday='';c.room='';
+      if(!c.cap)c.cap=3;
+      changed=true;
+    });
+  });
   return changed;
 }
 function applyUnivPassionPurpose(d){
@@ -1088,6 +1102,7 @@ function applyUnivPassionPurpose(d){
   if(applyFourYearElectives(db))changed=true;
   if(applyUnivPassionPurpose(db))changed=true;
   if(applySectionPeriods(db))changed=true;
+  if(applyInternshipsAsync(db))changed=true;
   if(changed)saveData(db);
 })();
 
