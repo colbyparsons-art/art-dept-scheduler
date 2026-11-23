@@ -1555,6 +1555,16 @@ function dropOnCell(e,pattern,block){
   renderAll();
 }
 
+// Sections of the same course in section order (.01, .02, …), each course
+// staying where its first section was. Cells with bracketed pairs are left
+// alone so partners stay side by side.
+function bySection(list){
+  if(list.some(c=>c.bracketed))return list;
+  const secN=c=>parseFloat(String(c.section||'').replace(/^./,''))||0;
+  const groups=new Map();
+  list.forEach(c=>{const k=c.code||'';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(c);});
+  return [...groups.values()].flatMap(g=>g.sort((a,b)=>secN(a)-secN(b)));
+}
 function renderGrid(){
   const grid=document.getElementById('scheduleGrid');
   const courses=getSemCourses();
@@ -1571,8 +1581,8 @@ function renderGrid(){
 
   BLOCKS.forEach((block,idx)=>{
     const bs=block.split('–')[0];
-    const allMw=courses.filter(c=>c.pattern==='mw'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time)));
-    const allTth=courses.filter(c=>c.pattern==='tth'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time)));
+    const allMw=bySection(courses.filter(c=>c.pattern==='mw'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time))));
+    const allTth=bySection(courses.filter(c=>c.pattern==='tth'&&c.time&&(c.time.startsWith(bs)||blockContains(block,c.time))));
     const[mwA,mwB]=splitCols(allMw);
     const[tthA,tthB]=splitCols(allTth);
     const addMw=FACULTY_MODE?'':`<button class="add-chip" onclick="openAddModal('mw','${block}')">+ add</button>`;
@@ -1625,7 +1635,7 @@ function renderGrid(){
   const onceContainer=document.getElementById('oncePanelContainer');
   if(once.length){
     const days=['Monday','Tuesday','Wednesday','Thursday'];
-    const coursesByDay=days.map(day=>once.filter(c=>c.oncedday===day));
+    const coursesByDay=days.map(day=>bySection(once.filter(c=>c.oncedday===day)));
     const onceChip=c=>{
         const idx=courses.indexOf(c);
         const dispCode=(c.code||'').replace(/^[A-Z]+\s+/,'')+(c.section||'');
@@ -1642,7 +1652,7 @@ function renderGrid(){
       return `<div class="once-day-column"><div class="once-day-header">${day}</div><div class="once-day-courses">${coursesHtml||'<div style="padding:8px;font-size:.7rem;color:#999;text-align:center;">—</div>'}</div></div>`;
     }).join('');
     // Once/week classes with no day chosen used to show nowhere: list them here
-    const noDay=once.filter(c=>!days.includes(c.oncedday));
+    const noDay=bySection(once.filter(c=>!days.includes(c.oncedday)));
     const noDayHtml=noDay.length?`<div style="padding:10px 12px;border-top:1px solid var(--mist);"><div class="once-day-header" style="margin-bottom:6px;">Day not set${FACULTY_MODE?'':' — click ✏ to pick a day, or change to Async/Online'}</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">${noDay.map(onceChip).join('')}</div></div>`:'';
     onceContainer.innerHTML=`<div class="once-panel"><div class="once-panel-header">Once / Week</div><div class="once-day-grid">${dayColumnsHtml}</div>${noDayHtml}</div>`;
   } else {
@@ -1650,8 +1660,8 @@ function renderGrid(){
   }
 
   // Split async courses: unscheduled (time='') vs genuinely async (time set)
-  const unscheduled=courses.filter(c=>c.pattern==='async'&&!c.time);
-  const async_=courses.filter(c=>c.pattern==='async'&&c.time);
+  const unscheduled=bySection(courses.filter(c=>c.pattern==='async'&&!c.time));
+  const async_=bySection(courses.filter(c=>c.pattern==='async'&&c.time));
   const asyncContainer=document.getElementById('asyncPanelContainer');
   let asyncHtml='';
   const addAsync=FACULTY_MODE?'':`<button class="add-chip" onclick="openAddModal('async')">+ add</button>`;
@@ -2845,8 +2855,8 @@ function generatePDF(){
   const courses=getSemCourses();
   const gridC=courses.filter(c=>c.pattern==='mw'||c.pattern==='tth');
   const onceC=courses.filter(c=>c.pattern==='once');
-  const asyncC=courses.filter(c=>c.pattern==='async');
-  const onceByDay=['Monday','Tuesday','Wednesday','Thursday'].map(day=>onceC.filter(c=>c.oncedday===day));
+  const asyncC=bySection(courses.filter(c=>c.pattern==='async'));
+  const onceByDay=['Monday','Tuesday','Wednesday','Thursday'].map(day=>bySection(onceC.filter(c=>c.oncedday===day)));
 
   // ── Light header (print-friendly, no heavy ink fill) ─────────────────────
   const HDR_H=22;
