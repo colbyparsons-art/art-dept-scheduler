@@ -2393,23 +2393,16 @@ function markupReport(aoa,appRows){
     return {o,...p,capSet:!!a.capOverride};
   });
 
-  // Pair report and schedule sections of the same course: best fit first
+  // Pair report and schedule sections by course + section number: the same
+  // section first, then an online number to its in-person one (51 ↔ 02).
+  // Sections with no partner are dropped (red) or added (blue).
   const pairs=[],usedR=new Set(),usedA=new Set();
-  const codes=new Set([...rep.map(r=>r.code),...app.map(a=>a.code)]);
-  codes.forEach(code=>{
-    const R=rep.filter(r=>r.code===code),A=app.filter(a=>a.code===code);
-    const cand=[];
-    R.forEach(r=>A.forEach(a=>{
-      let s=1;
-      if(mkDays(get(r.row,'DAYS'))===mkDays(a.o['DAYS']))s+=3;
-      if(mkMinutes(get(r.row,'START'))===mkMinutes(a.o['START']))s+=3;
-      if(mkRoom(get(r.row,'ROOM'))===mkRoom(a.o['ROOM']))s+=1;
-      if(mkInstr(get(r.row,'INSTRUCTOR'))===mkInstr(a.o['INSTRUCTOR']))s+=1;
-      if(mkSecKey(r.sec)===mkSecKey(a.sec))s+=2;
-      cand.push([s,r,a]);
-    }));
-    cand.sort((x,y)=>y[0]-x[0]);
-    cand.forEach(([s,r,a])=>{if(usedR.has(r)||usedA.has(a))return;usedR.add(r);usedA.add(a);pairs.push([r,a]);});
+  [(r,a)=>r.sec===a.sec,(r,a)=>mkSecKey(r.sec)===mkSecKey(a.sec)].forEach(same=>{
+    rep.forEach(r=>{
+      if(usedR.has(r))return;
+      const a=app.find(a=>!usedA.has(a)&&a.code===r.code&&a.sec&&same(r,a));
+      if(a){usedR.add(r);usedA.add(a);pairs.push([r,a]);}
+    });
   });
 
   const cellFill=new Map(),rowFill=new Map();   // keyed by the row arrays themselves
@@ -2425,6 +2418,14 @@ function markupReport(aoa,appRows){
       r.row[c]=now;mark(r.row,c);
       changes.push([label(r.row),header[c],String(was??''),String(now)]);
     });
+    // Section number: online 50s that are now in person (51 → 02). An online
+    // class numbered 01 in the report keeps its number (50s aren't required).
+    const cc=col['COURSE'];
+    if(cc!==undefined&&+r.sec>=50&&+a.sec<50){
+      const now=String(a.o['COURSE']);
+      changes.push([label(r.row),header[cc],String(r.row[cc]),now]);
+      r.row[cc]=now;mark(r.row,cc);
+    }
     // Section cap: the report's cap stands unless the schedule map overrides it
     const capC=col['SECTION CAP'];
     if(a.capSet&&capC!==undefined&&String(r.row[capC]??'').trim()!==String(a.o['SECTION CAP']).trim()){
