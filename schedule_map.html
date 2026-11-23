@@ -951,17 +951,21 @@ function applySectionPeriods(d){
   }));
   return changed;
 }
-// Nov 2026: internships in the starting data were "once a week" with no day
-// (so they showed nowhere). Fall 2028/2029: make them Async/Online, cap 3.
+// Nov 2026: every semester after Fall 2027 gets the same six internship
+// sections as Fall 2027 (Async/Online). Replaces the old ones from the
+// starting data ("once a week" with no day, so they showed nowhere). Done
+// once per semester (flagged), so later edits stick. Returns true if changed.
+const INTERNSHIP_SET=[['.01','JULIE',3],['.02','CHRISTINE',3],['.03','SHELI',3],['.04','MEG',1],['.05','LAURA LEE',1],['.06','GIOVANNI',1]];
 function applyInternshipsAsync(d){
   let changed=false;
-  ['Fall 2028','Fall 2029'].forEach(sem=>{
-    ((d&&d[sem]&&d[sem].courses)||[]).forEach(c=>{
-      if(c.code!=='ART 4953'||c.pattern!=='once'||['Monday','Tuesday','Wednesday','Thursday'].includes(c.oncedday))return;
-      c.pattern='async';c.time='No set time';c.oncedday='';c.room='';
-      if(!c.cap)c.cap=3;
-      changed=true;
-    });
+  const after=s=>{const[a,y]=String(s).split(' ');return (+y*2+(a==='Fall'?1:0))>2027*2+1;};
+  Object.keys(d||{}).forEach(sem=>{
+    const S=d[sem];
+    if(!after(sem)||!S||!S.courses||S.internships2026)return;
+    S.courses=S.courses.filter(c=>c.code!=='ART 4953');
+    INTERNSHIP_SET.forEach(([section,faculty,cap])=>S.courses.push({code:'ART 4953',section,title:'INTERNSHIP',faculty,room:'',pattern:'async',time:'No set time',oncedday:'',hidden:false,bracketed:false,hybrid:false,grad:false,bracketpair:'',notes:'',cap}));
+    S.internships2026=true;
+    changed=true;
   });
   return changed;
 }
@@ -2073,6 +2077,11 @@ const XL_INSTRUCTORS={
   'JULIE':'Libersat, Julie','TANYA':'Synar, Tanya','LAURA LEE':'McCartney, Laura',
   'CHRISTINE':'Adame, Christine','COLBY':'Parsons, Matthew'
 };
+// Internship comments (ART 4953). The department changed "meet twice" to
+// three times (Nov 2026). Area of study by internship supervisor.
+const XL_INTERN_MEET='COURSE WILL MEET THREE TIMES WITH INSTRUCTOR ON CAMPUS DURING THE SEMESTER; DATES TBA.';
+const XL_INTERN_AREA={JULIE:'GRAPHIC DESIGN OR STUDIO ART',CHRISTINE:'GRAPHIC DESIGN OR STUDIO ART',SHELI:'GRAPHIC DESIGN OR STUDIO ART',MEG:'PHOTOGRAPHY',GIOVANNI:'PAINTING AND DRAWING'};
+const xlInternComment=area=>(area?area.replace(/\.$/,'')+'. ':'')+XL_INTERN_MEET+' DEPARTMENT PERMISSION REQUIRED.';
 const XL_HEADERS=['SEC TERM','COURSE','COURSE TYPES','COURSE TYPE DESC','SEC START DATE','SEC END DATE','SHORT TITLE','COLLEGE','SUBJECT','COURSE LEVEL','CIP CODE','ENR','Wait','Section Cap','SCH','UGL SCH (FR/SO)','UGU SCH (JR/SR)','PB SCH','GM SCH','GD SCH','INSTRUCTOR','METH','DAYS','BLDG','ROOM','ROOM CAPACITY','LOCATION','START ','END','COMMENTS','SEC STATUS','PROG FEE','LAB FEE','DIS FEE','DL FEE','SYLLABUS','VITAE','REPORTING TERM','DUAL CREDIT','CROSS LISTED','CROSS LISTING ENROLLMENT','SMALL CLASS','BRACKETED COURSE','INSTRUCTOR CAMPUS'];
 const XL_EXPENSES='ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT.';
 // Full-term start/end dates from "TWU Skeletal Term Dates 2024–2033"
@@ -2267,6 +2276,12 @@ function buildExcelRows(sem,opts){
       if(cat&&cat.extra)comment+=' '+cat.extra;
       if(c.bracketed&&c.bracketpair)comment+=` BRACKETED WITH ${c.bracketpair}.`;
     }
+    // Internships: area of study + the department's meeting wording
+    if(c.code==='ART 4953'){
+      const area=XL_INTERN_AREA[(c.faculty||'').trim().toUpperCase()]||'';
+      comment=xlInternComment(area);
+      if(!area)flag(label,'Internship area of study (e.g. PHOTOGRAPHY) not known for this instructor. Add it to the start of the comment.');
+    }
     const crossListed=c.bracketed||/CROSS-LISTED/i.test(comment);
     const instr=(c.faculty||'').trim().toLowerCase()==='staff'||!c.faculty?'Staff, ':(XL_INSTRUCTORS[(c.faculty||'').trim().toUpperCase()]||c.faculty);
     if(instr!=='Staff, '&&!XL_INSTRUCTORS[(c.faculty||'').trim().toUpperCase()])flag(label,`Instructor "${c.faculty}" isn't in the name list — check the spelling.`);
@@ -2456,6 +2471,7 @@ function markupReport(aoa,appRows){
 
   // Changed values → yellow cells
   pairs.forEach(([r,a])=>{
+    const repInstr=get(r.row,'INSTRUCTOR');
     MK_FIELDS.forEach(([name,norm])=>{
       const c=col[name];if(c===undefined)return;
       const was=r.row[c],now=a.o[name]??'';
@@ -2470,6 +2486,18 @@ function markupReport(aoa,appRows){
       const now=String(a.o['COURSE']);
       changes.push([label(r.row),header[cc],String(r.row[cc]),now]);
       r.row[cc]=now;mark(r.row,cc);
+    }
+    // Internships: keep the report's area of study (unless the supervisor
+    // changed) and use the department's current meeting wording
+    const cmc=col['COMMENTS'];
+    if(r.code==='ART 4953'&&cmc!==undefined){
+      const was=String(r.row[cmc]??'');
+      const area=was.replace(/COURSE WILL MEET[^.]*\.\s*/i,'').replace(/DEPARTMENT PERMISSION REQUIRED\.?/i,'').trim();
+      const now=area&&mkInstr(repInstr)===mkInstr(a.o['INSTRUCTOR'])?xlInternComment(area):String(a.o['COMMENTS']||'');
+      if(now&&mkNorm(now)!==mkNorm(was)){
+        changes.push([label(r.row),header[cmc],was,now]);
+        r.row[cmc]=now;mark(r.row,cmc);
+      }
     }
     // Section cap: the report's cap stands unless the schedule map overrides it
     const capC=col['SECTION CAP'];
