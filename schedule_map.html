@@ -2514,15 +2514,14 @@ function markupReport(aoa,appRows){
       }
     }
   });
-  // Dropped → red rows. Left alone: other departments' courses, and permission
-  // sections (internships etc.) the schedule map doesn't list at all.
+  // Dropped → red rows. Left alone: other departments' courses. (Permission
+  // sections such as internships and thesis are in the schedule map now, so
+  // one missing from the map is dropped like any other.)
   const subjects=new Set(app.map(a=>a.code.split(' ')[0]));
-  const PERMISSION=/INTERNSHIP|IND(EPENDENT)?\s+STUDY|THESIS|RESEARCH WRITING|CAPSTONE/i;
   let dropped=0;
   rep.forEach(r=>{
     if(usedR.has(r))return;
     if(!subjects.has(r.code.split(' ')[0])){changes.push([label(r.row),'Left as is',"another department's course",'']);return;}
-    if(PERMISSION.test(String(get(r.row,'SHORT TITLE')))&&!app.some(a=>a.code===r.code)){changes.push([label(r.row),'Left as is','permission section','not tracked in the schedule map']);return;}
     rowFill.set(r.row,MK_RED);dropped++;changes.push([label(r.row),'Dropped','in the report','not in the schedule map']);
   });
   // The report's own reporting term (its most common value) is used for added rows
