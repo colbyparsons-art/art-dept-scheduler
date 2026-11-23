@@ -1555,15 +1555,21 @@ function dropOnCell(e,pattern,block){
   renderAll();
 }
 
-// Sections of the same course in section order (.01, .02, …), each course
-// staying where its first section was. Cells with bracketed pairs are left
-// alone so partners stay side by side.
+// Courses in numeric order by course number (1203, 1303, … 5903; other
+// departments' courses by number too), then section (.01, .02, …).
+// A bracketed pair stays together, placed by its lower-numbered course.
 function bySection(list){
-  if(list.some(c=>c.bracketed))return list;
-  const secN=c=>parseFloat(String(c.section||'').replace(/^./,''))||0;
-  const groups=new Map();
-  list.forEach(c=>{const k=c.code||'';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(c);});
-  return [...groups.values()].flatMap(g=>g.sort((a,b)=>secN(a)-secN(b)));
+  const num=c=>{const m=/(\d{4})/.exec(c.code||'');return m?+m[1]:99999;};
+  const secN=c=>parseFloat(String(c.section||'').replace(/^\./,''))||0;
+  const cmp=(a,b)=>num(a)-num(b)||String(a.code||'').localeCompare(String(b.code||''))||secN(a)-secN(b);
+  const seen=new Set(),units=[];
+  list.forEach(c=>{
+    if(seen.has(c))return;
+    seen.add(c);
+    const p=c.bracketed&&c.bracketpair?list.find(x=>!seen.has(x)&&isBracketPair(c,x)):null;
+    if(p){seen.add(p);units.push([c,p].sort(cmp));}else units.push([c]);
+  });
+  return units.sort((a,b)=>cmp(a[0],b[0])).flat();
 }
 function renderGrid(){
   const grid=document.getElementById('scheduleGrid');
