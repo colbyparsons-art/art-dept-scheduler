@@ -218,6 +218,26 @@
   #view-grid.fac-dimmed .once-chip:not(.fac-hi){opacity:.15;filter:saturate(0);transition:opacity .15s,filter .15s;}
   #view-grid.fac-dimmed .course-chip.fac-hi,
   #view-grid.fac-dimmed .once-chip.fac-hi{outline:2.5px solid var(--clay);outline-offset:1px;transition:outline .15s;}
+
+  /* Room check: conflicts + free rooms */
+  .course-chip.room-clash,.once-chip.room-clash{box-shadow:0 0 0 2px #c0392b;}
+  .room-clash-tag{display:inline-block;margin-top:3px;font-size:.66rem;font-weight:700;color:#fff;background:#c0392b;border-radius:3px;padding:0 5px;}
+  #roomBarToggle.has-clash{border-color:#c0392b;color:#c0392b;}
+  #roomBarToggle.active.has-clash{background:#c0392b;color:#fff;}
+  .room-panel{background:#fff;border:1px solid var(--mist);border-radius:6px;padding:14px 16px;margin-bottom:14px;font-size:.8rem;}
+  .room-panel h4{margin:0 0 8px;font-size:.85rem;}
+  .room-clash-list{margin:0 0 14px;padding:0;list-style:none;}
+  .room-clash-list li{padding:6px 10px;margin-bottom:4px;background:#fdecea;border-left:4px solid #c0392b;border-radius:3px;line-height:1.45;}
+  .room-clash-list li.ok{background:#eef6ee;border-left-color:#5c7a5f;}
+  .room-clash-list .chip-btn{position:static;display:inline-block;margin-left:4px;}
+  .room-free-table{width:100%;border-collapse:collapse;}
+  .room-free-table th,.room-free-table td{border:1px solid var(--mist);padding:6px 8px;vertical-align:top;text-align:left;}
+  .room-free-table th{background:#fdf5ed;font-weight:600;white-space:nowrap;}
+  .room-free{display:inline-block;margin:2px 3px 2px 0;padding:1px 7px;border-radius:99px;border:1px solid #5c7a5f;color:#2f4a32;background:#eef6ee;font-size:.72rem;white-space:nowrap;}
+  .room-free.part{border-style:dashed;border-color:#b9a48c;color:#6b5a48;background:#fff;}
+  .room-free small{opacity:.65;}
+  .room-none{color:#999;font-style:italic;}
+  .room-note{opacity:.65;font-size:.72rem;margin-top:8px;line-height:1.45;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
@@ -277,6 +297,7 @@
   <button class="fac-btn" onclick="toggleFacultyHighlight('COLBY',this)">Colby</button>
   <button class="fac-btn" style="margin-left:10px;" onclick="toggleFacultyHighlight('STAFF',this)">Staff-taught</button>
   <button class="fac-btn" id="classBarToggle" style="margin-left:10px;" onclick="toggleClassBar()" title="Show a button for each class, to highlight where it is on the map">Classes ▾</button>
+  <button class="fac-btn" id="roomBarToggle" style="margin-left:4px;" onclick="toggleRoomPanel()" title="Check for room conflicts and see which rooms are free in each time block">Rooms ▾</button>
   <button class="fac-btn fac-btn-clear" id="facClearBtn" style="display:none" onclick="clearFacultyHighlight()">✕ Clear</button>
 </div>
 <div class="faculty-bar class-bar" id="classBar" style="display:none"></div>
@@ -305,6 +326,7 @@
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:var(--hidden);"></div>Hidden section</div>
     </div>
+    <div class="room-panel" id="roomPanel" style="display:none"></div>
     <div class="grid-wrap"><div class="schedule-grid" id="scheduleGrid"></div></div>
     <div id="oncePanelContainer"></div>
     <div id="asyncPanelContainer"></div>
@@ -707,7 +729,7 @@ const DEFAULT_SCHEDULE = {"Spring 2027":{"courses":[{"code":"ART 3253","section"
 let highlightedFaculty=null, highlightedClass=null;
 
 function markActive(btn){
-  document.querySelectorAll('.fac-btn').forEach(b=>{if(b.id!=='classBarToggle')b.classList.remove('active');});
+  document.querySelectorAll('.fac-btn').forEach(b=>{if(b.id!=='classBarToggle'&&b.id!=='roomBarToggle')b.classList.remove('active');});
   if(btn)btn.classList.add('active');
   document.getElementById('facClearBtn').style.display=btn?'':'none';
 }
@@ -772,6 +794,148 @@ function renderClassBar(){
       const safe=escapeHtml(code);
       return `<button class="fac-btn${highlightedClass===code?' active':''}" data-cls="${safe}" onclick="toggleClassHighlight(this.dataset.cls,this)" title="${safe} ${escapeHtml(title)}"><span class="cls-num">${escapeHtml(num)}</span>${escapeHtml(title)}</button>`;
     }).join('')||'<span class="faculty-bar-label">No classes this semester.</span>';
+}
+
+// ── Room check ─────────────────────────────────────────────────────────────
+// Each class with a room, a day and a clock time becomes one or more
+// "meetings" (room + day + start/end minutes). Two meetings in the same room
+// on the same day whose times overlap are a conflict, unless the two classes
+// are bracketed with each other (they share the room on purpose).
+const ROOM_DAYS=['Monday','Tuesday','Wednesday','Thursday'];
+const DAY_SHORT={Monday:'Mon',Tuesday:'Tue',Wednesday:'Wed',Thursday:'Thu'};
+function roomList(room){
+  if(!room||/off.?site|online|tba|tbd|none/i.test(room))return [];
+  return [...new Set(String(room).split(/[\/,&+]|\band\b/i).map(r=>r.trim()).filter(r=>/\d/.test(r)))];
+}
+function timeRange(time){
+  const m=String(time||'').match(/(\d{1,2}(?::\d{2})?)\s*[–-]\s*(\d{1,2}(?::\d{2})?)/);
+  if(!m)return null;
+  const s=parseTime(m[1]);let e=parseTime(m[2]);
+  if(e<=s)e+=12*60;
+  return [s,e];
+}
+function meetingDays(c){
+  if(c.pattern==='once')return ROOM_DAYS.includes(c.oncedday)?[c.oncedday]:[];
+  const both=c.pattern==='mw'?['Monday','Wednesday']:c.pattern==='tth'?['Tuesday','Thursday']:[];
+  if(c.hybrid){
+    // Hybrid with one face-to-face day named in the notes uses the room that day only
+    const d=extractHybridDay(c.notes||'');
+    if(both.includes(d))return [d];
+  }
+  return both;
+}
+function roomMeetings(courses){
+  const out=[];
+  courses.forEach((c,idx)=>{
+    const t=timeRange(c.time);if(!t)return;
+    const days=meetingDays(c);
+    roomList(c.room).forEach(room=>days.forEach(day=>out.push({c,idx,room,day,s:t[0],e:t[1]})));
+  });
+  return out;
+}
+function bracketedTogether(a,b){
+  if(!a.bracketed||!b.bracketed)return false;
+  const k=x=>(String(x.code||'')+String(x.section||'')).replace(/\s+/g,'').toUpperCase();
+  const p=x=>String(x.bracketpair||'').replace(/\s+/g,'').toUpperCase();
+  return p(a)===k(b)||p(b)===k(a);
+}
+// Conflicts grouped by pair of classes + room, listing the days they clash
+function findRoomConflicts(courses){
+  const ms=roomMeetings(courses);
+  const groups=new Map();
+  for(let i=0;i<ms.length;i++)for(let j=i+1;j<ms.length;j++){
+    const a=ms[i],b=ms[j];
+    if(a.idx===b.idx||a.room!==b.room||a.day!==b.day)continue;
+    if(a.s>=b.e||b.s>=a.e)continue;
+    if(bracketedTogether(a.c,b.c))continue;
+    const [x,y]=a.idx<b.idx?[a,b]:[b,a];
+    const key=x.idx+'|'+y.idx+'|'+a.room;
+    if(!groups.has(key))groups.set(key,{room:a.room,a:x,b:y,days:[]});
+    const g=groups.get(key);if(!g.days.includes(a.day))g.days.push(a.day);
+  }
+  return [...groups.values()];
+}
+function roomConflictIdx(){
+  const set=new Set();
+  findRoomConflicts(getSemCourses()).forEach(g=>{set.add(g.a.idx);set.add(g.b.idx);});
+  return set;
+}
+// Outline clashing chips on the map and flag the Rooms button
+function markRoomConflicts(){
+  const clash=roomConflictIdx();
+  document.querySelectorAll('#view-grid .course-chip[data-idx],#view-grid .once-chip[data-idx]').forEach(el=>{
+    const on=clash.has(+el.dataset.idx);
+    el.classList.toggle('room-clash',on);
+    const tag=el.querySelector('.room-clash-tag');
+    if(on&&!tag){
+      const t=document.createElement('div');t.className='room-clash-tag';t.textContent='⚠ room conflict';
+      const meta=el.querySelector('.chip-meta,.chip-meta-dark');
+      (meta||el).insertAdjacentElement(meta?'afterend':'beforeend',t);
+    } else if(!on&&tag)tag.remove();
+  });
+  const btn=document.getElementById('roomBarToggle');
+  if(btn){
+    const n=findRoomConflicts(getSemCourses()).length;
+    const open=document.getElementById('roomPanel').style.display!=='none';
+    btn.classList.toggle('has-clash',n>0);
+    btn.textContent=(n?`⚠ Rooms (${n})`:'Rooms')+(open?' ▴':' ▾');
+    btn.title=n?`${n} room conflict${n>1?'s':''} — click to see them`:'Check for room conflicts and see which rooms are free in each time block';
+  }
+}
+function toggleRoomPanel(){
+  const p=document.getElementById('roomPanel');
+  const open=p.style.display==='none';
+  p.style.display=open?'':'none';
+  document.getElementById('roomBarToggle').classList.toggle('active',open);
+  renderRoomPanel();markRoomConflicts();
+}
+function roomLabel(r){return ROOMS[r]?`${r} <small>${escapeHtml(String(ROOMS[r]).replace(/\s*\(.*\)\s*$/,''))}</small>`:escapeHtml(r);}
+function renderRoomPanel(){
+  const p=document.getElementById('roomPanel');
+  if(!p||p.style.display==='none')return;
+  if(!currentSem){p.innerHTML='';return;}
+  const courses=getSemCourses();
+  const who=c=>{const f=String(c.faculty||'');return f?(f.toLowerCase()==='staff'?'staff':f.toLowerCase().replace(/\b\w/g,ch=>ch.toUpperCase())):'';};
+  const name=c=>`<b>${escapeHtml(String(c.code||'').replace(/^ART\s+/,'')+(c.section||''))}</b> ${escapeHtml(c.title||'')}${who(c)?' ('+escapeHtml(who(c))+')':''}${c.hidden?' <i>hidden</i>':''}`;
+  const edit=i=>FACULTY_MODE?'':`<button class="chip-btn" onclick="openEditModal(${i})" title="Edit">✏</button>`;
+  const dayList=ds=>{
+    const s=ROOM_DAYS.filter(d=>ds.includes(d));
+    if(s.join()==='Monday,Wednesday')return 'MW';
+    if(s.join()==='Tuesday,Thursday')return 'TTh';
+    return s.map(d=>DAY_SHORT[d]).join(', ');
+  };
+  const clashes=findRoomConflicts(courses);
+  let html=`<h4>Room conflicts — ${escapeHtml(currentSem)}</h4><ul class="room-clash-list">`;
+  html+=clashes.length?clashes.map(g=>`<li>⚠ <b>Room ${escapeHtml(g.room)}</b> · ${dayList(g.days)}: ${name(g.a.c)} <span style="opacity:.7">${escapeHtml(g.a.c.time||'')}</span>${edit(g.a.idx)} &nbsp;and&nbsp; ${name(g.b.c)} <span style="opacity:.7">${escapeHtml(g.b.c.time||'')}</span>${edit(g.b.idx)}</li>`).join('')
+    :'<li class="ok">✓ No room conflicts this semester.</li>';
+  html+='</ul>';
+
+  // Free rooms: a room is free in a block if nothing meets there during any part of it
+  const ms=roomMeetings(courses);
+  const rooms=Object.keys(ROOMS);
+  const busy=(room,day,s,e)=>ms.some(m=>m.room===room&&m.day===day&&m.s<e&&s<m.e);
+  const cols=[['MW',['Monday','Wednesday']],['TTh',['Tuesday','Thursday']]];
+  html+=`<h4>Free rooms by time block</h4><table class="room-free-table"><tr><th></th>${cols.map(([l])=>`<th>${l==='MW'?'Monday / Wednesday':'Tuesday / Thursday'}</th>`).join('')}</tr>`;
+  BLOCKS.forEach(block=>{
+    const [s,e]=timeRange(block);
+    html+=`<tr><th>${block}</th>`+cols.map(([,days])=>{
+      const full=[],part=[];
+      rooms.forEach(r=>{
+        const free=days.filter(d=>!busy(r,d,s,e));
+        if(free.length===days.length)full.push(r);
+        else if(free.length)part.push([r,free[0]]);
+      });
+      return `<td>${full.map(r=>`<span class="room-free" title="${escapeHtml(ROOMS[r]||r)}">${roomLabel(r)}</span>`).join('')}`+
+        part.map(([r,d])=>`<span class="room-free part" title="${escapeHtml(ROOMS[r]||r)} — free ${d} only">${roomLabel(r)} <small>${DAY_SHORT[d]} only</small></span>`).join('')+
+        (full.length||part.length?'':'<span class="room-none">No rooms free</span>')+'</td>';
+    }).join('')+'</tr>';
+  });
+  html+='</table>';
+  // Classes the check can't place (no room, no day or no clock time)
+  const unchecked=courses.filter(c=>(c.pattern==='mw'||c.pattern==='tth'||c.pattern==='once')&&!/off.?site/i.test(c.room||'')&&(!roomList(c.room).length||!meetingDays(c).length||!timeRange(c.time)));
+  html+=`<div class="room-note">A room counts as busy for the whole block if any class meets there during part of it (e.g. a 9:30 lecture makes the room busy for 8:00–10:50). Hidden (pending) sections count. Hybrid classes with one day in their notes use the room that day only. Bracketed classes sharing a room aren't a conflict. Dashed = free one day only.`+
+    (unchecked.length?`<br><b>Not checked</b> (no room, day or time set): ${unchecked.map(c=>escapeHtml(String(c.code||'').replace(/^ART\s+/,'')+(c.section||''))).join(', ')}`:'')+'</div>';
+  p.innerHTML=html;
 }
 
 // ── Data ───────────────────────────────────────────────────────────────────
@@ -1730,6 +1894,8 @@ function renderGrid(){
   }
   asyncContainer.innerHTML=asyncHtml;
   applyFacultyHighlight();
+  renderRoomPanel();
+  markRoomConflicts();
 }
 
 function blockContains(block,time){
