@@ -2096,7 +2096,9 @@ const XL_INSTRUCTORS={
 // Internship comments (ART 4953). The department changed "meet twice" to
 // three times (Nov 2026). Area of study by internship supervisor.
 const XL_INTERN_MEET='COURSE WILL MEET THREE TIMES WITH INSTRUCTOR ON CAMPUS DURING THE SEMESTER; DATES TBA.';
-const XL_INTERN_AREA={JULIE:'GRAPHIC DESIGN OR STUDIO ART',CHRISTINE:'GRAPHIC DESIGN OR STUDIO ART',SHELI:'GRAPHIC DESIGN OR STUDIO ART',MEG:'PHOTOGRAPHY',GIOVANNI:'PAINTING AND DRAWING'};
+const XL_INTERN_AREA={JULIE:'GRAPHIC DESIGN OR STUDIO ART',CHRISTINE:'GRAPHIC DESIGN OR STUDIO ART',SHELI:'GRAPHIC DESIGN OR STUDIO ART',MEG:'PHOTOGRAPHY',GIOVANNI:'PAINTING AND DRAWING','LAURA LEE':'MUSEUM STUDIES'};
+// UNIV 1333 Passion and Purpose: the Visual Arts section
+const XL_UNIV_REQ='VISUAL ARTS MAJORS ARE REQUIRED TO TAKE THIS SECTION.';
 const xlInternComment=area=>(area?area.replace(/\.$/,'')+'. ':'')+XL_INTERN_MEET+' DEPARTMENT PERMISSION REQUIRED.';
 const XL_HEADERS=['SEC TERM','COURSE','COURSE TYPES','COURSE TYPE DESC','SEC START DATE','SEC END DATE','SHORT TITLE','COLLEGE','SUBJECT','COURSE LEVEL','CIP CODE','ENR','Wait','Section Cap','SCH','UGL SCH (FR/SO)','UGU SCH (JR/SR)','PB SCH','GM SCH','GD SCH','INSTRUCTOR','METH','DAYS','BLDG','ROOM','ROOM CAPACITY','LOCATION','START ','END','COMMENTS','SEC STATUS','PROG FEE','LAB FEE','DIS FEE','DL FEE','SYLLABUS','VITAE','REPORTING TERM','DUAL CREDIT','CROSS LISTED','CROSS LISTING ENROLLMENT','SMALL CLASS','BRACKETED COURSE','INSTRUCTOR CAMPUS'];
 const XL_EXPENSES='ADDITIONAL STUDENT EXPENSES WILL BE INCURRED BEYOND THE PROGRAM AND LAB FEES FOR SUPPLIES AND EQUIPMENT.';
@@ -2221,10 +2223,10 @@ function buildExcelRows(sem,opts){
   const rows=[],review=[],excluded=[];
   const flag=(course,what)=>review.push([course,what]);
   const list=courses.filter(c=>{
-    if(!/^ART\s/.test(c.code||'')){excluded.push(c);return false;}
+    // ART courses, plus UNIV 1333 (the department's Passion and Purpose section)
+    if(!/^ART\s/.test(c.code||'')&&String(c.code||'').trim()!=='UNIV 1333'){excluded.push(c);return false;}
     return true;
   }).slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'')||(a.section||'').localeCompare(b.section||''));
-  // Online sections use the university's 50-series numbers (.01 → 50, .02 → 51)
   list.forEach(c=>{
     const code=c.code.trim(), [subj,num]=code.split(/\s+/);
     const titleUpper=String(c.title||'').toUpperCase();
@@ -2234,7 +2236,7 @@ function buildExcelRows(sem,opts){
     const isOnline=c.pattern==='async'&&!!c.time&&!permission;
     const unplaced=c.pattern==='async'&&!c.time;
     let sec=(c.section||'').replace(/^\./,'').trim()||'01';
-    if(isOnline&&/^\d+$/.test(sec)&&+sec<50)sec=String(49+(+sec));
+    // Online sections keep the map's number: the department doesn't use the 50s
     const label=`${code} ${sec}`;
     const cat=XL_CATALOG.byCode[code]||null;
     const catSec=XL_CATALOG.bySec[label]||XL_CATALOG.bySec[`${code} ${(c.section||'').replace(/^\./,'')}`]||null;
@@ -2249,7 +2251,8 @@ function buildExcelRows(sem,opts){
     } else if(isOnline&&!/^WEB/.test(meth)){meth='WEB1L';}
     // Level, fees
     const lvl=(cat&&cat.level)||String(Math.floor((+num||0)/1000)*100);
-    const progFee=(cat&&cat.prog)||(+lvl>=500?75:+lvl>=300?45:24);
+    // Art program fees apply to ART courses only (not UNIV 1333)
+    const progFee=subj!=='ART'?'':(cat&&cat.prog)||(+lvl>=500?75:+lvl>=300?45:24);
     let labFee=cat?cat.lab:null;
     if(!cat&&studio&&!isOnline&&!permission){labFee=30;flag(label,'Lab fee assumed $30 (studio course).');}
     if(isOnline)labFee=null;
@@ -2297,6 +2300,11 @@ function buildExcelRows(sem,opts){
       const area=XL_INTERN_AREA[(c.faculty||'').trim().toUpperCase()]||'';
       comment=xlInternComment(area);
       if(!area)flag(label,'Internship area of study (e.g. PHOTOGRAPHY) not known for this instructor. Add it to the start of the comment.');
+    }
+    if(code==='UNIV 1333'){
+      comment=(isOnline?'100% ONLINE. ':c.hybrid?'HYBRID CLASS. ':'FACE TO FACE COURSE. ')+XL_UNIV_REQ;
+      labFee=null;
+      flag(label,'Program and lab fees left blank (university course). Fill in if UNIV 1333 has fees.');
     }
     const crossListed=c.bracketed||/CROSS-LISTED/i.test(comment);
     const instr=(c.faculty||'').trim().toLowerCase()==='staff'||!c.faculty?'Staff, ':(XL_INSTRUCTORS[(c.faculty||'').trim().toUpperCase()]||c.faculty);
@@ -2495,8 +2503,8 @@ function markupReport(aoa,appRows){
       r.row[c]=now;mark(r.row,c);
       changes.push([label(r.row),header[c],String(was??''),String(now)]);
     });
-    // Section number: online 50s that are now in person (51 → 02). An online
-    // class numbered 01 in the report keeps its number (50s aren't required).
+    // Section number: the report's online 50s become the map's number (51 → 02);
+    // the department doesn't use the 50s for online sections.
     const cc=col['COURSE'];
     if(cc!==undefined&&+r.sec>=50&&+a.sec<50){
       const now=String(a.o['COURSE']);
@@ -2514,6 +2522,11 @@ function markupReport(aoa,appRows){
         changes.push([label(r.row),header[cmc],was,now]);
         r.row[cmc]=now;mark(r.row,cmc);
       }
+    }
+    // UNIV 1333: say Visual Arts majors are required to take this section
+    if(r.code==='UNIV 1333'&&cmc!==undefined&&!String(r.row[cmc]??'').includes(XL_UNIV_REQ)){
+      const was=String(r.row[cmc]??''),now=(was.trim()+' '+XL_UNIV_REQ).trim();
+      changes.push([label(r.row),header[cmc],was,now]);r.row[cmc]=now;mark(r.row,cmc);
     }
     // Section cap: the report's cap stands unless the schedule map overrides it
     const capC=col['SECTION CAP'];
