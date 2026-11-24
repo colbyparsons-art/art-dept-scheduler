@@ -620,8 +620,8 @@ const ROOMS={
 };
 
 const TIME_OPTIONS={
-  mw:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)'],
-  tth:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)'],
+  mw:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)','6:00–7:20 (lecture)'],
+  tth:['8:00–10:50','11:00–1:50','2:30–5:20','6:00–8:50','9:30–10:50 (lecture)','11:00–12:20 (lecture)','2:30–4:50 (lecture)','6:00–7:20 (lecture)'],
   once:['6:00–8:50','8:00–10:50','11:00–1:50','2:30–5:20','Other'],
   async:['No set time']
 };
@@ -2952,7 +2952,7 @@ function markupFromReport(report,sem){
   rv['!cols']=[{wch:16},{wch:100}];
   XLSX.utils.book_append_sheet(out,rv,'Check before sending');
   const today=new Date();const stamp=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  XLSX.writeFile(out,`Course Schedule ${sem} marked up (${stamp}).xlsx`);
+  XLSX.writeFile(out,`Course Schedule ${sem} Visual Arts (${stamp}).xlsx`);
   alert(`Done — downloaded the marked-up report for ${sem}.\n\n${res.counts.added} added (blue), ${res.counts.dropped} dropped (red), ${res.counts.changedCells} changed cells (yellow).${res.counts.dupes?`\n${res.counts.dupes} duplicate line${res.counts.dupes===1?'':'s'} removed (one line per class).`:''}\n\nThe "Changes" sheet lists each one; "Check before sending" lists guesses to double-check.`);
 }
 
