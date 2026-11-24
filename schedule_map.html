@@ -2223,8 +2223,9 @@ function buildExcelRows(sem,opts){
   const rows=[],review=[],excluded=[];
   const flag=(course,what)=>review.push([course,what]);
   const list=courses.filter(c=>{
-    // ART courses, plus UNIV 1333 (the department's Passion and Purpose section)
-    if(!/^ART\s/.test(c.code||'')&&String(c.code||'').trim()!=='UNIV 1333'){excluded.push(c);return false;}
+    // ART courses only. UNIV 1333 is in the map for planning, but its schedule is
+    // set by whoever oversees UNIV, so it isn't submitted from here.
+    if(!/^ART\s/.test(c.code||'')){excluded.push(c);return false;}
     return true;
   }).slice().sort((a,b)=>(a.code||'').localeCompare(b.code||'')||(a.section||'').localeCompare(b.section||''));
   list.forEach(c=>{
