@@ -926,7 +926,7 @@ function renderRoomPanel(){
         else if(free.length)part.push([r,free[0]]);
       });
       return `<td>${full.map(r=>`<span class="room-free" title="${escapeHtml(ROOMS[r]||r)}">${roomLabel(r)}</span>`).join('')}`+
-        part.map(([r,d])=>`<span class="room-free part" title="${escapeHtml(ROOMS[r]||r)} — free ${d} only">${roomLabel(r)} <small>${DAY_SHORT[d]} only</small></span>`).join('')+
+        part.map(([r,d])=>`<span class="room-free part" title="${escapeHtml(ROOMS[r]||r)} — free ${d} only">${roomLabel(r)} <small>free ${DAY_SHORT[d]} only</small></span>`).join('')+
         (full.length||part.length?'':'<span class="room-none">No rooms free</span>')+'</td>';
     }).join('')+'</tr>';
   });
