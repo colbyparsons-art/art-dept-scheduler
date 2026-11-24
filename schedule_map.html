@@ -912,7 +912,9 @@ function renderRoomPanel(){
 
   // Free rooms: a room is free in a block if nothing meets there during any part of it
   const ms=roomMeetings(courses);
-  const rooms=Object.keys(ROOMS);
+  // 201 (Critique) stays open for students to set up and document work, so it's never offered as free
+  const ROOMS_NOT_OFFERED=['201'];
+  const rooms=Object.keys(ROOMS).filter(r=>!ROOMS_NOT_OFFERED.includes(r));
   const busy=(room,day,s,e)=>ms.some(m=>m.room===room&&m.day===day&&m.s<e&&s<m.e);
   const cols=[['MW',['Monday','Wednesday']],['TTh',['Tuesday','Thursday']]];
   html+=`<h4>Free rooms by time block</h4><table class="room-free-table"><tr><th></th>${cols.map(([l])=>`<th>${l==='MW'?'Monday / Wednesday':'Tuesday / Thursday'}</th>`).join('')}</tr>`;
@@ -933,7 +935,7 @@ function renderRoomPanel(){
   html+='</table>';
   // Classes the check can't place (no room, no day or no clock time)
   const unchecked=courses.filter(c=>(c.pattern==='mw'||c.pattern==='tth'||c.pattern==='once')&&!/off.?site/i.test(c.room||'')&&(!roomList(c.room).length||!meetingDays(c).length||!timeRange(c.time)));
-  html+=`<div class="room-note">A room counts as busy for the whole block if any class meets there during part of it (e.g. a 9:30 lecture makes the room busy for 8:00–10:50). Hidden (pending) sections count. Hybrid classes with one day in their notes use the room that day only. Bracketed classes sharing a room aren't a conflict. Dashed = free one day only.`+
+  html+=`<div class="room-note">A room counts as busy for the whole block if any class meets there during part of it (e.g. a 9:30 lecture makes the room busy for 8:00–10:50). Hidden (pending) sections count. Hybrid classes with one day in their notes use the room that day only. Bracketed classes sharing a room aren't a conflict. Dashed = free one day only. Room 201 is never listed as free: it's kept open for critique setup and documenting work.`+
     (unchecked.length?`<br><b>Not checked</b> (no room, day or time set): ${unchecked.map(c=>escapeHtml(String(c.code||'').replace(/^ART\s+/,'')+(c.section||''))).join(', ')}`:'')+'</div>';
   p.innerHTML=html;
 }
