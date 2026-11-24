@@ -742,7 +742,7 @@ function applyFacultyHighlight(){
   panel.classList.add('fac-dimmed');
   panel.querySelectorAll('.course-chip,.once-chip').forEach(el=>{
     el.classList.toggle('fac-hi',highlightedClass
-      ?(el.dataset.code||'')===highlightedClass
+      ?(el.dataset.code||'')===highlightedClass||(el.dataset.paircode||'')===highlightedClass   // its bracketed partner too
       :(el.dataset.faculty||'')===highlightedFaculty);
   });
 }
@@ -1340,7 +1340,7 @@ function chipHtml(c,idx,extra=''){
   const editBtn=FACULTY_MODE?'':
     `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
   const drag=FACULTY_MODE?'':` draggable="true" ondragstart="dragStart(event,${idx})" ondragend="dragEnd(event)"`;
-  return `<div class="course-chip ${cls}" data-idx="${idx}" data-code="${escapeHtml(String(c.code||'').trim().toUpperCase())}" data-faculty="${(c.faculty||'').toUpperCase()}"${drag}>
+  return `<div class="course-chip ${cls}" data-idx="${idx}" data-code="${escapeHtml(String(c.code||'').trim().toUpperCase())}" data-paircode="${c.bracketed&&c.bracketpair?escapeHtml(String(c.bracketpair).replace(/\s*\.\s*\d+\s*$/,'').trim().toUpperCase()):''}" data-faculty="${(c.faculty||'').toUpperCase()}"${drag}>
     ${editBtn}
     <div class="chip-title">${dispCode} ${c.title||''}</div>
     <div class="chip-meta">${meta}</div>
@@ -1699,7 +1699,7 @@ function renderGrid(){
         const meta=[fac,rm,c.time&&c.time!=='Other'?c.time:''].filter(Boolean).join(' · ');
         const eb=FACULTY_MODE?'':
           `<div class="chip-actions"><button class="chip-btn" onclick="openEditModal(${idx})" title="Edit">✏</button></div>`;
-        return `<div class="once-chip${c.hidden?' hidden':''}" data-idx="${idx}" data-code="${escapeHtml(String(c.code||'').trim().toUpperCase())}" data-faculty="${(c.faculty||'').toUpperCase()}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div>${commentBtn(c)}</div>`;
+        return `<div class="once-chip${c.hidden?' hidden':''}" data-idx="${idx}" data-code="${escapeHtml(String(c.code||'').trim().toUpperCase())}" data-paircode="${c.bracketed&&c.bracketpair?escapeHtml(String(c.bracketpair).replace(/\s*\.\s*\d+\s*$/,'').trim().toUpperCase()):''}" data-faculty="${(c.faculty||'').toUpperCase()}">${eb}<div class="chip-code-title">${dispCode} ${c.title||''}</div><div class="chip-meta-dark">${meta}</div>${commentBtn(c)}</div>`;
     };
     const dayColumnsHtml=days.map((day,dayIdx)=>{
       const coursesHtml=coursesByDay[dayIdx].map(onceChip).join('');
