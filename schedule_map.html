@@ -2589,7 +2589,7 @@ function downloadExcel(){
     rv['!cols']=[{wch:16},{wch:100}];
     XLSX.utils.book_append_sheet(wb,rv,'Check before sending');
     const today=new Date();const stamp=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-    XLSX.writeFile(wb,`Course Schedule ${currentSem} (${stamp}).xlsx`);
+    XLSX.writeFile(wb,`Course Schedule ${currentSem} Visual Arts (${stamp}).xlsx`);
     closeExcelExport();
   }).catch(err=>alert(err.message));
 }
