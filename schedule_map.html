@@ -1750,19 +1750,33 @@ function dragOver(e){
 function dragLeave(e){
   e.currentTarget.classList.remove('drop-target');
 }
+// The time a class gets when dropped into a grid cell. Dragging used to
+// always set the full block (so a 9:30–10:50 lecture became 8:00–10:50).
+// Now: a full-block class takes the new block; a class with a shorter or
+// unusual time keeps it when it stays in the same row (e.g. MW → TTh), and
+// takes that row's lecture time when it moves to another row. Only when the
+// new row has no lecture time does it fall back to the full block.
+function dropTime(c,pattern,block){
+  const old=String(c.time||'');
+  if(!/\d/.test(old)||BLOCKS.includes(old))return block;
+  if(blockFor(old)===block)return old;
+  const lecture=(TIME_OPTIONS[pattern]||[]).find(t=>t!==block&&!BLOCKS.includes(t)&&blockFor(t)===block);
+  return lecture||block;
+}
 function dropOnCell(e,pattern,block){
   e.preventDefault();
   e.currentTarget.classList.remove('drop-target');
   if(dragIdx===null||!currentSem)return;
   const c=db[currentSem].courses[dragIdx];
   if(!c)return;
+  const newTime=dropTime(c,pattern,block);
   c.pattern=pattern;
-  c.time=block;
+  c.time=newTime;
   if(pattern!=='once')c.oncedday='';
   // Always move the bracketed partner to the same slot so the joined styling stays intact
   if(c.bracketed&&c.bracketpair){
     const partner=db[currentSem].courses.find(p=>isBracketPair(c,p));
-    if(partner){partner.pattern=pattern;partner.time=block;if(pattern!=='once')partner.oncedday='';}
+    if(partner){partner.pattern=pattern;partner.time=newTime;if(pattern!=='once')partner.oncedday='';}
   }
   saveEdit(db);
   dragIdx=null;
